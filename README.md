@@ -1,4 +1,9 @@
-# TCC
+<center>
+<img src="./.git-assets/logo.png" alt="Logo do TCC" width="250">
+
+# PsycheLink
+
+</center>
 
 ## Como contribuir
 
