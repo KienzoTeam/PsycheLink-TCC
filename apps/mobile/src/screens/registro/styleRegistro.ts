@@ -149,4 +149,113 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 17,
   },
+
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+
+  backText: {
+    color: '#6D5EF5',
+    fontSize: 16,
+  },
+
+  vinculacaoIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 24,
+  },
+
+  vinculacaoCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#DDD6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  vinculacaoCircleAlt: {
+    backgroundColor: '#C8E6FF',
+  },
+
+  vinculacaoIcon: {
+    fontSize: 30,
+  },
+
+  vinculacaoArrow: {
+    fontSize: 24,
+    color: '#6D5EF5',
+  },
+
+  infoBox: {
+    flexDirection: 'row',
+    backgroundColor: '#F0EEFF',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 24,
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+
+  infoIcon: {
+    fontSize: 18,
+  },
+
+  infoText: {
+    flex: 1,
+    color: '#6E6792',
+    fontSize: 13,
+    lineHeight: 20,
+  },
+
+  inputCenter: {
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: 4,
+    color: '#2D2154',
+  },
+
+  emailLinkContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: -10,
+  },
+
+  emailLink: {
+    color: '#6D5EF5',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+
+  skipButton: {
+    height: 55,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#DDD6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+
+  skipButtonText: {
+    color: '#6D5EF5',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
+  checkboxChecked: {
+  backgroundColor: '#7B68EE',
+  borderColor: '#7B68EE',
+},
+
+checkboxMark: {
+  color: '#FFF',
+  fontSize: 13,
+  fontWeight: 'bold',
+},
 });
