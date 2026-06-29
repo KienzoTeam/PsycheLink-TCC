@@ -6,7 +6,6 @@
   --font-sans: "Outfit", sans-serif;
   --font-serif: "Cormorant Garamond", serif;
 
-  /* Mocha */
   --color-mocha-rosewater: #f5e0dc;
   --color-mocha-flamingo: #f2cdcd;
   --color-mocha-pink: #f5c2e7;
@@ -34,7 +33,6 @@
   --color-mocha-mantle: #181825;
   --color-mocha-crust: #11111b;
 
-  /* Latte */
   --color-latte-rosewater: #dc8a78;
   --color-latte-flamingo: #dd7878;
   --color-latte-pink: #ea76cb;
@@ -62,22 +60,22 @@
   --color-latte-mantle: #e8ebf0;
   --color-latte-crust: #dce0e8;
 
-  /* Tokens semânticos — referenciam as variáveis do tema ativo */
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-primary: var(--primary);
   --color-text: var(--text);
   --color-subtext: var(--subtext);
 
-  /* Border radius M3 Expressive */
   --radius-sm: 0.5rem;
   --radius-md: 1rem;
   --radius-lg: 1.5rem;
   --radius-xl: 2rem;
   --radius-pill: 9999px;
+
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
 }
 
-/* ─── Tema escuro (padrão) ─── */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
@@ -88,7 +86,6 @@
   --subtext: var(--color-mocha-subtext1);
 }
 
-/* ─── Respeita preferência do sistema ─── */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     color-scheme: light;
@@ -98,4 +95,30 @@
     --text: var(--color-latte-text);
     --subtext: var(--color-latte-subtext1);
   }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
