@@ -3,10 +3,10 @@ import logoImg from "./assets/logo.png";
 
 type AuthMode = "login" | "register";
 
-const spring = "ease-[cubic-bezier(0.34,1.56,0.64,1)]";
-const smooth = "ease-[cubic-bezier(0.32,0.72,0,1)]";
+const spring = "ease-out-expo";
+const smooth = "ease-in-out-expo";
 
-function useReveal(threshold = 0.1) {
+function useReveal() {
   const ref = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
   useEffect(() => {
@@ -19,11 +19,11 @@ function useReveal(threshold = 0.1) {
           obs.disconnect();
         }
       },
-      { threshold },
+      { threshold: 0.1 },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [threshold]);
+  }, []);
   return { ref, show };
 }
 
@@ -41,7 +41,13 @@ function App() {
   const [height, setHeight] = useState(0);
 
   useEffect(() => {
-    if (contentRef.current) setHeight(contentRef.current.scrollHeight);
+    const el = contentRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(([entry]) => {
+      setHeight(entry.contentRect.height);
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
   }, [mode, errors]);
 
   const toggleMode = (m: AuthMode) => {
@@ -53,7 +59,8 @@ function App() {
     const errs: Record<string, string> = {};
     if (mode === "register" && !name.trim())
       errs.name = "Informe seu nome completo";
-    if (!email.includes("@")) errs.email = "Email inválido";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      errs.email = "Email inválido";
     if (password.length < 6) errs.password = "Mínimo de 6 caracteres";
     if (mode === "register" && password !== confirmPassword)
       errs.confirmPassword = "As senhas não conferem";
@@ -108,20 +115,20 @@ function App() {
       <main className="flex flex-1 items-center justify-center bg-background p-6">
         <div
           className="w-full max-w-sm"
-          style={{
-            animation:
-              "fadeSlideIn 0.9s cubic-bezier(0.32,0.72,0,1) 0.15s both",
-          }}
-        >
-          {/* Tab toggle with morph indicator */}
-          <div
-            className="relative mb-6 flex rounded-xl bg-surface p-1"
-            role="tablist"
-            aria-label="Modo de autenticação"
             style={{
               animation:
-                "fadeSlideIn 0.6s cubic-bezier(0.32,0.72,0,1) 0.25s both",
+                "fadeSlideIn 0.9s var(--ease-in-out-expo) 0.15s both",
             }}
+          >
+            {/* Tab toggle with morph indicator */}
+            <div
+              className="relative mb-6 flex rounded-xl bg-surface p-1"
+              role="tablist"
+              aria-label="Modo de autenticação"
+              style={{
+                animation:
+                  "fadeSlideIn 0.6s var(--ease-in-out-expo) 0.25s both",
+              }}
           >
             <div
               className={`absolute left-1 top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-lg bg-background shadow-xs transition-all duration-500 ${smooth} ${
@@ -157,7 +164,7 @@ function App() {
           {/* Form com altura animada */}
           <form onSubmit={handleSubmit} noValidate>
             <div
-              className="transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
+              className="transition-all duration-500 ease-in-out-expo"
               style={{ height: height ? `${height}px` : "auto" }}
             >
               <div className="space-y-4" key={mode} ref={contentRef}>
@@ -165,7 +172,7 @@ function App() {
                   <div
                     style={{
                       animation:
-                        "fadeSlideIn 0.5s cubic-bezier(0.32,0.72,0,1) 0.1s both",
+                        "fadeSlideIn 0.5s var(--ease-in-out-expo) 0.1s both",
                     }}
                   >
                     <label
@@ -194,7 +201,7 @@ function App() {
                 <div
                   style={{
                     animation:
-                      "fadeSlideIn 0.5s cubic-bezier(0.32,0.72,0,1) 0.2s both",
+                      "fadeSlideIn 0.5s var(--ease-in-out-expo) 0.2s both",
                   }}
                 >
                   <label
@@ -222,7 +229,7 @@ function App() {
                 <div
                   style={{
                     animation:
-                      "fadeSlideIn 0.5s cubic-bezier(0.32,0.72,0,1) 0.3s both",
+                      "fadeSlideIn 0.5s var(--ease-in-out-expo) 0.3s both",
                   }}
                 >
                   <label
@@ -254,7 +261,7 @@ function App() {
                     className="flex justify-end"
                     style={{
                       animation:
-                        "fadeSlideIn 0.5s cubic-bezier(0.32,0.72,0,1) 0.4s both",
+                        "fadeSlideIn 0.5s var(--ease-in-out-expo) 0.4s both",
                     }}
                   >
                     <button
@@ -270,7 +277,7 @@ function App() {
                   <div
                     style={{
                       animation:
-                        "fadeSlideIn 0.5s cubic-bezier(0.32,0.72,0,1) 0.4s both",
+                        "fadeSlideIn 0.5s var(--ease-in-out-expo) 0.4s both",
                     }}
                   >
                     <label
@@ -299,10 +306,10 @@ function App() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-mocha-base transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-mocha-base transition-all duration-500 ease-in-out-expo hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     animation:
-                      "fadeSlideIn 0.5s cubic-bezier(0.32,0.72,0,1) 0.5s both",
+                      "fadeSlideIn 0.5s var(--ease-in-out-expo) 0.5s both",
                   }}
                 >
                   {loading ? (
