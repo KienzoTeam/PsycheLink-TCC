@@ -1,9 +1,14 @@
-import React from 'react';
+import React , {useState} from 'react';
 import {View,Text,TextInput,TouchableOpacity,Image,} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient'; // Ou 'react-native-linear-gradient'
+import { useNavigation } from '@react-navigation/native'; 
 import { styles } from './styles';
 
 export default function Login() {
+  const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+
   return (
     <LinearGradient
     
@@ -36,6 +41,8 @@ export default function Login() {
           style={styles.input}
           placeholder="seu@email.com"
           placeholderTextColor="#a0a0a0"
+          value={email}
+          onChangeText={setEmail}
         />
 
         <Text style={styles.label}>Senha</Text>
@@ -43,6 +50,8 @@ export default function Login() {
           style={styles.input}
           placeholder="••••••••"
           placeholderTextColor="#a0a0a0"
+          value={senha}
+          onChangeText={setSenha}
           secureTextEntry
         />
 
@@ -59,8 +68,9 @@ export default function Login() {
         </TouchableOpacity>
 
         
-        <TouchableOpacity>
-          <Text style={styles.linkText}>
+        <TouchableOpacity onPress={() => navigation.navigate('Vinculacao')}>
+          <Text 
+            style={styles.linkText}>
             Vincular-se a um psicólogo
           </Text>
         </TouchableOpacity>
@@ -73,7 +83,10 @@ export default function Login() {
         </View>
 
         
-        <TouchableOpacity style={styles.registerButton}>
+        <TouchableOpacity 
+        style={styles.registerButton}
+        onPress={() => navigation.navigate('Registro')}
+        >
           <Text style={styles.registerButtonText}>
             Criar conta
           </Text>
