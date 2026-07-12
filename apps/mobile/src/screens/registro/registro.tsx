@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import { styles } from './styleRegistro';
 
-export default function Registro({ navigation }: any) {
+type Props = NativeStackScreenProps<RootStackParamList, 'Registro'>;
+
+export default function Registro({ navigation }: Props) {
   const [aceito, setAceito] = useState(false);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -41,7 +45,7 @@ export default function Registro({ navigation }: any) {
 
   return (
     <LinearGradient
-      colors={['#F5F2FF', '#EEF4FF']}
+      colors={['#eff1f5', '#e6e9ef']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
@@ -50,6 +54,10 @@ export default function Registro({ navigation }: any) {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backText}>{'< Voltar'}</Text>
+        </TouchableOpacity>
+
         <View style={styles.stepsContainer}>
           <View style={styles.activeStep}>
             <Text style={styles.stepNumber}>1</Text>
@@ -144,7 +152,7 @@ export default function Registro({ navigation }: any) {
 
         <TouchableOpacity onPress={handleContinuar}>
           <LinearGradient
-            colors={['#7B68EE', '#6957E8']}
+            colors={['#8839ef', '#7287fd']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.button}

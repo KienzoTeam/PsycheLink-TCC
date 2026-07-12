@@ -1,9 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import { styles } from './styleEsqueciSenha';
 
-export default function VerificarCodigo({ navigation, route }: any) {
+type Props = NativeStackScreenProps<RootStackParamList, 'VerificarCodigo'>;
+
+export default function VerificarCodigo({ navigation, route }: Props) {
   const { email } = route.params;
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const inputs = useRef<(TextInput | null)[]>([]);
@@ -28,7 +32,7 @@ export default function VerificarCodigo({ navigation, route }: any) {
 
   return (
     <LinearGradient
-      colors={['#F5F2FF', '#EEF4FF']}
+      colors={['#eff1f5', '#e6e9ef']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
@@ -79,7 +83,7 @@ export default function VerificarCodigo({ navigation, route }: any) {
 
         <TouchableOpacity onPress={handleVerificar}>
           <LinearGradient
-            colors={['#7B68EE', '#6957E8']}
+            colors={['#8839ef', '#7287fd']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.button}

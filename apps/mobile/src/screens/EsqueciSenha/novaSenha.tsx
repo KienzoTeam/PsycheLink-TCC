@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 import { styles } from './styleEsqueciSenha';
 
-export default function NovaSenha({ navigation }: any) {
+type Props = NativeStackScreenProps<RootStackParamList, 'NovaSenha'>;
+
+export default function NovaSenha({ navigation }: Props) {
   const [showSenha, setShowSenha] = useState(false);
   const [showConfirmar, setShowConfirmar] = useState(false);
   const [senha, setSenha] = useState('');
@@ -23,7 +27,7 @@ export default function NovaSenha({ navigation }: any) {
 
   return (
     <LinearGradient
-      colors={['#F5F2FF', '#EEF4FF']}
+      colors={['#eff1f5', '#e6e9ef']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{ flex: 1 }}
@@ -89,7 +93,7 @@ export default function NovaSenha({ navigation }: any) {
 
         <TouchableOpacity onPress={handleRedefinir}>
           <LinearGradient
-            colors={['#7B68EE', '#6957E8']}
+            colors={['#8839ef', '#7287fd']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.button}

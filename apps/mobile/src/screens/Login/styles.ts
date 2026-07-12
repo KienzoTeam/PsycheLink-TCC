@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   container: {
@@ -17,12 +17,12 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: '700',
-    color: '#2d2d44',
+    color: '#4c4f69',
   },
 
   subtitle: {
     fontSize: 18,
-    color: '#6b7280',
+    color: '#6c6f85',
     marginBottom: 30,
   },
 
@@ -31,7 +31,6 @@ export const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 30,
     padding: 25,
-
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -44,7 +43,7 @@ export const styles = StyleSheet.create({
 
   label: {
     fontSize: 15,
-    color: '#3f3f46',
+    color: '#4c4f69',
     marginBottom: 8,
     fontWeight: '500',
   },
@@ -52,11 +51,11 @@ export const styles = StyleSheet.create({
   input: {
     height: 55,
     borderWidth: 1,
-    borderColor: '#d7c8ff',
+    borderColor: '#bcc0cc',
     borderRadius: 15,
     paddingHorizontal: 18,
     marginBottom: 18,
-    backgroundColor: '#fafafa',
+    backgroundColor: '#e6e9ef',
     fontSize: 15,
   },
 
@@ -77,7 +76,7 @@ export const styles = StyleSheet.create({
   linkText: {
     textAlign: 'center',
     marginTop: 22,
-    color: '#6c63ff',
+    color: '#8839ef',
     fontWeight: '600',
   },
 
@@ -90,25 +89,25 @@ export const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: '#d6d6d6',
+    backgroundColor: '#ccd0da',
   },
 
   separatorText: {
     marginHorizontal: 10,
-    color: '#777',
+    color: '#9ca0b0',
   },
 
   registerButton: {
     height: 55,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: '#6c63ff',
+    borderColor: '#8839ef',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   registerButtonText: {
-    color: '#6c63ff',
+    color: '#8839ef',
     fontSize: 17,
     fontWeight: '700',
   },
@@ -116,13 +115,9 @@ export const styles = StyleSheet.create({
   footer: {
     marginTop: 25,
     textAlign: 'center',
-    color: '#6b7280',
+    color: '#6c6f85',
     fontSize: 12,
     paddingHorizontal: 20,
     lineHeight: 18,
   },
 });
-
-
-
-
