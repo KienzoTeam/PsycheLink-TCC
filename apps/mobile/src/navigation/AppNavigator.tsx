@@ -1,13 +1,24 @@
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
 import Login from '../screens/Login/login';
 import Registro from '../screens/registro/registro';
 import EsqueciSenha from '../screens/EsqueciSenha/esqueciSenha';
 import VerificarCodigo from '../screens/EsqueciSenha/verificarCodigo';
 import NovaSenha from '../screens/EsqueciSenha/novaSenha';
 import Vinculacao from '../screens/registro/vinculacao';
+import Home from '../screens/Home/home';
 
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Login: undefined;
+  Registro: undefined;
+  Vinculacao: undefined;
+  Home: undefined;  
+  EsqueciSenha: undefined;
+  VerificarCodigo: { email: string };
+  NovaSenha: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   return (
@@ -22,6 +33,7 @@ export default function AppNavigator() {
         <Stack.Screen name="VerificarCodigo" component={VerificarCodigo} />
         <Stack.Screen name="NovaSenha" component={NovaSenha} />
         <Stack.Screen name="Vinculacao" component={Vinculacao} />
+         <Stack.Screen name="Home" component={Home} />
       </Stack.Navigator>
     </NavigationContainer>
   );
