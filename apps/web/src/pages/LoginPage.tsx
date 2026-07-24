@@ -1,5 +1,5 @@
-import { AuthLayout } from "../components/features/auth/AuthLayout";
+import { AuthForm } from "../components/features/auth/AuthForm";
 
 export function LoginPage() {
-  return <AuthLayout mode="login" />;
+  return <AuthForm mode="login" />;
 }
