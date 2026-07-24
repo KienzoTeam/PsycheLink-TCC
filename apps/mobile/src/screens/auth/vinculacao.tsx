@@ -5,7 +5,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useTheme } from '../../theme/ThemeContext';
 import CustomInput from '../../components/ui/CustomInput';
 import CustomButton from '../../components/ui/CustomButton';
-import { styles } from './styleRegistro';
+import { styles } from './registroStyles';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Vinculacao'>;
 
