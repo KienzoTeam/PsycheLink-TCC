@@ -8,7 +8,7 @@ import { useTheme } from "../../theme/ThemeContext";
 import CustomInput from "../../components/ui/CustomInput";
 import PasswordInput from "../../components/ui/PasswordInput";
 import CustomButton from "../../components/ui/CustomButton";
-import { styles } from "./styles";
+import { styles } from "./loginStyles";
 
 type LoginNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
