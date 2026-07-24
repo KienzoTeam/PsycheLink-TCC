@@ -34,7 +34,7 @@ export default function BottomNavBar({ navigation, telaAtual }: Props) {
               <Feather
                 name={item.icone}
                 size={22}
-                color={ativo ? '#7B68EE' : '#B8AEDF'}
+                color={ativo ? '#8839ef' : '#9ca0b0'}
               />
             </View>
             <Text style={[styles.label, ativo && styles.labelAtivo]}>
@@ -55,8 +55,8 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     paddingHorizontal: 4,
     borderTopWidth: 1,
-    borderTopColor: '#F0EEFF',
-    shadowColor: '#7B68EE',
+    borderTopColor: '#e6e9ef',
+    shadowColor: '#8839ef',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
@@ -75,15 +75,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconContainerAtivo: {
-    backgroundColor: '#F0EEFF',
+    backgroundColor: '#e6e9ef',
   },
   label: {
     fontSize: 11,
-    color: '#B8AEDF',
+    color: '#9ca0b0',
     fontWeight: '500',
   },
   labelAtivo: {
-    color: '#7B68EE',
+    color: '#8839ef',
     fontWeight: '700',
   },
 });

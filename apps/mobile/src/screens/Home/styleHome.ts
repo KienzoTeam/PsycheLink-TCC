@@ -55,9 +55,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkinIcon: {
-    fontSize: 20,
-  },
   checkinTextContainer: {
     flex: 1,
   },
@@ -70,11 +67,6 @@ export const styles = StyleSheet.create({
     color: '#D8D0FF',
     fontSize: 13,
     marginTop: 2,
-  },
-  checkinArrow: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   content: {
     padding: 20,
@@ -90,7 +82,7 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     width: '47%',
-    shadowColor: '#7B68EE',
+    shadowColor: '#8839ef',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -102,13 +94,13 @@ export const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 13,
-    color: '#7D74A5',
+    color: '#6c6f85',
     marginBottom: 4,
   },
   metricValue: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#2D2154',
+    color: '#4c4f69',
     marginBottom: 4,
   },
   metricTrend: {
@@ -117,13 +109,13 @@ export const styles = StyleSheet.create({
   },
   metricQuality: {
     fontSize: 12,
-    color: '#7D74A5',
+    color: '#6c6f85',
   },
   card: {
     backgroundColor: '#FFF',
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#7B68EE',
+    shadowColor: '#8839ef',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -135,13 +127,10 @@ export const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 16,
   },
-  cardHeaderIcon: {
-    fontSize: 18,
-  },
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#2D2154',
+    color: '#4c4f69',
   },
   emocoesContainer: {
     flexDirection: 'row',
@@ -149,29 +138,29 @@ export const styles = StyleSheet.create({
     gap: 8,
   },
   emocaoTag: {
-    backgroundColor: '#F0EEFF',
+    backgroundColor: '#e6e9ef',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   emocaoText: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     fontSize: 14,
     fontWeight: '500',
   },
   percepcaoItem: {
-    backgroundColor: '#F8F7FF',
+    backgroundColor: '#e6e9ef',
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
   },
   percepcaoText: {
-    color: '#4A4270',
+    color: '#4c4f69',
     fontSize: 14,
     lineHeight: 22,
   },
   sugestaoCard: {
-    backgroundColor: '#F0EEFF',
+    backgroundColor: '#e6e9ef',
     borderRadius: 20,
     padding: 16,
     flexDirection: 'row',
@@ -179,8 +168,13 @@ export const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 30,
   },
-  sugestaoEmoji: {
-    fontSize: 36,
+  sugestaoIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sugestaoTextContainer: {
     flex: 1,
@@ -188,11 +182,11 @@ export const styles = StyleSheet.create({
   sugestaoTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#2D2154',
+    color: '#4c4f69',
   },
   sugestaoSubtitle: {
     fontSize: 13,
-    color: '#7D74A5',
+    color: '#6c6f85',
     marginTop: 2,
   },
 });

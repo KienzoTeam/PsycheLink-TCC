@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#7B68EE',
+    backgroundColor: '#8839ef',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -25,7 +25,7 @@ export const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E5DFFF',
+    backgroundColor: '#ccd0da',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -38,7 +38,7 @@ export const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 2,
-    backgroundColor: '#D8D0FF',
+    backgroundColor: '#ccd0da',
   },
 
   stepLabelContainer: {
@@ -50,12 +50,12 @@ export const styles = StyleSheet.create({
   },
 
   activeLabel: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     fontWeight: '600',
   },
 
   inactiveLabel: {
-    color: '#B8AEDF',
+    color: '#9ca0b0',
   },
 
   logo: {
@@ -68,7 +68,7 @@ export const styles = StyleSheet.create({
   logoText: {
     textAlign: 'center',
     fontSize: 28,
-    color: '#2D2154',
+    color: '#4c4f69',
     marginTop: 10,
     fontWeight: '600',
   },
@@ -77,14 +77,14 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 40,
     fontWeight: 'bold',
-    color: '#2D2154',
+    color: '#4c4f69',
     marginTop: 20,
   },
 
   subtitle: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#7D74A5',
+    color: '#6c6f85',
     marginTop: 10,
     lineHeight: 24,
     marginBottom: 30,
@@ -93,7 +93,7 @@ export const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#2D2154',
+    color: '#4c4f69',
     marginBottom: 8,
     marginTop: 10,
   },
@@ -103,7 +103,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#DDD6FF',
+    borderColor: '#bcc0cc',
     paddingHorizontal: 16,
     fontSize: 15,
   },
@@ -120,20 +120,20 @@ export const styles = StyleSheet.create({
     height: 20,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: '#B8AEDF',
+    borderColor: '#9ca0b0',
     marginTop: 2,
     marginRight: 10,
   },
 
   termsText: {
     flex: 1,
-    color: '#6E6792',
+    color: '#6c6f85',
     fontSize: 14,
     lineHeight: 22,
   },
 
   link: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     textDecorationLine: 'underline',
   },
 
@@ -157,7 +157,7 @@ export const styles = StyleSheet.create({
   },
 
   backText: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     fontSize: 16,
   },
 
@@ -173,13 +173,13 @@ export const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#DDD6FF',
+    backgroundColor: '#ccd0da',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   vinculacaoCircleAlt: {
-    backgroundColor: '#C8E6FF',
+    backgroundColor: '#bcc0cc',
   },
 
   vinculacaoIcon: {
@@ -188,12 +188,12 @@ export const styles = StyleSheet.create({
 
   vinculacaoArrow: {
     fontSize: 24,
-    color: '#6D5EF5',
+    color: '#8839ef',
   },
 
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#F0EEFF',
+    backgroundColor: '#e6e9ef',
     borderRadius: 14,
     padding: 14,
     marginBottom: 24,
@@ -207,7 +207,7 @@ export const styles = StyleSheet.create({
 
   infoText: {
     flex: 1,
-    color: '#6E6792',
+    color: '#6c6f85',
     fontSize: 13,
     lineHeight: 20,
   },
@@ -217,17 +217,17 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: 4,
-    color: '#2D2154',
+    color: '#4c4f69',
   },
 
   emailLinkContainer: {
     alignItems: 'center',
     marginBottom: 20,
-    marginTop: -10,
+    marginTop: 20,
   },
 
   emailLink: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -236,26 +236,26 @@ export const styles = StyleSheet.create({
     height: 55,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#DDD6FF',
+    borderColor: '#ccd0da',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 12,
   },
 
   skipButtonText: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     fontSize: 16,
     fontWeight: '500',
   },
 
   checkboxChecked: {
-  backgroundColor: '#7B68EE',
-  borderColor: '#7B68EE',
-},
+    backgroundColor: '#1e66f5',
+    borderColor: '#1e66f5',
+  },
 
-checkboxMark: {
-  color: '#FFF',
-  fontSize: 13,
-  fontWeight: 'bold',
-},
+  checkboxMark: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: 'bold',
+  },
 });

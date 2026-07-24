@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
   },
 
   backText: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     fontSize: 16,
     marginLeft: 4,
   },
@@ -32,14 +32,14 @@ export const styles = StyleSheet.create({
     width: 24,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#DDD6FF',
+    backgroundColor: '#ccd0da',
   },
 
   stepDotActive: {
     width: 24,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#6D5EF5',
+    backgroundColor: '#8839ef',
   },
 
   logo: {
@@ -52,7 +52,7 @@ export const styles = StyleSheet.create({
   logoText: {
     textAlign: 'center',
     fontSize: 20,
-    color: '#2D2154',
+    color: '#4c4f69',
     fontWeight: '600',
     marginBottom: 24,
   },
@@ -61,7 +61,7 @@ export const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: '#EEE9FF',
+    backgroundColor: '#e6e9ef',
     alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',
@@ -76,27 +76,27 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#2D2154',
+    color: '#4c4f69',
     marginBottom: 12,
   },
 
   subtitle: {
     textAlign: 'center',
     fontSize: 15,
-    color: '#7D74A5',
+    color: '#6c6f85',
     lineHeight: 22,
     marginBottom: 30,
   },
 
   emailHighlight: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     fontWeight: '600',
   },
 
   label: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#2D2154',
+    color: '#4c4f69',
     marginBottom: 8,
     letterSpacing: 0.5,
   },
@@ -106,7 +106,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#DDD6FF',
+    borderColor: '#bcc0cc',
     paddingHorizontal: 16,
     fontSize: 15,
     marginBottom: 20,
@@ -126,7 +126,6 @@ export const styles = StyleSheet.create({
     fontSize: 17,
   },
 
-  
   codeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -138,22 +137,22 @@ export const styles = StyleSheet.create({
     height: 56,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#DDD6FF',
+    borderColor: '#bcc0cc',
     backgroundColor: '#FFF',
     textAlign: 'center',
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#2D2154',
+    color: '#4c4f69',
   },
 
   codeInputActive: {
-    borderColor: '#6D5EF5',
+    borderColor: '#8839ef',
   },
 
   demoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F0EEFF',
+    backgroundColor: '#e6e9ef',
     borderRadius: 12,
     padding: 12,
     marginBottom: 20,
@@ -161,7 +160,7 @@ export const styles = StyleSheet.create({
   },
 
   demoText: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     fontSize: 14,
   },
 
@@ -177,17 +176,16 @@ export const styles = StyleSheet.create({
   },
 
   resendText: {
-    color: '#7D74A5',
+    color: '#6c6f85',
     fontSize: 14,
   },
 
   resendLink: {
-    color: '#6D5EF5',
+    color: '#8839ef',
     fontSize: 14,
     fontWeight: '600',
   },
 
- 
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -195,7 +193,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#DDD6FF',
+    borderColor: '#bcc0cc',
     paddingHorizontal: 16,
     marginBottom: 20,
   },
@@ -203,7 +201,7 @@ export const styles = StyleSheet.create({
   inputFlex: {
     flex: 1,
     fontSize: 15,
-    color: '#2D2154',
+    color: '#4c4f69',
   },
 
   eyeText: {
