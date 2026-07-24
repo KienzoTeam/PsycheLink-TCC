@@ -2,18 +2,11 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
 import Home from '../screens/Home/home';
+import Checkin from '../screens/Checkin/checkin';
+import Dados from '../screens/Dados/dados';
+import Chat from '../screens/Chat/chat';
+import SOS from '../screens/SOS/sos';
 import { useTheme } from '../theme/ThemeContext';
-import { View, Text } from 'react-native';
-
-// Placeholders para telas futuras
-const Placeholder = ({ name }: { name: string }) => {
-  const { theme } = useTheme();
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
-      <Text style={{ color: theme.colors.onBackground }}>{name} Screen</Text>
-    </View>
-  );
-};
 
 export type MainTabParamList = {
   Home: undefined;
@@ -61,22 +54,22 @@ export default function MainTabNavigator() {
       />
       <Tab.Screen 
         name="Checkin" 
-        component={() => <Placeholder name="Check-in" />} 
+        component={Checkin} 
         options={{ tabBarLabel: 'Check-in' }}
       />
       <Tab.Screen 
         name="Dados" 
-        component={() => <Placeholder name="Dados" />} 
+        component={Dados} 
         options={{ tabBarLabel: 'Dados' }}
       />
       <Tab.Screen 
         name="Chat" 
-        component={() => <Placeholder name="Chat" />} 
+        component={Chat} 
         options={{ tabBarLabel: 'Chat' }}
       />
       <Tab.Screen 
         name="SOS" 
-        component={() => <Placeholder name="SOS" />} 
+        component={SOS} 
         options={{ tabBarLabel: 'SOS' }}
       />
     </Tab.Navigator>

@@ -1,108 +1,66 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { useTheme } from '../../theme/ThemeContext';
+import PasswordInput from '../../components/Input/PasswordInput';
+import CustomButton from '../../components/Button/CustomButton';
 import { styles } from './styleEsqueciSenha';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NovaSenha'>;
 
 export default function NovaSenha({ navigation }: Props) {
-  const [showSenha, setShowSenha] = useState(false);
-  const [showConfirmar, setShowConfirmar] = useState(false);
+  const { theme } = useTheme();
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
 
   const handleRedefinir = () => {
-    if (!senha.trim() || senha.length < 8) {
-      Alert.alert('Erro', 'A senha deve ter no mínimo 8 caracteres.');
-      return;
-    }
-    if (senha !== confirmarSenha) {
-      Alert.alert('Erro', 'As senhas não coincidem.');
+    if (senha.length < 8 || senha !== confirmarSenha) {
       return;
     }
     navigation.navigate('Login');
   };
 
   return (
-    <LinearGradient
-      colors={['#eff1f5', '#e6e9ef']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
+    <ScrollView 
+      style={{ backgroundColor: theme.colors.background }}
+      contentContainerStyle={styles.container} 
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={[styles.backText, { color: theme.colors.primary }]}>{'< Voltar'}</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>{'< Voltar'}</Text>
-        </TouchableOpacity>
+      <View style={styles.stepsContainer}>
+        <View style={[styles.stepDot, { backgroundColor: theme.colors.primary }]} />
+        <View style={[styles.stepDot, { backgroundColor: theme.colors.primary }]} />
+        <View style={[styles.stepDotActive, { backgroundColor: theme.colors.primary }]} />
+      </View>
 
-        <View style={styles.stepsContainer}>
-          <View style={styles.stepDot} />
-          <View style={styles.stepDot} />
-          <View style={styles.stepDotActive} />
-        </View>
+      <Text style={[styles.title, { color: theme.colors.onBackground }]}>Nova senha</Text>
 
-        <Image
-          source={require('../../assets/Psychelink.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.logoText}>PsycheLink</Text>
+      <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+        Escolha uma senha segura para proteger sua conta.
+      </Text>
 
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>🔒</Text>
-        </View>
+      <PasswordInput
+        label="NOVA SENHA"
+        placeholder="Mínimo 8 caracteres"
+        value={senha}
+        onChangeText={setSenha}
+      />
 
-        <Text style={styles.title}>Nova senha</Text>
+      <PasswordInput
+        label="CONFIRMAR SENHA"
+        placeholder="Repita a nova senha"
+        value={confirmarSenha}
+        onChangeText={setConfirmarSenha}
+      />
 
-        <Text style={styles.subtitle}>
-          Escolha uma senha segura para proteger sua conta.
-        </Text>
-
-        <Text style={styles.label}>NOVA SENHA</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.inputFlex}
-            placeholder="Mínimo 8 caracteres"
-            placeholderTextColor="#a0a0a0"
-            secureTextEntry={!showSenha}
-            value={senha}
-            onChangeText={setSenha}
-          />
-          <TouchableOpacity onPress={() => setShowSenha(!showSenha)}>
-            <Text style={styles.eyeText}>{showSenha ? '◉' : '◎'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.label}>CONFIRMAR SENHA</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.inputFlex}
-            placeholder="Repita a nova senha"
-            placeholderTextColor="#a0a0a0"
-            secureTextEntry={!showConfirmar}
-            value={confirmarSenha}
-            onChangeText={setConfirmarSenha}
-          />
-          <TouchableOpacity onPress={() => setShowConfirmar(!showConfirmar)}>
-            <Text style={styles.eyeText}>{showConfirmar ? '◉' : '◎'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity onPress={handleRedefinir}>
-          <LinearGradient
-            colors={['#8839ef', '#7287fd']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>Redefinir senha</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-      </ScrollView>
-    </LinearGradient>
+      <CustomButton
+        title="Redefinir senha"
+        onPress={handleRedefinir}
+      />
+    </ScrollView>
   );
 }

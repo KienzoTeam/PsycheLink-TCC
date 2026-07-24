@@ -1,13 +1,15 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { useTheme } from '../../theme/ThemeContext';
+import CustomButton from '../../components/Button/CustomButton';
 import { styles } from './styleEsqueciSenha';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VerificarCodigo'>;
 
 export default function VerificarCodigo({ navigation, route }: Props) {
+  const { theme } = useTheme();
   const { email } = route.params;
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const inputs = useRef<(TextInput | null)[]>([]);
@@ -24,86 +26,71 @@ export default function VerificarCodigo({ navigation, route }: Props) {
   const handleVerificar = () => {
     const codigoCompleto = code.join('');
     if (codigoCompleto.length < 6) {
-      Alert.alert('Erro', 'Informe o código completo de 6 dígitos.');
       return;
     }
     navigation.navigate('NovaSenha');
   };
 
   return (
-    <LinearGradient
-      colors={['#eff1f5', '#e6e9ef']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
+    <ScrollView 
+      style={{ backgroundColor: theme.colors.background }}
+      contentContainerStyle={styles.container} 
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={[styles.backText, { color: theme.colors.primary }]}>{'< Voltar'}</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>{'< Voltar'}</Text>
+      <View style={styles.stepsContainer}>
+        <View style={[styles.stepDot, { backgroundColor: theme.colors.primary }]} />
+        <View style={[styles.stepDotActive, { backgroundColor: theme.colors.primary }]} />
+        <View style={[styles.stepDot, { backgroundColor: theme.colors.outline }]} />
+      </View>
+
+      <Text style={[styles.title, { color: theme.colors.onBackground }]}>Verifique seu e-mail</Text>
+
+      <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+        Enviamos um código de 6 dígitos para{'\n'}
+        <Text style={[styles.emailHighlight, { color: theme.colors.onBackground }]}>{email}</Text>
+      </Text>
+
+      <View style={styles.codeContainer}>
+        {code.map((digit, index) => (
+          <TextInput
+            key={index}
+            ref={ref => { inputs.current[index] = ref; }}
+            style={[
+              styles.codeInput, 
+              { 
+                backgroundColor: theme.colors.surface, 
+                borderColor: digit ? theme.colors.primary : theme.colors.outline,
+                color: theme.colors.onSurface
+              },
+              digit ? styles.codeInputActive : null
+            ]}
+            maxLength={1}
+            keyboardType="number-pad"
+            value={digit}
+            onChangeText={text => handleChange(text, index)}
+          />
+        ))}
+      </View>
+
+      <CustomButton
+        title="Verificar código"
+        onPress={handleVerificar}
+      />
+
+      <View style={[styles.demoBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
+        <Text style={[styles.demoText, { color: theme.colors.onSurfaceVariant }]}>ℹ️ Demonstração: use o código <Text style={[styles.demoCode, { color: theme.colors.onSurface }]}>847291</Text></Text>
+      </View>
+
+      <View style={styles.resendContainer}>
+        <Text style={[styles.resendText, { color: theme.colors.onSurfaceVariant }]}>Não recebeu?</Text>
+        <TouchableOpacity>
+          <Text style={[styles.resendLink, { color: theme.colors.primary }]}>🔄 Reenviar código</Text>
         </TouchableOpacity>
-
-        <View style={styles.stepsContainer}>
-          <View style={styles.stepDot} />
-          <View style={styles.stepDotActive} />
-          <View style={styles.stepDot} />
-        </View>
-
-        <Image
-          source={require('../../assets/Psychelink.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.logoText}>PsycheLink</Text>
-
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>📨</Text>
-        </View>
-
-        <Text style={styles.title}>Verifique seu e-mail</Text>
-
-        <Text style={styles.subtitle}>
-          Enviamos um código de 6 dígitos para{'\n'}
-          <Text style={styles.emailHighlight}>{email}</Text>
-        </Text>
-
-        <View style={styles.codeContainer}>
-          {code.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={ref => { inputs.current[index] = ref; }}
-              style={[styles.codeInput, digit ? styles.codeInputActive : null]}
-              maxLength={1}
-              keyboardType="number-pad"
-              value={digit}
-              onChangeText={text => handleChange(text, index)}
-            />
-          ))}
-        </View>
-
-        <TouchableOpacity onPress={handleVerificar}>
-          <LinearGradient
-            colors={['#8839ef', '#7287fd']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>Verificar código</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <View style={styles.demoBox}>
-          <Text style={styles.demoText}>ℹ️ Demonstração: use o código <Text style={styles.demoCode}>847291</Text></Text>
-        </View>
-
-        <View style={styles.resendContainer}>
-          <Text style={styles.resendText}>Não recebeu?</Text>
-          <TouchableOpacity>
-            <Text style={styles.resendLink}>🔄 Reenviar código</Text>
-          </TouchableOpacity>
-        </View>
-
-      </ScrollView>
-    </LinearGradient>
+      </View>
+    </ScrollView>
   );
 }

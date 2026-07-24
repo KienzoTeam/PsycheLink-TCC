@@ -1,86 +1,60 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { useTheme } from '../../theme/ThemeContext';
+import CustomInput from '../../components/Input/CustomInput';
+import CustomButton from '../../components/Button/CustomButton';
 import { styles } from './styleEsqueciSenha';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EsqueciSenha'>;
 
 export default function EsqueciSenha({ navigation }: Props) {
+  const { theme, isDark } = useTheme();
   const [email, setEmail] = useState('');
 
   const handleEnviar = () => {
-    if (!email.trim()) {
-      Alert.alert('Erro', 'Informe seu e-mail.');
-      return;
-    }
-    if (!email.includes('@')) {
-      Alert.alert('Erro', 'Informe um e-mail válido.');
+    if (!email.trim() || !email.includes('@')) {
       return;
     }
     navigation.navigate('VerificarCodigo', { email });
   };
 
   return (
-    <LinearGradient
-      colors={['#eff1f5', '#e6e9ef']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ flex: 1 }}
+    <ScrollView 
+      style={{ backgroundColor: theme.colors.background }}
+      contentContainerStyle={styles.container} 
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Login')}>
+        <Text style={[styles.backText, { color: theme.colors.primary }]}>{'< Entrar'}</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.backText}>{'< Entrar'}</Text>
-        </TouchableOpacity>
+      <View style={styles.stepsContainer}>
+        <View style={[styles.stepDotActive, { backgroundColor: theme.colors.primary }]} />
+        <View style={[styles.stepDot, { backgroundColor: theme.colors.outline }]} />
+        <View style={[styles.stepDot, { backgroundColor: theme.colors.outline }]} />
+      </View>
 
-        <View style={styles.stepsContainer}>
-          <View style={styles.stepDotActive} />
-          <View style={styles.stepDot} />
-          <View style={styles.stepDot} />
-        </View>
+      <Text style={[styles.title, { color: theme.colors.onBackground }]}>Esqueceu sua senha?</Text>
 
-        <Image
-          source={require('../../assets/Psychelink.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.logoText}>PsycheLink</Text>
+      <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+        Sem problemas. Informe seu e-mail e enviaremos um código para redefinir sua senha.
+      </Text>
 
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>✉️</Text>
-        </View>
+      <CustomInput
+        label="SEU E-MAIL"
+        placeholder="ana@email.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        value={email}
+        onChangeText={setEmail}
+      />
 
-        <Text style={styles.title}>Esqueceu sua senha?</Text>
-
-        <Text style={styles.subtitle}>
-          Sem problemas. Informe seu e-mail e enviaremos um código para redefinir sua senha.
-        </Text>
-
-        <Text style={styles.label}>SEU E-MAIL</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="ana@email.com"
-          placeholderTextColor="#a0a0a0"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
-        />
-
-        <TouchableOpacity onPress={handleEnviar}>
-          <LinearGradient
-            colors={['#8839ef', '#7287fd']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>Enviar código</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-      </ScrollView>
-    </LinearGradient>
+      <CustomButton
+        title="Enviar código"
+        onPress={handleEnviar}
+      />
+    </ScrollView>
   );
 }
