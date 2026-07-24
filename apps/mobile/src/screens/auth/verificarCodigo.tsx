@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import { useTheme } from '../../theme/ThemeContext';
-import CustomButton from '../../components/Button/CustomButton';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
+import { useTheme } from '../../../theme/ThemeContext';
+import CustomButton from '../../../components/ui/CustomButton';
 import { styles } from './styleEsqueciSenha';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'VerificarCodigo'>;

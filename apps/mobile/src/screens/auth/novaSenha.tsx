@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import { useTheme } from '../../theme/ThemeContext';
-import PasswordInput from '../../components/Input/PasswordInput';
-import CustomButton from '../../components/Button/CustomButton';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
+import { useTheme } from '../../../theme/ThemeContext';
+import PasswordInput from '../../../components/ui/PasswordInput';
+import CustomButton from '../../../components/ui/CustomButton';
 import { styles } from './styleEsqueciSenha';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NovaSenha'>;

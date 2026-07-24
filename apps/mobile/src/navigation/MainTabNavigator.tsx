@@ -1,11 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
-import Home from '../screens/Home/home';
-import Checkin from '../screens/Checkin/checkin';
-import Dados from '../screens/Dados/dados';
-import Chat from '../screens/Chat/chat';
-import SOS from '../screens/SOS/sos';
+import Home from '../screens/paciente/dashboard/home';
+import Checkin from '../screens/paciente/checkin/checkin';
+import Dados from '../screens/paciente/dashboard/dados';
+import Chat from '../screens/paciente/chat/chat';
+import SOS from '../screens/paciente/sos/sos';
 import { useTheme } from '../theme/ThemeContext';
 
 export type MainTabParamList = {

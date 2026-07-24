@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import { useTheme } from '../../theme/ThemeContext';
-import CustomInput from '../../components/Input/CustomInput';
-import CustomButton from '../../components/Button/CustomButton';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
+import { useTheme } from '../../../theme/ThemeContext';
+import CustomInput from '../../../components/ui/CustomInput';
+import CustomButton from '../../../components/ui/CustomButton';
 import { styles } from './styleRegistro';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Vinculacao'>;

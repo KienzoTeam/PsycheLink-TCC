@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/screen-stack';
-import { RootStackParamList } from '../../navigation/AppNavigator';
-import { useAuth } from '../../hooks/useAuth';
-import { useTheme } from '../../theme/ThemeContext';
-import CustomInput from '../../components/Input/CustomInput';
-import PasswordInput from '../../components/Input/PasswordInput';
-import CustomButton from '../../components/Button/CustomButton';
+import { RootStackParamList } from '../../../navigation/AppNavigator';
+import { useAuth } from '../../../hooks/useAuth';
+import { useTheme } from '../../../theme/ThemeContext';
+import CustomInput from '../../../components/ui/CustomInput';
+import PasswordInput from '../../../components/ui/PasswordInput';
+import CustomButton from '../../../components/ui/CustomButton';
 import { styles } from './styleRegistro';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Registro'>;

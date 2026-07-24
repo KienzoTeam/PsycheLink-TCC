@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../navigation/AppNavigator";
-import { useAuth } from "../../hooks/useAuth";
-import { useTheme } from "../../theme/ThemeContext";
-import CustomInput from "../../components/Input/CustomInput";
-import PasswordInput from "../../components/Input/PasswordInput";
-import CustomButton from "../../components/Button/CustomButton";
+import { RootStackParamList } from "../../../navigation/AppNavigator";
+import { useAuth } from "../../../hooks/useAuth";
+import { useTheme } from "../../../theme/ThemeContext";
+import CustomInput from "../../../components/ui/CustomInput";
+import PasswordInput from "../../../components/ui/PasswordInput";
+import CustomButton from "../../../components/ui/CustomButton";
 import { styles } from "./styles";
 
 type LoginNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
