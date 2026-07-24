@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { useTheme } from '../../../../theme/ThemeContext';
+import { useTheme } from '../../../theme/ThemeContext';
 import CustomButton from '../../../components/ui/CustomButton';
 import { styles } from './styleCheckin';
 

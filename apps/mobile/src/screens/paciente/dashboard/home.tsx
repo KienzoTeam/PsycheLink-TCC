@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-import { useTheme } from '../../../../theme/ThemeContext';
+import { useTheme } from '../../../theme/ThemeContext';
 import { styles } from './styleHome';
 
 const getGreeting = () => {
