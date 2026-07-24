@@ -1,58 +1,63 @@
 import React from 'react';
-import { TextInput as RNTextInput, Text, StyleSheet, View, KeyboardTypeOptions } from 'react-native';
+import { 
+  TextInput as RNTextInput, 
+  Text, 
+  StyleSheet, 
+  View, 
+  KeyboardTypeOptions,
+  TextInputProps 
+} from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
 
-interface Props {
+interface Props extends TextInputProps {
   label: string;
-  placeholder: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  secureTextEntry?: boolean;
-  keyboardType?: KeyboardTypeOptions;
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 }
 
 export default function CustomInput({
   label,
-  placeholder,
-  value,
-  onChangeText,
-  secureTextEntry = false,
-  keyboardType = 'default',
-  autoCapitalize = 'sentences',
+  style,
+  ...rest
 }: Props) {
+  const { theme } = useTheme();
+
   return (
-    <View>
-      <Text style={styles.label}>{label}</Text>
+    <View style={styles.container}>
+      <Text style={[styles.label, { color: theme.colors.onSurface }]}>
+        {label}
+      </Text>
       <RNTextInput
-        style={styles.input}
-        placeholder={placeholder}
-        placeholderTextColor="#a0a0a0"
-        value={value}
-        onChangeText={onChangeText}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
+        style={[
+          styles.input, 
+          { 
+            backgroundColor: theme.colors.surface,
+            color: theme.colors.onSurface,
+            borderColor: theme.colors.outline,
+            borderRadius: theme.borderRadius.lg
+          },
+          style
+        ]}
+        placeholderTextColor={theme.colors.onSurfaceVariant}
+        {...rest}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+    width: '100%',
+  },
   label: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#2D2154',
     marginBottom: 8,
-    marginTop: 10,
+    marginLeft: 4,
   },
   input: {
-    height: 55,
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#DDD6FF',
+    height: 56,
+    borderWidth: 1.5,
     paddingHorizontal: 16,
-    fontSize: 15,
-    marginBottom: 4,
+    fontSize: 16,
   },
 });
