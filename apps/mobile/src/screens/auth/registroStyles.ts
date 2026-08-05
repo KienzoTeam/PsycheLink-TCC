@@ -16,7 +16,6 @@ export const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#8839ef',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -25,7 +24,6 @@ export const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#ccd0da',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -38,7 +36,6 @@ export const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 2,
-    backgroundColor: '#ccd0da',
   },
 
   stepLabelContainer: {
@@ -50,62 +47,38 @@ export const styles = StyleSheet.create({
   },
 
   activeLabel: {
-    color: '#8839ef',
     fontWeight: '600',
   },
 
   inactiveLabel: {
-    color: '#9ca0b0',
   },
 
   logo: {
-    width: 120,
-    height: 120,
+    width: 80,
+    height: 80,
     alignSelf: 'center',
-    marginBottom: 10,
   },
 
   logoText: {
     textAlign: 'center',
-    fontSize: 28,
-    color: '#4c4f69',
-    marginTop: 10,
+    fontSize: 24,
+    marginTop: 8,
     fontWeight: '600',
   },
 
   title: {
     textAlign: 'center',
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#4c4f69',
     marginTop: 20,
   },
 
   subtitle: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#6c6f85',
     marginTop: 10,
     lineHeight: 24,
     marginBottom: 30,
-  },
-
-  label: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#4c4f69',
-    marginBottom: 8,
-    marginTop: 10,
-  },
-
-  input: {
-    height: 55,
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#bcc0cc',
-    paddingHorizontal: 16,
-    fontSize: 15,
   },
 
   checkboxContainer: {
@@ -116,38 +89,24 @@ export const styles = StyleSheet.create({
   },
 
   checkbox: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     borderRadius: 6,
-    borderWidth: 1.5,
-    borderColor: '#9ca0b0',
+    borderWidth: 2,
     marginTop: 2,
-    marginRight: 10,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   termsText: {
     flex: 1,
-    color: '#6c6f85',
     fontSize: 14,
     lineHeight: 22,
   },
 
   link: {
-    color: '#8839ef',
-    textDecorationLine: 'underline',
-  },
-
-  button: {
-    height: 55,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  buttonText: {
-    color: '#FFF',
-    fontWeight: 'bold',
-    fontSize: 17,
+    fontWeight: '600',
   },
 
   backButton: {
@@ -157,10 +116,16 @@ export const styles = StyleSheet.create({
   },
 
   backText: {
-    color: '#8839ef',
     fontSize: 16,
+    fontWeight: '600',
   },
 
+  checkboxMark: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  // Mantendo os estilos de vinculação para uso futuro
   vinculacaoIconContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -168,7 +133,6 @@ export const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 24,
   },
-
   vinculacaoCircle: {
     width: 70,
     height: 70,
@@ -177,20 +141,16 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   vinculacaoCircleAlt: {
     backgroundColor: '#bcc0cc',
   },
-
   vinculacaoIcon: {
     fontSize: 30,
   },
-
   vinculacaoArrow: {
     fontSize: 24,
     color: '#8839ef',
   },
-
   infoBox: {
     flexDirection: 'row',
     backgroundColor: '#e6e9ef',
@@ -200,18 +160,15 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
   },
-
   infoIcon: {
     fontSize: 18,
   },
-
   infoText: {
     flex: 1,
     color: '#6c6f85',
     fontSize: 13,
     lineHeight: 20,
   },
-
   inputCenter: {
     textAlign: 'center',
     fontSize: 18,
@@ -219,19 +176,16 @@ export const styles = StyleSheet.create({
     letterSpacing: 4,
     color: '#4c4f69',
   },
-
   emailLinkContainer: {
     alignItems: 'center',
     marginBottom: 20,
     marginTop: 20,
   },
-
   emailLink: {
     color: '#8839ef',
     fontSize: 14,
     fontWeight: '500',
   },
-
   skipButton: {
     height: 55,
     borderRadius: 16,
@@ -241,21 +195,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
   },
-
   skipButtonText: {
     color: '#8839ef',
     fontSize: 16,
     fontWeight: '500',
-  },
-
-  checkboxChecked: {
-    backgroundColor: '#1e66f5',
-    borderColor: '#1e66f5',
-  },
-
-  checkboxMark: {
-    color: '#FFF',
-    fontSize: 13,
-    fontWeight: 'bold',
   },
 });
