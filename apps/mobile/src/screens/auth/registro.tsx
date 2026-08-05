@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { NativeStackScreenProps } from '@react-navigation/screen-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../theme/ThemeContext';
@@ -12,42 +12,19 @@ import { styles } from './registroStyles';
 type Props = NativeStackScreenProps<RootStackParamList, 'Registro'>;
 
 export default function Registro({ navigation }: Props) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [aceito, setAceito] = useState(false);
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
-  
-  const { registro, carregando } = useAuth();
-
-  // ✅ Função inteligente que aplica a máscara dd/mm/aaaa automaticamente
-  const handleDataChange = (texto: string) => {
-    const apenasNumeros = texto.replace(/\D/g, '');
-    let dataFormatada = apenasNumeros;
-
-    if (apenasNumeros.length > 2 && apenasNumeros.length <= 4) {
-      dataFormatada = `${apenasNumeros.slice(0, 2)}/${apenasNumeros.slice(2)}`;
-    } else if (apenasNumeros.length > 4) {
-      dataFormatada = `${apenasNumeros.slice(0, 2)}/${apenasNumeros.slice(2, 4)}/${apenasNumeros.slice(4, 8)}`;
-    }
-
-    setDataNascimento(dataFormatada);
-  };
+  const { registro } = useAuth();
 
   const handleContinuar = () => {
-    registro(
-      nome, 
-      email, 
-      senha, 
-      confirmarSenha, 
-      dataNascimento, 
-      aceito, 
-      () => {
-        navigation.goBack(); 
-      }
-    );
+    registro(nome, email, senha, confirmarSenha, dataNascimento, aceito, () => {
+      navigation.navigate('Vinculacao');
+    });
   };
 
   return (
@@ -55,7 +32,6 @@ export default function Registro({ navigation }: Props) {
       style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
     >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Text style={[styles.backText, { color: theme.colors.primary }]}>{'< Voltar'}</Text>
@@ -118,20 +94,17 @@ export default function Registro({ navigation }: Props) {
         onChangeText={setConfirmarSenha}
       />
 
-      {/* ✅ Campo de data atualizado com máscara automática e teclado numérico seguro */}
       <CustomInput
         label="DATA DE NASCIMENTO"
         placeholder="dd/mm/aaaa"
         keyboardType="numeric"
-        maxLength={10}
         value={dataNascimento}
-        onChangeText={handleDataChange}
+        onChangeText={setDataNascimento}
       />
 
       <TouchableOpacity
         style={styles.checkboxContainer}
         onPress={() => setAceito(!aceito)}
-        activeOpacity={0.8}
       >
         <View style={[
           styles.checkbox, 
@@ -148,13 +121,10 @@ export default function Registro({ navigation }: Props) {
         </Text>
       </TouchableOpacity>
 
-      <View style={{ width: '100%', marginTop: 10, marginBottom: 30 }}>
-        <CustomButton
-          title="Continuar"
-          onPress={handleContinuar}
-          loading={carregando}
-        />
-      </View>
+      <CustomButton
+        title="Continuar"
+        onPress={handleContinuar}
+      />
 
     </ScrollView>
   );

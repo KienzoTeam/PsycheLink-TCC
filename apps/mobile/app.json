@@ -16,14 +16,10 @@
         "backgroundImage": "./src/assets/android-icon-background.png",
         "monochromeImage": "./src/assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.psychelink"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
-    },
-    "plugins": [
-      "expo-secure-store"
-    ]
+    }
   }
 }
