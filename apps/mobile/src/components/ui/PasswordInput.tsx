@@ -45,6 +45,8 @@ export default function PasswordInput({
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={!visible}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
         <TouchableOpacity 
           style={styles.icon} 

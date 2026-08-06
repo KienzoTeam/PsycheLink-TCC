@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
+import { useAuth } from '../../hooks/useAuth';
+import { getEmailSyntaxError } from '../../lib/emailValidation';
 import { useTheme } from '../../theme/ThemeContext';
 import CustomInput from '../../components/ui/CustomInput';
 import CustomButton from '../../components/ui/CustomButton';
@@ -10,21 +12,28 @@ import { styles } from './styleEsqueciSenha';
 type Props = NativeStackScreenProps<RootStackParamList, 'EsqueciSenha'>;
 
 export default function EsqueciSenha({ navigation }: Props) {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
+  const [touched, setTouched] = useState(false);
+  const { solicitarRedefinicaoSenha, carregando } = useAuth();
+  const emailError = useMemo(() => (touched ? getEmailSyntaxError(email) : undefined), [email, touched]);
 
   const handleEnviar = () => {
-    if (!email.trim() || !email.includes('@')) {
+    setTouched(true);
+    if (getEmailSyntaxError(email)) {
       return;
     }
-    navigation.navigate('VerificarCodigo', { email });
+    solicitarRedefinicaoSenha(email, () => {
+      navigation.navigate('VerificarCodigo', { email: email.trim() });
+    });
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={styles.container} 
+      contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Login')}>
         <Text style={[styles.backText, { color: theme.colors.primary }]}>{'< Entrar'}</Text>
@@ -37,24 +46,25 @@ export default function EsqueciSenha({ navigation }: Props) {
       </View>
 
       <Text style={[styles.title, { color: theme.colors.onBackground }]}>Esqueceu sua senha?</Text>
-
       <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-        Sem problemas. Informe seu e-mail e enviaremos um código para redefinir sua senha.
+        Informe seu e-mail e, se houver uma conta confirmada, enviaremos um código.
       </Text>
 
       <CustomInput
         label="SEU E-MAIL"
-        placeholder="ana@email.com"
+        placeholder="ana@exemplo.com"
         keyboardType="email-address"
         autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="email"
+        textContentType="emailAddress"
         value={email}
         onChangeText={setEmail}
+        onBlur={() => setTouched(true)}
+        errorMessage={emailError}
       />
 
-      <CustomButton
-        title="Enviar código"
-        onPress={handleEnviar}
-      />
+      <CustomButton title="Enviar código" onPress={handleEnviar} loading={carregando} />
     </ScrollView>
   );
 }

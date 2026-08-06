@@ -15,6 +15,7 @@ interface Props {
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   loading?: boolean;
+  disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
@@ -24,6 +25,7 @@ export default function CustomButton({
   onPress,
   variant = 'primary',
   loading = false,
+  disabled = false,
   style,
   textStyle,
 }: Props) {
@@ -59,6 +61,7 @@ export default function CustomButton({
   };
 
   const variantStyles = getVariantStyles();
+  const isDisabled = loading || disabled;
 
   const ButtonContent = () => (
     <>
@@ -76,8 +79,9 @@ export default function CustomButton({
     return (
       <TouchableOpacity 
         onPress={onPress} 
-        disabled={loading}
-        style={[styles.container, style]}
+        disabled={isDisabled}
+        accessibilityState={{ disabled: isDisabled, busy: loading }}
+        style={[styles.container, isDisabled && styles.disabled, style]}
       >
         <LinearGradient
           colors={[theme.colors.primary, theme.colors.secondary]}
@@ -94,12 +98,14 @@ export default function CustomButton({
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={loading}
+      disabled={isDisabled}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       style={[
-        styles.container, 
-        variantStyles.container, 
+        styles.container,
+        variantStyles.container,
         { borderRadius: theme.borderRadius.xl },
-        style
+        isDisabled && styles.disabled,
+        style,
       ]}
     >
       <ButtonContent />
@@ -120,6 +126,9 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  disabled: {
+    opacity: 0.55,
   },
   text: {
     fontSize: 16,

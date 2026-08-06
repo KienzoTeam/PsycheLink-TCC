@@ -1,45 +1,96 @@
 import { useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import axios from 'axios';
+import { getApiBaseUrl } from '../config/api';
+import { getEmailSyntaxError } from '../lib/emailValidation';
 
-const API_URL = 'http://localhost:3000';
+const TOKEN_KEY = 'psychelink_token';
+
+type ApiErrorBody = {
+  error?: string;
+  code?: string;
+};
+
+class ApiError extends Error {
+  public constructor(
+    public readonly status: number,
+    message: string,
+    public readonly code?: string,
+  ) {
+    super(message);
+  }
+}
+
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as ApiErrorBody;
+    throw new ApiError(response.status, payload.error ?? 'Não foi possível concluir a solicitação.', payload.code);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json() as Promise<T>;
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+  if (error instanceof Error && error.message.includes('EXPO_PUBLIC_API_URL')) {
+    return error.message;
+  }
+  return fallback;
+}
 
 export function useAuth() {
   const [carregando, setCarregando] = useState(false);
 
-  // Função auxiliar para gerir o token de forma compatível (Web vs Mobile)
   const salvarTokenSeguro = async (token: string) => {
     if (Platform.OS === 'web') {
-      localStorage.setItem('psychelink_token', token);
-    } else {
-      await SecureStore.setItemAsync('psychelink_token', token);
+      globalThis.localStorage?.setItem(TOKEN_KEY, token);
+      return;
     }
+    await SecureStore.setItemAsync(TOKEN_KEY, token);
   };
 
-  const login = async (email: string, senha: string, onSuccess: () => void) => {
-    if (!email.trim()) { 
-      Alert.alert('Atenção', 'Informe seu e-mail.'); 
-      return; 
+  const login = async (
+    email: string,
+    senha: string,
+    onSuccess: () => void,
+    onEmailNotVerified?: () => void,
+  ) => {
+    if (getEmailSyntaxError(email)) {
+      Alert.alert('Atenção', 'Informe um e-mail válido.');
+      return;
     }
-    if (!senha.trim()) { 
-      Alert.alert('Atenção', 'Informe sua senha.'); 
-      return; 
+    if (!senha) {
+      Alert.alert('Atenção', 'Informe sua senha.');
+      return;
     }
 
     setCarregando(true);
     try {
-      const response = await axios.post(`${API_URL}/login`, {
-        email: email.trim().toLowerCase(),
-        password: senha
+      const response = await post<{ token: string }>('/api/auth/login', {
+        email: email.trim(),
+        password: senha,
       });
-
-      const { token } = response.data;
-      await salvarTokenSeguro(token);
+      await salvarTokenSeguro(response.token);
       onSuccess();
-    } catch (error: any) {
-      const mensagemErro = error.response?.data?.error || 'Não foi possível conectar ao servidor. Verifique sua rede.';
-      Alert.alert('Falha no Login', mensagemErro);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'EMAIL_NOT_VERIFIED') {
+        Alert.alert('Confirme seu e-mail', error.message);
+        onEmailNotVerified?.();
+        return;
+      }
+      Alert.alert('Falha no login', errorMessage(error, 'Não foi possível conectar ao servidor. Verifique sua rede.'));
     } finally {
       setCarregando(false);
     }
@@ -49,82 +100,92 @@ export function useAuth() {
     nome: string,
     email: string,
     senha: string,
-    confirmarSenha: string,
     dataNascimento: string,
-    aceito: boolean,
-    onSuccess: () => void
+    onSuccess: (canonicalInputEmail: string) => void,
   ) => {
-    if (!nome.trim()) { 
-      Alert.alert('Atenção', 'Informe seu nome completo.'); 
-      return; 
-    }
-    if (!email.trim()) { 
-      Alert.alert('Atenção', 'Informe seu e-mail.'); 
-      return; 
-    }
-    if (!email.includes('@')) { 
-      Alert.alert('Atenção', 'E-mail inválido.'); 
-      return; 
-    }
-    if (!senha.trim() || senha.length < 8) { 
-      Alert.alert('Atenção', 'A senha deve ter no mínimo 8 caracteres.'); 
-      return; 
-    }
-    if (senha !== confirmarSenha) { 
-      Alert.alert('Atenção', 'As senhas não coincidem.'); 
-      return; 
-    }
-    if (!dataNascimento.trim()) { 
-      Alert.alert('Atenção', 'Informe sua data de nascimento.'); 
-      return; 
-    }
-    if (!aceito) { 
-      Alert.alert('Atenção', 'Você deve aceitar os Termos de Uso e a Política de Privacidade.'); 
-      return; 
-    }
-    
     setCarregando(true);
     try {
-      await axios.post(`${API_URL}/registro`, {
+      await post('/api/auth/register', {
         nome: nome.trim(),
-        email: email.trim().toLowerCase(),
+        email: email.trim(),
         password: senha,
-        dataNascimento: dataNascimento
+        dataNascimento,
       });
-
-      Alert.alert('Sucesso!', 'Sua conta foi criada. Faça o login para continuar.');
-      onSuccess();
-    } catch (error: any) {
-      const mensagemErro = error.response?.data?.error || 'Não foi possível conectar ao servidor. Tente novamente mais tarde.';
-      Alert.alert('Falha no Registro', mensagemErro);
+      onSuccess(email.trim());
+    } catch (error) {
+      Alert.alert('Não foi possível iniciar a confirmação', errorMessage(error, 'Tente novamente mais tarde.'));
     } finally {
       setCarregando(false);
     }
   };
 
-  const esqueceuSenha = (email: string, onSuccess: () => void) => {
-    if (!email.trim() || !email.includes('@')) {
+  const verificarEmail = async (email: string, code: string, onSuccess: () => void) => {
+    setCarregando(true);
+    try {
+      await post('/api/auth/email-verification/confirm', { email: email.trim(), code });
+      onSuccess();
+    } catch (error) {
+      Alert.alert('Não foi possível confirmar o e-mail', errorMessage(error, 'Verifique o código e tente novamente.'));
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const reenviarVerificacaoEmail = async (email: string): Promise<boolean> => {
+    setCarregando(true);
+    try {
+      await post('/api/auth/email-verification/resend', { email: email.trim() });
+      Alert.alert('Código solicitado', 'Se o endereço puder receber a confirmação, enviaremos um novo código.');
+      return true;
+    } catch (error) {
+      Alert.alert('Não foi possível reenviar o código', errorMessage(error, 'Tente novamente mais tarde.'));
+      return false;
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const solicitarRedefinicaoSenha = async (email: string, onSuccess: () => void) => {
+    if (getEmailSyntaxError(email)) {
       Alert.alert('Atenção', 'Informe um e-mail válido.');
       return;
     }
-    onSuccess();
-  };
 
-  const verificarCodigo = (code: string[], onSuccess: () => void) => {
-    if (code.join('').length < 6) {
-      Alert.alert('Atenção', 'Informe o código completo de 6 dígitos.');
-      return;
+    setCarregando(true);
+    try {
+      await post('/api/auth/password-reset/request', { email: email.trim() });
+      onSuccess();
+    } catch (error) {
+      Alert.alert('Não foi possível solicitar o código', errorMessage(error, 'Tente novamente mais tarde.'));
+    } finally {
+      setCarregando(false);
     }
-    onSuccess();
   };
 
-  const novaSenha = (senha: string, confirmarSenha: string, onSuccess: () => void) => {
-    if (!senha.trim() || senha.length < 8 || senha !== confirmarSenha) {
-      Alert.alert('Atenção', 'As senhas devem coincidir e ter no mínimo 8 caracteres.');
-      return;
+  const redefinirSenha = async (
+    email: string,
+    code: string,
+    senha: string,
+    onSuccess: () => void,
+  ) => {
+    setCarregando(true);
+    try {
+      await post('/api/auth/password-reset/confirm', { email: email.trim(), code, password: senha });
+      onSuccess();
+    } catch (error) {
+      Alert.alert('Não foi possível redefinir a senha', errorMessage(error, 'Verifique o código e tente novamente.'));
+    } finally {
+      setCarregando(false);
     }
-    onSuccess();
   };
 
-  return { login, registro, esqueceuSenha, verificarCodigo, novaSenha, carregando };
+  return {
+    login,
+    registro,
+    verificarEmail,
+    reenviarVerificacaoEmail,
+    solicitarRedefinicaoSenha,
+    redefinirSenha,
+    carregando,
+  };
 }

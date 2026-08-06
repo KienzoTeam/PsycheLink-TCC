@@ -17,12 +17,15 @@ export default function Login() {
   const { theme, isDark } = useTheme();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const { login } = useAuth();
+  const { login, carregando } = useAuth();
 
   const handleLogin = () => {
-    login(email, senha, () => {
-      navigation.navigate("Main");
-    });
+    login(
+      email,
+      senha,
+      () => navigation.navigate('Main'),
+      () => navigation.navigate('VerificarEmail', { email: email.trim() }),
+    );
   };
 
   return (
@@ -63,7 +66,8 @@ export default function Login() {
 
         <CustomButton 
           title="Entrar" 
-          onPress={handleLogin} 
+          onPress={handleLogin}
+          loading={carregando}
         />
 
         <TouchableOpacity onPress={() => navigation.navigate("EsqueciSenha")}>
