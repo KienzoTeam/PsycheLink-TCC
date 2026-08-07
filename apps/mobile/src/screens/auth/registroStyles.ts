@@ -6,12 +6,10 @@ export const styles = StyleSheet.create({
     paddingTop: 50,
     paddingBottom: 40,
   },
-
   stepsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-
   activeStep: {
     width: 36,
     height: 36,
@@ -19,7 +17,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   inactiveStep: {
     width: 36,
     height: 36,
@@ -27,17 +24,14 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   stepNumber: {
     color: '#fff',
     fontWeight: 'bold',
   },
-
   line: {
     flex: 1,
     height: 2,
   },
-
   stepLabelContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -45,34 +39,27 @@ export const styles = StyleSheet.create({
     marginBottom: 30,
     paddingHorizontal: 10,
   },
-
   activeLabel: {
     fontWeight: '600',
   },
-
-  inactiveLabel: {
-  },
-
+  inactiveLabel: {},
   logo: {
     width: 80,
     height: 80,
     alignSelf: 'center',
   },
-
   logoText: {
     textAlign: 'center',
     fontSize: 24,
     marginTop: 8,
     fontWeight: '600',
   },
-
   title: {
     textAlign: 'center',
     fontSize: 32,
     fontWeight: 'bold',
     marginTop: 20,
   },
-
   subtitle: {
     textAlign: 'center',
     fontSize: 16,
@@ -80,52 +67,20 @@ export const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 30,
   },
-
-  checkboxContainer: {
-    flexDirection: 'row',
-    marginTop: 20,
-    marginBottom: 30,
-    alignItems: 'flex-start',
-  },
-
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    marginTop: 2,
-    marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  termsText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-
-  link: {
-    fontWeight: '600',
-  },
-
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
   },
-
   backText: {
     fontSize: 16,
     fontWeight: '600',
   },
-
   checkboxMark: {
     color: '#FFF',
     fontSize: 14,
     fontWeight: 'bold',
   },
-  // Mantendo os estilos de vinculação para uso futuro
   vinculacaoIconContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -199,5 +154,38 @@ export const styles = StyleSheet.create({
     color: '#8839ef',
     fontSize: 16,
     fontWeight: '500',
+  },
+  secaoTitulo: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  secaoSubtitulo: {
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  confirmacaoItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 12,
+  },
+  confirmacaoCheck: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  confirmacaoTexto: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 20,
   },
 });
