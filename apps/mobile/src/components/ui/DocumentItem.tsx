@@ -64,10 +64,9 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}>
 
-            {/* Handle bar */}
             <View style={styles.handleBar} />
 
-            {/* Header */}
+        
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderLeft}>
                 <View style={[styles.modalIconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
@@ -89,7 +88,6 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
               </TouchableOpacity>
             </View>
 
-            {/* Conteúdo */}
             <ScrollView
               style={styles.modalContent}
               showsVerticalScrollIndicator={false}
@@ -112,7 +110,6 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
               })}
             </ScrollView>
 
-            {/* Botão */}
             <TouchableOpacity
               style={[styles.btnAceitar, { backgroundColor: theme.colors.primary }]}
               onPress={handleAceitar}
