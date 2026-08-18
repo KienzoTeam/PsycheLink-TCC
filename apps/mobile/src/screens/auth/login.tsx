@@ -17,7 +17,7 @@ export default function Login() {
   const { theme, isDark } = useTheme();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const { login } = useAuth();
+  const { login, carregando } = useAuth();
 
   const handleLogin = () => {
     login(email, senha, () => {
@@ -61,9 +61,9 @@ export default function Login() {
           onChangeText={setSenha}
         />
 
-        <CustomButton 
-          title="Entrar" 
-          onPress={handleLogin} 
+        <CustomButton
+          title={carregando ? 'Entrando...' : 'Entrar'}
+          onPress={handleLogin}
         />
 
         <TouchableOpacity onPress={() => navigation.navigate("EsqueciSenha")}>
