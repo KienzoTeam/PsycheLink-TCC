@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../theme/ThemeContext';
+import { useAuth } from '../../../hooks/useAuth';
 import { styles } from './styleHome';
 
 const getGreeting = () => {
@@ -13,8 +14,13 @@ const getGreeting = () => {
 };
 
 export default function Home() {
-  const { theme, isDark } = useTheme();
-  const nome = 'Júlia';
+  const { theme } = useTheme();
+  const { usuario } = useAuth();
+  // Nome real retornado pela rota GET /me
+  const nome = usuario?.nome?.trim() || 'Usuário';
+
+  // Evita erro caso o usuário ainda esteja sendo carregado
+  const inicialNome = nome.charAt(0).toUpperCase() || 'U';
   const { texto, emoji } = getGreeting();
   const emocoes = ['Calmo', 'Feliz', 'Ansioso', 'Energético', 'Cansado'];
 
