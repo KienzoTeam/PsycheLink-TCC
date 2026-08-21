@@ -3,6 +3,7 @@ import { Alert, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import axios from 'axios';
+import { erroEmail } from '../lib/email';
 
 const devHost = Constants.expoConfig?.hostUri?.split(':')[0];
 const API_URL =
@@ -201,7 +202,8 @@ export function useAuth() {
   const login = async (
     email: string,
     senha: string,
-    onSuccess: () => void
+    onSuccess: () => void,
+    onEmailNaoVerificado?: () => void
   ) => {
     if (!email.trim()) {
       Alert.alert('Atenção', 'Informe seu e-mail.');
@@ -216,11 +218,11 @@ export function useAuth() {
     setCarregando(true);
 
     try {
-      
+
       atualizarUsuarioCompartilhado(null);
 
       const response = await axios.post(`${API_URL}/login`, {
-        email: email.trim().toLowerCase(),
+        email: email.trim(),
         password: senha
       });
 
@@ -228,17 +230,27 @@ export function useAuth() {
 
       await salvarTokenSeguro(token);
 
-     
+
       await buscarUsuarioComToken(token);
 
       sessaoInicializada = true;
 
-    
+
       onSuccess();
     } catch (error: any) {
-      
+
       if (tokenInvalidoOuExpirado(error)) {
         await limparSessao();
+      }
+
+      // Conta existe e senha confere, mas o e-mail ainda não foi confirmado:
+      // o app navega para a tela de código em vez de mostrar erro genérico.
+      if (
+        error.response?.status === 403 &&
+        error.response?.data?.codigo === 'EMAIL_NAO_VERIFICADO'
+      ) {
+        onEmailNaoVerificado?.();
+        return;
       }
 
       const mensagemErro =
@@ -265,13 +277,10 @@ export function useAuth() {
       return;
     }
 
-    if (!email.trim()) {
-      Alert.alert('Atenção', 'Informe seu e-mail.');
-      return;
-    }
-
-    if (!email.includes('@')) {
-      Alert.alert('Atenção', 'E-mail inválido.');
+    // Checagem leve só para UX; a validação definitiva é a do servidor.
+    const erroEmailMsg = erroEmail(email);
+    if (erroEmailMsg) {
+      Alert.alert('Atenção', erroEmailMsg);
       return;
     }
 
@@ -301,17 +310,13 @@ export function useAuth() {
     setCarregando(true);
 
     try {
+      // Normalização final (lowercase, IDN/punycode) é responsabilidade do servidor.
       await axios.post(`${API_URL}/registro`, {
         nome: nome.trim(),
-        email: email.trim().toLowerCase(),
+        email: email.trim(),
         password: senha,
         dataNascimento
       });
-
-      Alert.alert(
-        'Sucesso!',
-        'Sua conta foi criada. Faça o login para continuar.'
-      );
 
       onSuccess();
     } catch (error: any) {
@@ -325,39 +330,96 @@ export function useAuth() {
     }
   };
 
-  const esqueceuSenha = (email: string, onSuccess: () => void) => {
-    if (!email.trim() || !email.includes('@')) {
-      Alert.alert('Atenção', 'Informe um e-mail válido.');
-      return;
-    }
-
-    onSuccess();
-  };
-
-  const verificarCodigo = (code: string[], onSuccess: () => void) => {
-    if (code.join('').length < 6) {
+  const confirmarEmail = async (
+    email: string,
+    codigo: string
+  ): Promise<boolean> => {
+    if (codigo.length < 6) {
       Alert.alert('Atenção', 'Informe o código completo de 6 dígitos.');
-      return;
+      return false;
     }
 
-    onSuccess();
-  };
-
-  const novaSenha = (
-    senha: string,
-    confirmarSenha: string,
-    onSuccess: () => void
-  ) => {
-    if (!senha.trim() || senha.length < 8 || senha !== confirmarSenha) {
+    try {
+      await axios.post(`${API_URL}/verificar-email`, {
+        email: email.trim(),
+        codigo
+      });
+      return true;
+    } catch (error: any) {
       Alert.alert(
-        'Atenção',
-        'As senhas devem coincidir e ter no mínimo 8 caracteres.'
+        'Erro',
+        error.response?.data?.error ||
+          'Não foi possível verificar o código. Tente novamente.'
       );
-      return;
+      return false;
+    }
+  };
+
+  const reenviarCodigo = async (email: string): Promise<boolean> => {
+    try {
+      await axios.post(`${API_URL}/reenviar-codigo`, { email: email.trim() });
+      Alert.alert(
+        'Sucesso',
+        'Se houver uma conta pendente, você receberá um novo código.'
+      );
+      return true;
+    } catch (error: any) {
+      Alert.alert(
+        'Erro',
+        error.response?.data?.error || 'Falha ao reenviar código.'
+      );
+      return false;
+    }
+  };
+
+  // Redefinição de senha, passo 1: pede o código. O servidor responde
+  // genericamente para não revelar se o e-mail tem conta ativa.
+  const solicitarRedefinicao = async (email: string): Promise<boolean> => {
+    try {
+      await axios.post(`${API_URL}/esqueci-senha`, { email: email.trim() });
+      return true;
+    } catch (error: any) {
+      Alert.alert('Erro', error.response?.data?.error || 'Falha ao solicitar o código.');
+      return false;
+    }
+  };
+
+  // Passo 2: valida o código e recebe o token de redefinição.
+  const confirmarCodigoRedefinicao = async (
+    email: string,
+    codigo: string
+  ): Promise<string | null> => {
+    if (codigo.length < 6) {
+      Alert.alert('Atenção', 'Informe o código completo de 6 dígitos.');
+      return null;
     }
 
-    onSuccess();
+    try {
+      const response = await axios.post(`${API_URL}/verificar-codigo-senha`, {
+        email: email.trim(),
+        codigo
+      });
+      return response.data.token as string;
+    } catch (error: any) {
+      Alert.alert(
+        'Erro',
+        error.response?.data?.error || 'Não foi possível verificar o código.'
+      );
+      return null;
+    }
   };
+
+  // Passo 3: troca a senha com o token do passo 2.
+  const redefinirSenha = async (token: string, senha: string): Promise<boolean> => {
+    try {
+      await axios.post(`${API_URL}/redefinir-senha`, { token, password: senha });
+      return true;
+    } catch (error: any) {
+      Alert.alert('Erro', error.response?.data?.error || 'Falha ao redefinir a senha.');
+      return false;
+    }
+  };
+
   const logout = async () => {
     await limparSessao();
   };
@@ -365,9 +427,11 @@ export function useAuth() {
   return {
     login,
     registro,
-    esqueceuSenha,
-    verificarCodigo,
-    novaSenha,
+    confirmarEmail,
+    reenviarCodigo,
+    solicitarRedefinicao,
+    confirmarCodigoRedefinicao,
+    redefinirSenha,
     logout,
     buscarUsuario,
     carregando,

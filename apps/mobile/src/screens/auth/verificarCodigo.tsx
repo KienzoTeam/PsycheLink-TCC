@@ -1,8 +1,9 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useTheme } from '../../theme/ThemeContext';
+import { useAuth } from '../../hooks/useAuth';
 import CustomButton from '../../components/ui/CustomButton';
 import { styles } from './styleEsqueciSenha';
 
@@ -10,31 +11,101 @@ type Props = NativeStackScreenProps<RootStackParamList, 'VerificarCodigo'>;
 
 export default function VerificarCodigo({ navigation, route }: Props) {
   const { theme } = useTheme();
-  const { email } = route.params;
+  const { email, modo } = route.params;
+  const { confirmarEmail, confirmarCodigoRedefinicao, reenviarCodigo } = useAuth();
   const [code, setCode] = useState(['', '', '', '', '', '']);
+  const [enviando, setEnviando] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const inputs = useRef<(TextInput | null)[]>([]);
 
+  // Contagem regressiva do reenvio (o servidor também impõe cooldown de 60 s).
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
   const handleChange = (text: string, index: number) => {
-    const newCode = [...code];
-    newCode[index] = text;
-    setCode(newCode);
-    if (text && index < 5) {
+    const digitos = text.replace(/\D/g, '');
+
+    if (!digitos) {
+      const novo = [...code];
+      novo[index] = '';
+      setCode(novo);
+      return;
+    }
+
+    // Colagem (ou digitação rápida): distribui os dígitos a partir do campo atual.
+    if (digitos.length > 1) {
+      const novo = [...code];
+      let i = index;
+      for (const d of digitos) {
+        if (i > 5) break;
+        novo[i] = d;
+        i++;
+      }
+      setCode(novo);
+      inputs.current[Math.min(i - 1, 5)]?.focus();
+      return;
+    }
+
+    const novo = [...code];
+    novo[index] = digitos;
+    setCode(novo);
+    if (index < 5) {
       inputs.current[index + 1]?.focus();
     }
   };
 
-  const handleVerificar = () => {
-    const codigoCompleto = code.join('');
-    if (codigoCompleto.length < 6) {
+  // Backspace em campo vazio volta um dígito e apaga o anterior junto.
+  const handleTecla = (index: number) => ({ nativeEvent }: any) => {
+    if (nativeEvent.key !== 'Backspace' || code[index]) return;
+    if (index === 0) return;
+
+    inputs.current[index - 1]?.focus();
+    const novo = [...code];
+    novo[index - 1] = '';
+    setCode(novo);
+  };
+
+  const limpar = () => {
+    setCode(['', '', '', '', '', '']);
+    inputs.current[0]?.focus();
+  };
+
+  const handleVerificar = async () => {
+    const completo = code.join('');
+    if (completo.length < 6 || enviando) {
       return;
     }
-    navigation.navigate('NovaSenha');
+
+    setEnviando(true);
+
+    if (modo === 'cadastro') {
+      const ok = await confirmarEmail(email, completo);
+      setEnviando(false);
+      if (!ok) return limpar();
+      navigation.navigate('Login');
+      return;
+    }
+
+    // Recuperação: o código vira um token curto que autoriza a troca de senha.
+    const token = await confirmarCodigoRedefinicao(email, completo);
+    setEnviando(false);
+    if (!token) return limpar();
+    navigation.navigate('NovaSenha', { token });
+  };
+
+  const handleReenviar = async () => {
+    if (cooldown > 0) return;
+    const ok = await reenviarCodigo(email);
+    if (ok) setCooldown(60);
   };
 
   return (
-    <ScrollView 
+    <ScrollView
       style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={styles.container} 
+      contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
@@ -60,35 +131,38 @@ export default function VerificarCodigo({ navigation, route }: Props) {
             key={index}
             ref={ref => { inputs.current[index] = ref; }}
             style={[
-              styles.codeInput, 
-              { 
-                backgroundColor: theme.colors.surface, 
+              styles.codeInput,
+              {
+                backgroundColor: theme.colors.surface,
                 borderColor: digit ? theme.colors.primary : theme.colors.outline,
                 color: theme.colors.onSurface
               },
               digit ? styles.codeInputActive : null
             ]}
-            maxLength={1}
             keyboardType="number-pad"
+            autoComplete={index === 0 ? 'sms-otp' : 'off'}
             value={digit}
             onChangeText={text => handleChange(text, index)}
+            onKeyPress={handleTecla(index)}
           />
         ))}
       </View>
 
       <CustomButton
-        title="Verificar código"
+        title={enviando ? 'Verificando...' : 'Verificar código'}
         onPress={handleVerificar}
+        loading={enviando}
       />
-
-      <View style={[styles.demoBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outline }]}>
-        <Text style={[styles.demoText, { color: theme.colors.onSurfaceVariant }]}>ℹ️ Demonstração: use o código <Text style={[styles.demoCode, { color: theme.colors.onSurface }]}>847291</Text></Text>
-      </View>
 
       <View style={styles.resendContainer}>
         <Text style={[styles.resendText, { color: theme.colors.onSurfaceVariant }]}>Não recebeu?</Text>
-        <TouchableOpacity>
-          <Text style={[styles.resendLink, { color: theme.colors.primary }]}>🔄 Reenviar código</Text>
+        <TouchableOpacity onPress={handleReenviar} disabled={cooldown > 0}>
+          <Text style={[
+            styles.resendLink,
+            { color: cooldown > 0 ? theme.colors.onSurfaceVariant : theme.colors.primary }
+          ]}>
+            {cooldown > 0 ? `Reenviar em ${cooldown}s` : '🔄 Reenviar código'}
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

@@ -1,23 +1,45 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useTheme } from '../../theme/ThemeContext';
+import { useAuth } from '../../hooks/useAuth';
 import PasswordInput from '../../components/ui/PasswordInput';
 import CustomButton from '../../components/ui/CustomButton';
 import { styles } from './styleEsqueciSenha';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'NovaSenha'>;
 
-export default function NovaSenha({ navigation }: Props) {
+export default function NovaSenha({ navigation, route }: Props) {
   const { theme } = useTheme();
+  const { token } = route.params;
+  const { redefinirSenha } = useAuth();
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [salvando, setSalvando] = useState(false);
 
-  const handleRedefinir = () => {
-    if (senha.length < 8 || senha !== confirmarSenha) {
+  const handleRedefinir = async () => {
+    if (salvando) return;
+    if (senha.length < 8) {
+      Alert.alert('Atenção', 'A senha deve ter no mínimo 8 caracteres.');
       return;
     }
+    if (senha !== confirmarSenha) {
+      Alert.alert('Atenção', 'As senhas não coincidem.');
+      return;
+    }
+
+    setSalvando(true);
+    const ok = await redefinirSenha(token, senha);
+    setSalvando(false);
+
+    if (!ok) {
+      // Token expirado/inválido: volta para pedir um novo código.
+      navigation.goBack();
+      return;
+    }
+
+    Alert.alert('Sucesso', 'Sua senha foi redefinida. Faça login com a nova senha.');
     navigation.navigate('Login');
   };
 
@@ -58,8 +80,9 @@ export default function NovaSenha({ navigation }: Props) {
       />
 
       <CustomButton
-        title="Redefinir senha"
+        title={salvando ? 'Salvando...' : 'Redefinir senha'}
         onPress={handleRedefinir}
+        loading={salvando}
       />
     </ScrollView>
   );

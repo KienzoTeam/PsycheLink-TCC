@@ -20,9 +20,20 @@ export default function Login() {
   const { login, carregando } = useAuth();
 
   const handleLogin = () => {
-    login(email, senha, () => {
-      navigation.navigate("Main");
-    });
+    login(
+      email,
+      senha,
+      () => {
+        navigation.navigate("Main");
+      },
+      // Conta pendente de confirmação: vai direto para a tela do código OTP.
+      () => {
+        navigation.navigate("VerificarCodigo", {
+          email: email.trim(),
+          modo: "cadastro"
+        });
+      }
+    );
   };
 
   return (

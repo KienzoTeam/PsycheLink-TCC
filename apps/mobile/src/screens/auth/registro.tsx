@@ -11,6 +11,7 @@ import PasswordInput from '../../components/ui/PasswordInput';
 import CustomButton from '../../components/ui/CustomButton';
 import DocumentItem from '../../components/ui/DocumentItem';
 import { styles } from './registroStyles';
+import { erroEmail } from '../../lib/email';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Registro'>;
 
@@ -21,6 +22,7 @@ export default function Registro({ navigation }: Props) {
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
+  const [erroEmailCampo, setErroEmailCampo] = useState<string | null>(null);
   const [termosAceitos, setTermosAceitos] = useState(false);
   const [privacidadeAceita, setPrivacidadeAceita] = useState(false);
   const [consentimentoAceito, setConsentimentoAceito] = useState(false);
@@ -42,6 +44,12 @@ export default function Registro({ navigation }: Props) {
   };
 
   const handleContinuar = () => {
+    const erro = erroEmail(email);
+    if (erro) {
+      setErroEmailCampo(erro);
+      return;
+    }
+
     registro(
       nome,
       email,
@@ -49,7 +57,13 @@ export default function Registro({ navigation }: Props) {
       confirmarSenha,
       dataNascimento,
       todosAceitos,
-      () => { navigation.goBack(); }
+      () => {
+        // Conta criada como pendente: o próximo passo é confirmar o e-mail (OTP).
+        navigation.navigate('VerificarCodigo', {
+          email: email.trim(),
+          modo: 'cadastro'
+        });
+      }
     );
   };
 
@@ -110,9 +124,29 @@ export default function Registro({ navigation }: Props) {
         placeholder="ana@email.com"
         keyboardType="email-address"
         autoCapitalize="none"
+        autoComplete="email"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(texto) => {
+          setEmail(texto);
+          if (erroEmailCampo) setErroEmailCampo(null); // nunca bloqueia a digitação
+        }}
+        onBlur={() => setErroEmailCampo(erroEmail(email))}
       />
+
+      {erroEmailCampo ? (
+        <Text
+          style={{
+            color: theme.colors.error,
+            fontSize: 13,
+            marginLeft: 4,
+            marginTop: -10,
+            marginBottom: 12
+          }}
+          accessibilityRole="alert"
+        >
+          {erroEmailCampo}
+        </Text>
+      ) : null}
 
       <PasswordInput
         label="SENHA"

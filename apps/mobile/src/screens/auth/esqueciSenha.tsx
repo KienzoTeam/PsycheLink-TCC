@@ -6,18 +6,28 @@ import { useTheme } from '../../theme/ThemeContext';
 import CustomInput from '../../components/ui/CustomInput';
 import CustomButton from '../../components/ui/CustomButton';
 import { styles } from './styleEsqueciSenha';
+import { erroEmail } from '../../lib/email';
+import { useAuth } from '../../hooks/useAuth';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EsqueciSenha'>;
 
 export default function EsqueciSenha({ navigation }: Props) {
   const { theme, isDark } = useTheme();
+  const { solicitarRedefinicao } = useAuth();
   const [email, setEmail] = useState('');
+  const [enviando, setEnviando] = useState(false);
 
-  const handleEnviar = () => {
-    if (!email.trim() || !email.includes('@')) {
+  const handleEnviar = async () => {
+    if (enviando || erroEmail(email)) {
       return;
     }
-    navigation.navigate('VerificarCodigo', { email });
+
+    setEnviando(true);
+    // A resposta é genérica por design; navegamos independentemente de a conta existir.
+    await solicitarRedefinicao(email);
+    setEnviando(false);
+
+    navigation.navigate('VerificarCodigo', { email: email.trim(), modo: 'recuperacao' });
   };
 
   return (
@@ -52,8 +62,9 @@ export default function EsqueciSenha({ navigation }: Props) {
       />
 
       <CustomButton
-        title="Enviar código"
+        title={enviando ? 'Enviando...' : 'Enviar código'}
         onPress={handleEnviar}
+        loading={enviando}
       />
     </ScrollView>
   );

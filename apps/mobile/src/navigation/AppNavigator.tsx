@@ -15,8 +15,8 @@ export type RootStackParamList = {
   Vinculacao: undefined;
   Main: undefined;
   EsqueciSenha: undefined;
-  VerificarCodigo: { email: string };
-  NovaSenha: undefined;
+  VerificarCodigo: { email: string; modo: 'cadastro' | 'recuperacao' };
+  NovaSenha: { token: string };
   Checkin: undefined;
 };
 

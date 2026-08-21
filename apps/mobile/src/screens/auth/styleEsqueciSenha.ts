@@ -43,12 +43,12 @@ export const styles = StyleSheet.create({
   },
   codeContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginBottom: 32,
     gap: 8,
   },
   codeInput: {
-    flex: 1,
+    width: 48,
     height: 56,
     borderWidth: 1.5,
     borderRadius: 12,
