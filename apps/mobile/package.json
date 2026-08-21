@@ -11,6 +11,7 @@
     "axios": "^1.19.0",
     "babel-plugin-module-resolver": "^5.0.3",
     "expo": "~56.0.9",
+    "expo-constants": "~56.0.24",
     "expo-linear-gradient": "~56.0.4",
     "expo-secure-store": "~56.0.4",
     "expo-status-bar": "~56.0.4",

@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Alert, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000';
+const devHost = Constants.expoConfig?.hostUri?.split(':')[0];
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ??
+  (Platform.OS === 'web' || !devHost ? 'http://localhost:3000' : `http://${devHost}:3000`);
 const TOKEN_KEY = 'psychelink_token';
 
 export type UsuarioAutenticado = {
