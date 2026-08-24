@@ -69,7 +69,7 @@ export const theme = {
     colors: {
       primary: palette.latte.mauve,
       onPrimary: '#ffffff',
-      primaryContainer: '#f5eaff', // Lighter mauve
+      primaryContainer: '#e7d3f5', // Lilac perceptível sobre o fundo base; texto em cima = onPrimaryContainer
       onPrimaryContainer: '#21005d',
       
       secondary: palette.latte.lavender,
@@ -89,9 +89,11 @@ export const theme = {
       onBackground: palette.latte.text,
       
       surface: palette.latte.mantle,
+      surfaceContainer: '#ffffff',
       onSurface: palette.latte.text,
       surfaceVariant: palette.latte.surface0,
       onSurfaceVariant: palette.latte.subtext0,
+      subtext1: palette.latte.subtext1,
       
       outline: palette.latte.surface1,
     },
@@ -135,9 +137,11 @@ export const theme = {
       onBackground: palette.mocha.text,
       
       surface: palette.mocha.mantle,
+      surfaceContainer: palette.mocha.surface0,
       onSurface: palette.mocha.text,
       surfaceVariant: palette.mocha.surface0,
       onSurfaceVariant: palette.mocha.subtext0,
+      subtext1: palette.mocha.subtext1,
       
       outline: palette.mocha.surface1,
     },
@@ -158,5 +162,11 @@ export const theme = {
     }
   }
 };
+
+/**
+ * Gradiente fixo de marca — texto branco por cima exige contraste AA
+ * (≥4.5:1) nos dois temas, então não segue theme.colors.primary/secondary.
+ */
+export const gradienteMarca = [palette.latte.mauve, '#6047d0'] as const;
 
 export type AppTheme = typeof theme.light;

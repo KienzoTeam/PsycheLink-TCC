@@ -5,7 +5,6 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 60,
     paddingHorizontal: 24,
     paddingBottom: 20,
     flexDirection: 'row',
@@ -19,10 +18,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
   headerInfo: {
     flex: 1,
   },
@@ -32,6 +27,13 @@ export const styles = StyleSheet.create({
   },
   doctorStatus: {
     fontSize: 12,
+  },
+  headerBotao: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   chatContent: {
     flex: 1,
@@ -58,6 +60,13 @@ export const styles = StyleSheet.create({
   messageText: {
     fontSize: 15,
     lineHeight: 20,
+  },
+  mensagemSistema: {
+    alignSelf: 'center',
+    textAlign: 'center',
+    fontSize: 12,
+    marginBottom: 16,
+    marginHorizontal: 24,
   },
   inputArea: {
     flexDirection: 'row',

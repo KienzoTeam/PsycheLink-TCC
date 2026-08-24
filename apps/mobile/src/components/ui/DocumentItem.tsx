@@ -25,26 +25,28 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
       <TouchableOpacity
         style={[
           styles.item,
-          { borderColor: aceito ? '#2DD4A0' : theme.colors.outline },
-          { backgroundColor: aceito ? '#F0FDF9' : theme.colors.surface },
+          { borderColor: aceito ? theme.colors.tertiary : theme.colors.outline },
+          { backgroundColor: aceito ? theme.colors.tertiaryContainer : theme.colors.surface },
         ]}
         onPress={() => setModalVisivel(true)}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={`${titulo}. ${aceito ? 'Lido e aceito' : 'Toque para ler'}`}
       >
         <View style={[
           styles.iconContainer,
-          { backgroundColor: aceito ? '#D1FAF0' : theme.colors.surfaceVariant }
+          { backgroundColor: aceito ? theme.colors.background : theme.colors.surfaceVariant }
         ]}>
           <Feather
             name="check-circle"
             size={22}
-            color={aceito ? '#2DD4A0' : theme.colors.onSurfaceVariant}
+            color={aceito ? theme.colors.tertiary : theme.colors.onSurfaceVariant}
           />
         </View>
         <View style={styles.textContainer}>
           <Text style={[
             styles.titulo,
-            { color: aceito ? '#2DD4A0' : theme.colors.onBackground }
+            { color: aceito ? theme.colors.onTertiaryContainer : theme.colors.onBackground }
           ]}>
             {titulo}
           </Text>
@@ -64,10 +66,10 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}>
 
-            <View style={styles.handleBar} />
+            <View style={[styles.handleBar, { backgroundColor: theme.colors.outline }]} />
 
         
-            <View style={styles.modalHeader}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.colors.outline }]}>
               <View style={styles.modalHeaderLeft}>
                 <View style={[styles.modalIconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
                   <Feather name="file-text" size={18} color={theme.colors.primary} />
@@ -83,7 +85,13 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
                   )}
                 </View>
               </View>
-              <TouchableOpacity onPress={() => setModalVisivel(false)}>
+              <TouchableOpacity
+                onPress={() => setModalVisivel(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={styles.closeButton}
+                accessibilityRole="button"
+                accessibilityLabel="Fechar documento"
+              >
                 <Feather name="x" size={24} color={theme.colors.onBackground} />
               </TouchableOpacity>
             </View>
@@ -114,8 +122,8 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
               style={[styles.btnAceitar, { backgroundColor: theme.colors.primary }]}
               onPress={handleAceitar}
             >
-              <Feather name="check" size={20} color="#FFF" />
-              <Text style={styles.btnAceitarTexto}>Li e compreendi</Text>
+              <Feather name="check" size={20} color={theme.colors.onPrimary} />
+              <Text style={[styles.btnAceitarTexto, { color: theme.colors.onPrimary }]}>Li e compreendi</Text>
             </TouchableOpacity>
 
           </View>
@@ -168,7 +176,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E0E0E0',
     alignSelf: 'center',
     marginBottom: 20,
   },
@@ -179,7 +186,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0EEFF',
   },
   modalHeaderLeft: {
     flexDirection: 'row',
@@ -236,8 +242,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   btnAceitarTexto: {
-    color: '#FFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  closeButton: {
+    padding: 10,
   },
 });

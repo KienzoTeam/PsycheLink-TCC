@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Feather } from '@expo/vector-icons';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../theme/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Politica_Privacidade, Termos_De_Uso, Consentimento_Dados, Aviso_Etico } from '../../constants/documentos';
 import CustomInput from '../../components/ui/CustomInput';
 import PasswordInput from '../../components/ui/PasswordInput';
 import CustomButton from '../../components/ui/CustomButton';
 import DocumentItem from '../../components/ui/DocumentItem';
+import AppLogo from '../../components/ui/AppLogo';
 import { styles } from './registroStyles';
 import { erroEmail } from '../../lib/email';
 
@@ -17,6 +18,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Registro'>;
 
 export default function Registro({ navigation }: Props) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -31,14 +33,23 @@ export default function Registro({ navigation }: Props) {
   const { registro, carregando } = useAuth();
 
   const todosAceitos = termosAceitos && privacidadeAceita && consentimentoAceito && avisoAceito;
+  const aceitosCount = [termosAceitos, privacidadeAceita, consentimentoAceito, avisoAceito].filter(Boolean).length;
 
   const handleDataChange = (texto: string) => {
     const apenasNumeros = texto.replace(/\D/g, '');
-    let dataFormatada = apenasNumeros;
-    if (apenasNumeros.length > 2 && apenasNumeros.length <= 4) {
-      dataFormatada = `${apenasNumeros.slice(0, 2)}/${apenasNumeros.slice(2)}`;
-    } else if (apenasNumeros.length > 4) {
-      dataFormatada = `${apenasNumeros.slice(0, 2)}/${apenasNumeros.slice(2, 4)}/${apenasNumeros.slice(4, 8)}`;
+    let dd = apenasNumeros.slice(0, 2);
+    let mm = apenasNumeros.slice(2, 4);
+
+    // Clamp durante a digitação: nunca deixa passar de 31/99 ou 12/9999.
+    if (dd.length === 2 && Number(dd) > 31) dd = '31';
+    if (mm.length === 2 && Number(mm) > 12) mm = '12';
+
+    let dataFormatada = dd + mm;
+    if (dd.length === 2 && mm.length > 0) {
+      dataFormatada = `${dd}/${mm}`;
+      if (mm.length === 2 && apenasNumeros.length > 4) {
+        dataFormatada = `${dd}/${mm}/${apenasNumeros.slice(4, 8)}`;
+      }
     }
     setDataNascimento(dataFormatada);
   };
@@ -67,27 +78,26 @@ export default function Registro({ navigation }: Props) {
     );
   };
 
-  const confirmacoes = [
-    { aceito: termosAceitos, texto: 'Li e aceito os Termos de Uso do PsycheLink' },
-    { aceito: privacidadeAceita, texto: 'Li e aceito a Política de Privacidade e as disposições da LGPD' },
-    { aceito: consentimentoAceito, texto: 'Consinto com o tratamento dos meus dados sensíveis de saúde' },
-    { aceito: avisoAceito, texto: 'Compreendo que o PsycheLink não substitui atendimento profissional ou serviços de emergência' },
-  ];
-
   return (
     <ScrollView
       style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, { paddingTop: insets.top + 8 }]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+        hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+        accessibilityRole="button"
+        accessibilityLabel="Voltar"
+      >
         <Text style={[styles.backText, { color: theme.colors.primary }]}>{'< Voltar'}</Text>
       </TouchableOpacity>
 
       <View style={styles.stepsContainer}>
         <View style={[styles.activeStep, { backgroundColor: theme.colors.primary }]}>
-          <Text style={styles.stepNumber}>1</Text>
+          <Text style={[styles.stepNumber, { color: theme.colors.onPrimary }]}>1</Text>
         </View>
         <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
         <View style={[styles.inactiveStep, { backgroundColor: theme.colors.surfaceVariant }]}>
@@ -100,28 +110,22 @@ export default function Registro({ navigation }: Props) {
         <Text style={[styles.inactiveLabel, { color: theme.colors.onSurfaceVariant }]}>Vinculação</Text>
       </View>
 
-      <Image
-        source={require('../../assets/Psychelink.png')}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-
-      <Text style={[styles.logoText, { color: theme.colors.onBackground }]}>PsycheLink</Text>
+      <AppLogo source={require('../../assets/Psychelink.png')} tamanho="grande" />
       <Text style={[styles.title, { color: theme.colors.onBackground }]}>Crie sua conta</Text>
       <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
         Acompanhe sua jornada terapêutica de forma{'\n'}segura e organizada.
       </Text>
 
       <CustomInput
-        label="NOME COMPLETO"
-        placeholder="Ana Carolina Silva"
+        label="Nome completo"
+        placeholder="Informe seu nome"
         value={nome}
         onChangeText={setNome}
       />
 
       <CustomInput
-        label="E-MAIL"
-        placeholder="ana@email.com"
+        label="E-mail"
+        placeholder="Informe seu e-mail"
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
@@ -149,17 +153,21 @@ export default function Registro({ navigation }: Props) {
       ) : null}
 
       <PasswordInput
-        label="SENHA"
+        label="Senha"
         placeholder="Mínimo 8 caracteres"
         value={senha}
         onChangeText={setSenha}
+        autoComplete="new-password"
+        textContentType="newPassword"
       />
 
       <PasswordInput
-        label="CONFIRMAR SENHA"
+        label="Confirmar senha"
         placeholder="Repita a senha"
         value={confirmarSenha}
         onChangeText={setConfirmarSenha}
+        autoComplete="password"
+        textContentType="password"
       />
 
       <CustomInput
@@ -172,7 +180,7 @@ export default function Registro({ navigation }: Props) {
       />
 
       <Text style={[styles.secaoTitulo, { color: theme.colors.primary }]}>
-        CONSENTIMENTOS E DOCUMENTOS
+        Consentimentos e documentos ({aceitosCount}/4)
       </Text>
       <Text style={[styles.secaoSubtitulo, { color: theme.colors.onSurfaceVariant }]}>
         Toque em cada documento para ler e confirme sua concordância abaixo.
@@ -210,29 +218,11 @@ export default function Registro({ navigation }: Props) {
         onAceitar={() => setAvisoAceito(true)}
       />
 
-      <Text style={[styles.secaoTitulo, { color: theme.colors.primary }]}>
-        CONFIRME SUA LEITURA E ACEITAÇÃO
-      </Text>
-
-      {confirmacoes.map((item, index) => (
-        <View key={index} style={styles.confirmacaoItem}>
-          <View style={[
-            styles.confirmacaoCheck,
-            { borderColor: item.aceito ? theme.colors.primary : theme.colors.outline },
-            item.aceito && { backgroundColor: theme.colors.primary }
-          ]}>
-            {item.aceito && <Feather name="check" size={12} color="#FFF" />}
-          </View>
-          <Text style={[styles.confirmacaoTexto, { color: theme.colors.onSurfaceVariant }]}>
-            {item.texto}
-          </Text>
-        </View>
-      ))}
-
-      <View style={{ width: '100%', marginTop: 10, marginBottom: 30, opacity: todosAceitos ? 1 : 0.5 }}>
+      <View style={{ width: '100%', marginTop: 10, marginBottom: 32 }}>
         <CustomButton
           title="Continuar"
-          onPress={() => todosAceitos && handleContinuar()}
+          disabled={!todosAceitos}
+          onPress={handleContinuar}
           loading={carregando}
         />
       </View>

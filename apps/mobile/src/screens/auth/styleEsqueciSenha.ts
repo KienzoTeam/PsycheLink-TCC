@@ -3,11 +3,15 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 24,
-    paddingTop: 60,
     paddingBottom: 40,
   },
   backButton: {
     marginBottom: 24,
+  },
+  erroCampo: {
+    fontSize: 13,
+    marginTop: -8,
+    marginBottom: 16,
   },
   backText: {
     fontSize: 16,
@@ -60,23 +64,6 @@ export const styles = StyleSheet.create({
     borderWidth: 2,
   },
   emailHighlight: {
-    fontWeight: 'bold',
-  },
-  demoBox: {
-    marginTop: 24,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#e6e9ef',
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    borderColor: '#9ca0b0',
-  },
-  demoText: {
-    fontSize: 13,
-    textAlign: 'center',
-    color: '#6c6f85',
-  },
-  demoCode: {
     fontWeight: 'bold',
   },
   resendContainer: {

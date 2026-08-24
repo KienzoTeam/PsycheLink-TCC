@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useTheme } from '../../theme/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../hooks/useAuth';
 import CustomButton from '../../components/ui/CustomButton';
 import { styles } from './styleEsqueciSenha';
@@ -11,6 +13,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'VerificarCodigo'>;
 
 export default function VerificarCodigo({ navigation, route }: Props) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const { email, modo } = route.params;
   const { confirmarEmail, confirmarCodigoRedefinicao, reenviarCodigo } = useAuth();
   const [code, setCode] = useState(['', '', '', '', '', '']);
@@ -85,7 +88,7 @@ export default function VerificarCodigo({ navigation, route }: Props) {
       const ok = await confirmarEmail(email, completo);
       setEnviando(false);
       if (!ok) return limpar();
-      navigation.navigate('Login');
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
       return;
     }
 
@@ -105,10 +108,16 @@ export default function VerificarCodigo({ navigation, route }: Props) {
   return (
     <ScrollView
       style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}
       showsVerticalScrollIndicator={false}
     >
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+        hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+        accessibilityRole="button"
+        accessibilityLabel="Voltar"
+      >
         <Text style={[styles.backText, { color: theme.colors.primary }]}>{'< Voltar'}</Text>
       </TouchableOpacity>
 
@@ -144,6 +153,7 @@ export default function VerificarCodigo({ navigation, route }: Props) {
             value={digit}
             onChangeText={text => handleChange(text, index)}
             onKeyPress={handleTecla(index)}
+            accessibilityLabel={`Dígito ${index + 1} de 6`}
           />
         ))}
       </View>
@@ -156,13 +166,23 @@ export default function VerificarCodigo({ navigation, route }: Props) {
 
       <View style={styles.resendContainer}>
         <Text style={[styles.resendText, { color: theme.colors.onSurfaceVariant }]}>Não recebeu?</Text>
-        <TouchableOpacity onPress={handleReenviar} disabled={cooldown > 0}>
-          <Text style={[
-            styles.resendLink,
-            { color: cooldown > 0 ? theme.colors.onSurfaceVariant : theme.colors.primary }
-          ]}>
-            {cooldown > 0 ? `Reenviar em ${cooldown}s` : '🔄 Reenviar código'}
-          </Text>
+        <TouchableOpacity
+          onPress={handleReenviar}
+          disabled={cooldown > 0}
+          hitSlop={{ top: 8, bottom: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Reenviar código"
+        >
+          {cooldown > 0 ? (
+            <Text style={[styles.resendLink, { color: theme.colors.onSurfaceVariant }]}>
+              Reenviar em {cooldown}s
+            </Text>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Feather name="refresh-cw" size={14} color={theme.colors.primary} />
+              <Text style={[styles.resendLink, { color: theme.colors.primary }]}>Reenviar código</Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>

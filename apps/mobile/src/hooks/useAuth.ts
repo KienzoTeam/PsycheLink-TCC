@@ -4,12 +4,14 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import axios from 'axios';
 import { erroEmail } from '../lib/email';
+import { resetarRascunho } from '../lib/rascunhoCheckin';
 
 const devHost = Constants.expoConfig?.hostUri?.split(':')[0];
 const API_URL =
   process.env.EXPO_PUBLIC_API_URL ??
   (Platform.OS === 'web' || !devHost ? 'http://localhost:3000' : `http://${devHost}:3000`);
 const TOKEN_KEY = 'psychelink_token';
+let avisoFalhaRestauracaoEmitido = false;
 
 export type UsuarioAutenticado = {
   id: number;
@@ -132,6 +134,15 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
   
     console.warn('Erro ao restaurar sessão:', error);
 
+    // Falha inesperada (ex.: rede): avisamos uma vez em vez de cair no Login em silêncio.
+    if (!avisoFalhaRestauracaoEmitido) {
+      avisoFalhaRestauracaoEmitido = true;
+      Alert.alert(
+        'Não foi possível reconectar',
+        'Sem problemas — é só entrar novamente para continuar.'
+      );
+    }
+
     return null;
   }
 };
@@ -206,12 +217,12 @@ export function useAuth() {
     onEmailNaoVerificado?: () => void
   ) => {
     if (!email.trim()) {
-      Alert.alert('Atenção', 'Informe seu e-mail.');
+      Alert.alert('Campo faltando', 'Digite seu e-mail para continuar.');
       return;
     }
 
     if (!senha.trim()) {
-      Alert.alert('Atenção', 'Informe sua senha.');
+      Alert.alert('Campo faltando', 'Digite sua senha para continuar.');
       return;
     }
 
@@ -255,9 +266,9 @@ export function useAuth() {
 
       const mensagemErro =
         error.response?.data?.error ||
-        'Não foi possível conectar ao servidor. Verifique sua rede.';
+        'Não foi possível conectar ao servidor. Verifique sua internet e tente de novo.';
 
-      Alert.alert('Falha no Login', mensagemErro);
+      Alert.alert('Não foi possível entrar', mensagemErro);
     } finally {
       setCarregando(false);
     }
@@ -273,36 +284,49 @@ export function useAuth() {
     onSuccess: () => void
   ) => {
     if (!nome.trim()) {
-      Alert.alert('Atenção', 'Informe seu nome completo.');
+      Alert.alert('Campo faltando', 'Digite seu nome completo para criar sua conta.');
       return;
     }
 
     // Checagem leve só para UX; a validação definitiva é a do servidor.
     const erroEmailMsg = erroEmail(email);
     if (erroEmailMsg) {
-      Alert.alert('Atenção', erroEmailMsg);
+      Alert.alert('E-mail inválido', erroEmailMsg);
       return;
     }
 
     if (!senha.trim() || senha.length < 8) {
-      Alert.alert('Atenção', 'A senha deve ter no mínimo 8 caracteres.');
+      Alert.alert('Senha curta demais', 'Use pelo menos 8 caracteres para proteger sua conta.');
       return;
     }
 
     if (senha !== confirmarSenha) {
-      Alert.alert('Atenção', 'As senhas não coincidem.');
+      Alert.alert('Senhas diferentes', 'As duas senhas digitadas não coincidem. Revise e digite novamente.');
       return;
     }
 
     if (!dataNascimento.trim()) {
-      Alert.alert('Atenção', 'Informe sua data de nascimento.');
+      Alert.alert('Campo faltando', 'Informe sua data de nascimento para continuar.');
+      return;
+    }
+
+    // Validação real de calendário: 31/02 não passa, mesmo com o clamp da máscara.
+    const [diaNasc, mesNasc, anoNasc] = dataNascimento.split('/').map(Number);
+    const dataValida = new Date(anoNasc, (mesNasc || 0) - 1, diaNasc || 0);
+    if (
+      !anoNasc ||
+      String(anoNasc).length !== 4 ||
+      dataValida.getDate() !== diaNasc ||
+      dataValida.getMonth() !== (mesNasc || 0) - 1
+    ) {
+      Alert.alert('Data inválida', 'Confira o dia, o mês e o ano da sua data de nascimento.');
       return;
     }
 
     if (!aceito) {
       Alert.alert(
-        'Atenção',
-        'Você deve aceitar os Termos de Uso e a Política de Privacidade.'
+        'Falta confirmar',
+        'Para criar sua conta, leia e aceite os Termos de Uso e a Política de Privacidade.'
       );
       return;
     }
@@ -324,7 +348,7 @@ export function useAuth() {
         error.response?.data?.error ||
         'Não foi possível conectar ao servidor. Tente novamente mais tarde.';
 
-      Alert.alert('Falha no Registro', mensagemErro);
+      Alert.alert('Não foi possível criar a conta', mensagemErro);
     } finally {
       setCarregando(false);
     }
@@ -335,7 +359,7 @@ export function useAuth() {
     codigo: string
   ): Promise<boolean> => {
     if (codigo.length < 6) {
-      Alert.alert('Atenção', 'Informe o código completo de 6 dígitos.');
+      Alert.alert('Código incompleto', 'Digite os 6 dígitos que enviamos para o seu e-mail.');
       return false;
     }
 
@@ -347,9 +371,9 @@ export function useAuth() {
       return true;
     } catch (error: any) {
       Alert.alert(
-        'Erro',
+        'Código não verificado',
         error.response?.data?.error ||
-          'Não foi possível verificar o código. Tente novamente.'
+          'Confira os dígitos e tente novamente.'
       );
       return false;
     }
@@ -359,14 +383,14 @@ export function useAuth() {
     try {
       await axios.post(`${API_URL}/reenviar-codigo`, { email: email.trim() });
       Alert.alert(
-        'Sucesso',
-        'Se houver uma conta pendente, você receberá um novo código.'
+        'Verifique seu e-mail',
+        'Se houver uma conta pendente, você receberá um novo código em instantes.'
       );
       return true;
     } catch (error: any) {
       Alert.alert(
-        'Erro',
-        error.response?.data?.error || 'Falha ao reenviar código.'
+        'Não foi possível reenviar',
+        error.response?.data?.error || 'Tente novamente em instantes.'
       );
       return false;
     }
@@ -379,7 +403,7 @@ export function useAuth() {
       await axios.post(`${API_URL}/esqueci-senha`, { email: email.trim() });
       return true;
     } catch (error: any) {
-      Alert.alert('Erro', error.response?.data?.error || 'Falha ao solicitar o código.');
+      Alert.alert('Não foi possível enviar o código', error.response?.data?.error || 'Tente novamente em instantes.');
       return false;
     }
   };
@@ -390,7 +414,7 @@ export function useAuth() {
     codigo: string
   ): Promise<string | null> => {
     if (codigo.length < 6) {
-      Alert.alert('Atenção', 'Informe o código completo de 6 dígitos.');
+      Alert.alert('Código incompleto', 'Digite os 6 dígitos que enviamos para o seu e-mail.');
       return null;
     }
 
@@ -402,8 +426,8 @@ export function useAuth() {
       return response.data.token as string;
     } catch (error: any) {
       Alert.alert(
-        'Erro',
-        error.response?.data?.error || 'Não foi possível verificar o código.'
+        'Código não confirmado',
+        error.response?.data?.error || 'Confira os dígitos ou peça um novo código.'
       );
       return null;
     }
@@ -415,12 +439,14 @@ export function useAuth() {
       await axios.post(`${API_URL}/redefinir-senha`, { token, password: senha });
       return true;
     } catch (error: any) {
-      Alert.alert('Erro', error.response?.data?.error || 'Falha ao redefinir a senha.');
+      Alert.alert('Não foi possível trocar a senha', error.response?.data?.error || 'O pedido pode ter expirado — comece novamente pelo e-mail.');
       return false;
     }
   };
 
   const logout = async () => {
+    // O rascunho emocional do check-in é dado do usuário: sai junto com a sessão.
+    resetarRascunho();
     await limparSessao();
   };
 

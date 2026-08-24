@@ -4,8 +4,13 @@ export const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 60,
     paddingBottom: 40,
+  },
+  dadosExemploAviso: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 16,
+    marginTop: -8,
   },
   title: {
     fontSize: 28,
@@ -15,16 +20,16 @@ export const styles = StyleSheet.create({
   card: {
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    borderWidth: 1,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 16,
+  },
+  chartLegend: {
+    fontSize: 13,
+    marginBottom: 12,
   },
   chartPlaceholder: {
     height: 150,
@@ -33,11 +38,21 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 12,
-    paddingBottom: 10,
+    paddingBottom: 8,
   },
   bar: {
     flex: 1,
     borderRadius: 8,
+  },
+  barraComDia: {
+    flex: 1,
+    height: '100%',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 6,
+  },
+  barraDia: {
+    fontSize: 11,
   },
   historyList: {
     marginTop: 8,
@@ -45,9 +60,9 @@ export const styles = StyleSheet.create({
   historyItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    gap: 14,
+    gap: 12,
   },
   historyEmoji: {
     fontSize: 22,
@@ -58,7 +73,7 @@ export const styles = StyleSheet.create({
   historyDate: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   historyTags: {
     fontSize: 12,

@@ -37,6 +37,8 @@ export default function CustomInput({
           style
         ]}
         placeholderTextColor={theme.colors.onSurfaceVariant}
+        accessibilityLabel={label}
+        maxFontSizeMultiplier={1.4}
         {...rest}
       />
     </View>

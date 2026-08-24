@@ -5,55 +5,37 @@ export const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 22,
+    paddingHorizontal: 24,
     paddingVertical: 40,
-  },
-
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 10,
-  },
-
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
   },
 
   subtitle: {
     fontSize: 16,
-    marginBottom: 30,
+    marginBottom: 32,
   },
 
   card: {
     width: '100%',
-    padding: 25,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
+    padding: 24,
+    borderWidth: 1,
   },
 
   linkText: {
     textAlign: 'center',
-    marginTop: 22,
+    marginTop: 24,
     fontWeight: '600',
   },
 
   forgotPasswordText: {
     textAlign: 'center',
-    marginTop: 15,
+    marginTop: 16,
     fontSize: 14,
   },
 
   separatorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 25,
+    marginVertical: 24,
   },
 
   line: {
@@ -66,10 +48,10 @@ export const styles = StyleSheet.create({
   },
 
   footer: {
-    marginTop: 25,
+    marginTop: 24,
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 13,
     paddingHorizontal: 20,
-    lineHeight: 18,
+    lineHeight: 19,
   },
 });

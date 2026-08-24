@@ -3,8 +3,7 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 24,
-    paddingTop: 55,
-    paddingBottom: 30,
+    paddingBottom: 32,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
@@ -21,7 +20,7 @@ export const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#D8D0FF',
+    color: '#EDEAFF',
     marginTop: 4,
   },
   avatarButton: {
@@ -38,6 +37,17 @@ export const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  avatarGear: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checkinCard: {
     backgroundColor: 'rgba(255,255,255,0.15)',
@@ -64,13 +74,18 @@ export const styles = StyleSheet.create({
     fontSize: 15,
   },
   checkinSubtitle: {
-    color: '#D8D0FF',
+    color: '#EDEAFF',
     fontSize: 13,
-    marginTop: 2,
+    marginTop: 4,
   },
   content: {
     padding: 20,
     gap: 16,
+  },
+  dadosExemploAviso: {
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: -8,
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -78,15 +93,10 @@ export const styles = StyleSheet.create({
     gap: 12,
   },
   metricCard: {
-    backgroundColor: '#FFF',
     borderRadius: 20,
     padding: 16,
     width: '47%',
-    shadowColor: '#8839ef',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 1,
   },
   metricIcon: {
     fontSize: 24,
@@ -94,13 +104,11 @@ export const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 13,
-    color: '#6c6f85',
     marginBottom: 4,
   },
   metricValue: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#4c4f69',
     marginBottom: 4,
   },
   metricTrend: {
@@ -109,17 +117,11 @@ export const styles = StyleSheet.create({
   },
   metricQuality: {
     fontSize: 12,
-    color: '#6c6f85',
   },
   card: {
-    backgroundColor: '#FFF',
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#8839ef',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 1,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -130,7 +132,6 @@ export const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#4c4f69',
   },
   emocoesContainer: {
     flexDirection: 'row',
@@ -138,41 +139,26 @@ export const styles = StyleSheet.create({
     gap: 8,
   },
   emocaoTag: {
-    backgroundColor: '#e6e9ef',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   emocaoText: {
-    color: '#8839ef',
     fontSize: 14,
     fontWeight: '500',
   },
-  percepcaoItem: {
-    backgroundColor: '#e6e9ef',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-  },
-  percepcaoText: {
-    color: '#4c4f69',
-    fontSize: 14,
-    lineHeight: 22,
-  },
   sugestaoCard: {
-    backgroundColor: '#e6e9ef',
     borderRadius: 20,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 30,
+    marginBottom: 32,
   },
   sugestaoIconContainer: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -182,11 +168,9 @@ export const styles = StyleSheet.create({
   sugestaoTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#4c4f69',
   },
   sugestaoSubtitle: {
     fontSize: 13,
-    color: '#6c6f85',
-    marginTop: 2,
+    marginTop: 4,
   },
 });

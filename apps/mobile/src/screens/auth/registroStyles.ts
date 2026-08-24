@@ -3,7 +3,6 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 24,
-    paddingTop: 50,
     paddingBottom: 40,
   },
   stepsContainer: {
@@ -25,7 +24,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stepNumber: {
-    color: '#fff',
     fontWeight: 'bold',
   },
   line: {
@@ -43,17 +41,6 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
   },
   inactiveLabel: {},
-  logo: {
-    width: 80,
-    height: 80,
-    alignSelf: 'center',
-  },
-  logoText: {
-    textAlign: 'center',
-    fontSize: 24,
-    marginTop: 8,
-    fontWeight: '600',
-  },
   title: {
     textAlign: 'center',
     fontSize: 32,
@@ -76,11 +63,6 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  checkboxMark: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
   vinculacaoIconContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -92,35 +74,19 @@ export const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#ccd0da',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  vinculacaoCircleAlt: {
-    backgroundColor: '#bcc0cc',
-  },
-  vinculacaoIcon: {
-    fontSize: 30,
-  },
-  vinculacaoArrow: {
-    fontSize: 24,
-    color: '#8839ef',
-  },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#e6e9ef',
     borderRadius: 14,
     padding: 14,
     marginBottom: 24,
     alignItems: 'flex-start',
     gap: 10,
   },
-  infoIcon: {
-    fontSize: 18,
-  },
   infoText: {
     flex: 1,
-    color: '#6c6f85',
     fontSize: 13,
     lineHeight: 20,
   },
@@ -129,7 +95,12 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     letterSpacing: 4,
-    color: '#4c4f69',
+  },
+  erroCodigo: {
+    fontSize: 13,
+    marginTop: -8,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emailLinkContainer: {
     alignItems: 'center',
@@ -137,7 +108,6 @@ export const styles = StyleSheet.create({
     marginTop: 20,
   },
   emailLink: {
-    color: '#8839ef',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -145,13 +115,11 @@ export const styles = StyleSheet.create({
     height: 55,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#ccd0da',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 12,
   },
   skipButtonText: {
-    color: '#8839ef',
     fontSize: 16,
     fontWeight: '500',
   },
@@ -167,25 +135,5 @@ export const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 16,
     textAlign: 'center',
-  },
-  confirmacaoItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginBottom: 12,
-  },
-  confirmacaoCheck: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
-    borderWidth: 1.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  confirmacaoTexto: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 20,
   },
 });

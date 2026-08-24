@@ -1,20 +1,22 @@
 import React from 'react';
-import { 
-  TouchableOpacity, 
-  Text, 
-  StyleSheet, 
+import {
+  StyleSheet,
+  Text,
   ActivityIndicator,
-  ViewStyle,
-  TextStyle
+  TextStyle,
+  ViewStyle
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme/ThemeContext';
+import { gradienteMarca } from '../../theme';
+import ToqueAnimado from './ToqueAnimado';
 
 interface Props {
   title: string;
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   loading?: boolean;
+  disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
@@ -24,6 +26,7 @@ export default function CustomButton({
   onPress,
   variant = 'primary',
   loading = false,
+  disabled = false,
   style,
   textStyle,
 }: Props) {
@@ -53,19 +56,19 @@ export default function CustomButton({
       default: // primary
         return {
           container: { backgroundColor: theme.colors.primary },
-          text: { color: theme.colors.onPrimary },
+          text: { color: '#FFFFFF' },
         };
     }
   };
 
   const variantStyles = getVariantStyles();
 
-  const ButtonContent = () => (
+  const renderContent = () => (
     <>
       {loading ? (
         <ActivityIndicator color={variantStyles.text.color} />
       ) : (
-        <Text style={[styles.text, variantStyles.text, textStyle]}>
+        <Text style={[styles.text, variantStyles.text, textStyle]} maxFontSizeMultiplier={1.4}>
           {title}
         </Text>
       )}
@@ -74,36 +77,44 @@ export default function CustomButton({
 
   if (variant === 'primary') {
     return (
-      <TouchableOpacity 
-        onPress={onPress} 
-        disabled={loading}
-        style={[styles.container, style]}
+      <ToqueAnimado
+        onPress={onPress}
+        disabled={loading || disabled}
+        preencher
+        style={[styles.container, disabled && styles.disabled, style]}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityState={{ disabled: loading || disabled }}
       >
         <LinearGradient
-          colors={[theme.colors.primary, theme.colors.secondary]}
+          colors={gradienteMarca}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[styles.gradient, { borderRadius: theme.borderRadius.xl }]}
         >
-          <ButtonContent />
+          {renderContent()}
         </LinearGradient>
-      </TouchableOpacity>
+      </ToqueAnimado>
     );
   }
 
   return (
-    <TouchableOpacity
+    <ToqueAnimado
       onPress={onPress}
-      disabled={loading}
+      disabled={loading || disabled}
       style={[
-        styles.container, 
-        variantStyles.container, 
+        styles.container,
+        variantStyles.container,
         { borderRadius: theme.borderRadius.xl },
+        disabled && styles.disabled,
         style
       ]}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: loading || disabled }}
     >
-      <ButtonContent />
-    </TouchableOpacity>
+      {renderContent()}
+    </ToqueAnimado>
   );
 }
 
@@ -116,8 +127,8 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   gradient: {
-    width: '100%',
-    height: '100%',
+    flexGrow: 1,
+    alignSelf: 'stretch',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -125,5 +136,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

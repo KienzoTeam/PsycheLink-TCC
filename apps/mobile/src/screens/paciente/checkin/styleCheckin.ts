@@ -11,7 +11,6 @@ export const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 55,
     paddingBottom: 20,
     gap: 12,
   },
@@ -121,6 +120,30 @@ export const styles = StyleSheet.create({
     borderRadius: 11,
     borderWidth: 2,
     position: 'absolute',
+    top: '50%',
+    marginLeft: -11,
+    marginTop: -11,
+  },
+  sliderHitArea: {
+    height: 44,
+    justifyContent: 'center',
+  },
+  sliderEscala: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  sliderNumeroAlvo: {
+    height: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  sliderNumero: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   // Etapa 3 - Sono
@@ -173,6 +196,7 @@ export const styles = StyleSheet.create({
     marginBottom: 32,
   },
   habitoItem: {
+    alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 16,
@@ -214,6 +238,35 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     flex: 1,
+  },
+  recapCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    gap: 10,
+  },
+  recapTitulo: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  recapLinha: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  recapRotulo: {
+    fontSize: 13,
+    width: 84,
+  },
+  recapValor: {
+    fontSize: 13,
+    flex: 1,
+    fontWeight: '500',
+  },
+  hintErro: {
+    fontSize: 13,
+    marginTop: -20,
+    marginBottom: 28,
   },
 
   // Etapa 7 - Sucesso
@@ -266,6 +319,7 @@ export const styles = StyleSheet.create({
   // Footer botões
   footer: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
     marginTop: 8,
   },

@@ -1,16 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../theme/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ExercicioRespiracao from '../../../components/ui/ExercicioRespiracao';
 import { styles } from './styleSOS';
 
 export default function SOS() {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
+  const [respirandoAberto, setRespirandoAberto] = useState(false);
 
   return (
     <ScrollView 
       style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
@@ -21,29 +25,33 @@ export default function SOS() {
         </Text>
       </View>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.sosButton, { backgroundColor: theme.colors.error + '10', borderColor: theme.colors.error }]}
         onPress={() => Linking.openURL('tel:188')}
+        accessibilityRole="button"
       >
         <View style={[styles.sosIconContainer, { backgroundColor: theme.colors.error }]}>
-          <Feather name="phone" size={24} color="#fff" />
+          <Feather name="phone" size={24} color={theme.colors.onError} />
         </View>
         <View style={styles.sosTextContainer}>
           <Text style={[styles.sosTitle, { color: theme.colors.error }]}>Ligar para o CVV (188)</Text>
-          <Text style={[styles.sosSubtitle, { color: theme.colors.error }]}>Centro de Valorização da Vida</Text>
+          <Text style={[styles.sosSubtitle, { color: theme.colors.error }]}>Gratuito, 24 horas por dia</Text>
         </View>
         <Feather name="chevron-right" size={20} color={theme.colors.error} />
       </TouchableOpacity>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.sosButton, { backgroundColor: theme.colors.primary + '10', borderColor: theme.colors.primary }]}
+        onPress={() => Linking.openURL('https://www.cvv.org.br/chat/')}
+        accessibilityRole="button"
+        accessibilityLabel="Abrir chat do CVV"
       >
         <View style={[styles.sosIconContainer, { backgroundColor: theme.colors.primary }]}>
-          <Feather name="message-square" size={24} color="#fff" />
+          <Feather name="message-square" size={24} color={theme.colors.onPrimary} />
         </View>
         <View style={styles.sosTextContainer}>
-          <Text style={[styles.sosTitle, { color: theme.colors.primary }]}>Mensagem de Emergência</Text>
-          <Text style={[styles.sosSubtitle, { color: theme.colors.primary }]}>Enviar alerta para seu psicólogo</Text>
+          <Text style={[styles.sosTitle, { color: theme.colors.primary }]}>Chat do CVV</Text>
+          <Text style={[styles.sosSubtitle, { color: theme.colors.primary }]}>Conversa por texto, gratuita e confidencial</Text>
         </View>
         <Feather name="chevron-right" size={20} color={theme.colors.primary} />
       </TouchableOpacity>
@@ -54,11 +62,16 @@ export default function SOS() {
         <Text style={{ textAlign: 'center', color: theme.colors.onPrimaryContainer, marginBottom: 8 }}>
           Vamos fazer um exercício rápido de respiração guiada de 1 minuto.
         </Text>
-        <TouchableOpacity style={[styles.exerciseButton, { backgroundColor: theme.colors.primary }]}>
+        <TouchableOpacity
+          style={[styles.exerciseButton, { backgroundColor: theme.colors.primary }]}
+          onPress={() => setRespirandoAberto(true)}
+          accessibilityRole="button"
+        >
           <Text style={[styles.exerciseButtonText, { color: theme.colors.onPrimary }]}>Começar Exercício</Text>
         </TouchableOpacity>
       </View>
 
+      <ExercicioRespiracao visivel={respirandoAberto} aoFechar={() => setRespirandoAberto(false)} />
     </ScrollView>
   );
 }

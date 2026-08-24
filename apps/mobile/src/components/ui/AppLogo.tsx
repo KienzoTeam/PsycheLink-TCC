@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, ImageSourcePropType } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
 
 interface Props {
   tamanho?: 'pequeno' | 'medio' | 'grande';
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export default function AppLogo({ tamanho = 'medio', source }: Props) {
+  const { theme } = useTheme();
   const tamanhos = {
     pequeno: { logo: 60, fonte: 20 },
     medio:   { logo: 80, fonte: 24 },
@@ -22,7 +24,7 @@ export default function AppLogo({ tamanho = 'medio', source }: Props) {
         style={{ width: logo, height: logo }}
         resizeMode="contain"
       />
-      <Text style={[styles.texto, { fontSize: fonte }]}>PsycheLink</Text>
+      <Text style={[styles.texto, { fontSize: fonte, color: theme.colors.onBackground }]}>PsycheLink</Text>
     </View>
   );
 }
@@ -34,7 +36,6 @@ const styles = StyleSheet.create({
   },
   texto: {
     textAlign: 'center',
-    color: '#2D2154',
     fontWeight: '600',
     marginTop: 8,
   },

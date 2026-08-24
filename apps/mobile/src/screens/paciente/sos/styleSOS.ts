@@ -4,7 +4,6 @@ export const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 60,
     paddingBottom: 40,
   },
   header: {
