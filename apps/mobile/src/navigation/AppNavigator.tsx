@@ -9,6 +9,7 @@ import NovaSenha from '../screens/auth/novaSenha';
 import Vinculacao from '../screens/auth/vinculacao';
 import MainTabNavigator from './MainTabNavigator';
 import Checkin from '../screens/paciente/checkin/checkin';
+import BemEstar from '../screens/paciente/BemEstar/BemEstar';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   VerificarCodigo: { email: string; modo: 'cadastro' | 'recuperacao' };
   NovaSenha: { token: string };
   Checkin: undefined;
+  BemEstar: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
