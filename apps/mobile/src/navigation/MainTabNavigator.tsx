@@ -7,12 +7,17 @@ import Home from '../screens/paciente/dashboard/home';
 import Dados from '../screens/paciente/dashboard/dados';
 import Chat from '../screens/paciente/chat/chat';
 import SOS from '../screens/paciente/sos/sos';
+import BemEstar from '../screens/paciente/BemEstar/BemEstar';
+import Escalas from '../screens/paciente/escalas/escalas';
 import { useTheme } from '../theme/ThemeContext';
+
 
 export type MainTabParamList = {
   Home: undefined;
   Dados: undefined;
   Chat: undefined;
+  Escalas: undefined;
+  BemEstar: undefined;
   SOS: undefined;
 };
 
@@ -20,6 +25,8 @@ const ABAS = [
   { nome: 'Home', rotulo: 'Início', icone: 'home' },
   { nome: 'Dados', rotulo: 'Dados', icone: 'bar-chart-2' },
   { nome: 'Chat', rotulo: 'Chat', icone: 'message-circle' },
+  { nome: 'Escalas', rotulo: 'Escalas', icone: 'clipboard' },
+  { nome: 'Bem Estar', rotulo: 'Bem Estar', icone: 'star' },
   { nome: 'SOS', rotulo: 'SOS', icone: 'alert-circle' },
 ] as const;
 
@@ -36,7 +43,7 @@ export default function MainTabNavigator() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <PagerView
+     <PagerView
         ref={pager}
         style={{ flex: 1 }}
         initialPage={0}
@@ -50,6 +57,12 @@ export default function MainTabNavigator() {
         </View>
         <View key="chat" style={{ flex: 1 }}>
           <Chat />
+        </View>
+        <View key="escalas" style={{ flex: 1 }}>
+          <Escalas />
+        </View>
+        <View key="bem-estar" style={{ flex: 1 }}>
+          <BemEstar onVoltar={() => pager.current?.setPage(0)} />
         </View>
         <View key="sos" style={{ flex: 1 }}>
           <SOS />
