@@ -30,11 +30,8 @@ const ABAS = [
   { nome: 'SOS', rotulo: 'SOS', icone: 'alert-circle' },
 ] as const;
 
-/**
- * Páginas com swipe horizontal (PagerView) + barra inferior customizada.
- * O Check-in não é aba: é tela de pilha (fluxo focado, não se navega
- * para dentro dele deslizando).
- */
+
+// PagerView para as páginas, alterando por posições de cada página.
 export default function MainTabNavigator() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -82,6 +79,7 @@ export default function MainTabNavigator() {
       >
         {ABAS.map((aba, indice) => {
           const ligada = indice === ativo;
+
           // Crise não espera foco de aba: o SOS é sempre vermelho.
           const tinta = aba.nome === 'SOS'
             ? theme.colors.error
