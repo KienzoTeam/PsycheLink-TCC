@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  ActivityIndicator,
-  TextStyle,
-  ViewStyle
-} from 'react-native';
+import { StyleSheet, Text, ActivityIndicator, TextStyle, ViewStyle} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme/ThemeContext';
 import { gradienteMarca } from '../../theme';

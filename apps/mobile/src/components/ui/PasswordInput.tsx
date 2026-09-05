@@ -5,8 +5,7 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  TextInputProps
-} from 'react-native';
+  TextInputProps} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 
