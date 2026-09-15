@@ -10,8 +10,10 @@ export interface RegisterData {
   email: string;
   password: string;
   confirmPassword: string;
+  /** dd/mm/aaaa — exigido pelo backend (`registroSchema`). */
+  birthDate?: string;
 }
 
 export type AuthFormErrors = Partial<
-  Record<"name" | "email" | "password" | "confirmPassword", string>
+  Record<"name" | "email" | "password" | "confirmPassword" | "birthDate", string>
 >;

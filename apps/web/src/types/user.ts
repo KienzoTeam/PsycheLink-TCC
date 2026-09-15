@@ -10,6 +10,7 @@ export interface User {
   data_nascimento: string;
   created_at?: string;
   email_verificado: boolean;
+  psicologo?: Psicologo | null;
 }
 
 export interface AuthResponse {

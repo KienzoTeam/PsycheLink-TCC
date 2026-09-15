@@ -1,99 +1,114 @@
-import React, { useState } from 'react';
-import { api } from '../../../services/api';
-import { TextField } from '../../ui/TextField';
-import { Button } from '../../ui/Button';
+import { useState } from "react";
+import { Button } from "../../ui/Button";
+import { TextField } from "../../ui/TextField";
+import { authApi, getApiErrorMessage } from "../../../services/api";
 
 interface CodeVerificationFormProps {
   email: string;
+  /** Chamado após o código ser confirmado com sucesso pelo backend. */
+  onVerified: () => void | Promise<void>;
   onBack: () => void;
 }
 
-export const CodeVerificationForm: React.FC<CodeVerificationFormProps> = ({ email, onBack }) => {
-  const [codigo, setCodigo] = useState('');
-  const [error, setError] = useState('');
+/**
+ * Tela de confirmação do código de 6 dígitos enviado por e-mail.
+ *
+ * Aparece depois de um cadastro (`precisaVerificacao: true`) ou de uma
+ * tentativa de login em uma conta cujo e-mail ainda não foi confirmado
+ * (`EMAIL_NAO_VERIFICADO`). Usa os mesmos componentes de UI (TextField,
+ * Button) e tokens de cor do restante do formulário de autenticação.
+ */
+export function CodeVerificationForm({ email, onVerified, onBack }: CodeVerificationFormProps) {
+  const [codigo, setCodigo] = useState("");
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [resending, setResending] = useState(false);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      await api.post('/verificar-email', { email, codigo: Number(codigo) });
-      setSuccessMsg('E-mail verificado com sucesso! Redirecionando...');
-      
-      setTimeout(() => {
-        onBack();
-      }, 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Código inválido ou expirado.');
+      await authApi.verificarEmail(email, Number(codigo));
+      setSuccessMsg("E-mail confirmado com sucesso!");
+      await onVerified();
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Código inválido ou expirado."));
     } finally {
       setLoading(false);
     }
   };
 
   const handleResend = async () => {
-    setError('');
+    setError("");
+    setSuccessMsg("");
+    setResending(true);
     try {
-      await api.post('/reenviar-codigo', { email });
-      setSuccessMsg('Um novo código foi enviado para o seu e-mail.');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Erro ao reenviar código.');
+      await authApi.reenviarCodigo(email);
+      setSuccessMsg("Um novo código foi enviado para o seu e-mail.");
+    } catch (err) {
+      setError(getApiErrorMessage(err, "Erro ao reenviar código."));
+    } finally {
+      setResending(false);
     }
   };
 
   return (
-    <form onSubmit={handleVerify} className="space-y-4">
-      <div className="text-center mb-4">
-        <p className="text-sm text-slate-400">
-          Enviamos um código de 6 dígitos para o e-mail:
+    <div className="w-full max-w-sm animate-[fadeSlideIn_0.9s_var(--ease-in-out-expo)_0.15s_both]">
+      <div className="mb-6 text-center">
+        <h2 className="font-serif text-2xl italic text-primary">Confirme seu e-mail</h2>
+        <p className="mt-1 text-sm text-subtext">
+          Enviamos um código de 6 dígitos para <strong className="text-text">{email}</strong>
         </p>
-        <span className="text-sm font-semibold text-teal-400">{email}</span>
       </div>
 
-      {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg">
-          {error}
+      <form onSubmit={handleVerify} noValidate>
+        <div className="pb-4">
+          <TextField
+            id="codigo"
+            label="Código de verificação"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+            maxLength={6}
+            placeholder="123456"
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ""))}
+          />
         </div>
-      )}
 
-      {successMsg && (
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-lg">
-          {successMsg}
-        </div>
-      )}
+        {error && (
+          <p className="mb-4 text-sm text-mocha-red" role="alert">
+            {error}
+          </p>
+        )}
+        {successMsg && (
+          <p className="mb-4 text-sm text-mocha-green" role="status">
+            {successMsg}
+          </p>
+        )}
 
-      <TextField
-        id="codigo"
-        label="Código de Verificação"
-        type="text"
-        required
-        placeholder="123456"
-        value={codigo}
-        onChange={(e) => setCodigo(e.target.value)}
-      />
+        <Button type="submit" loading={loading} loadingLabel="Verificando...">
+          Confirmar código
+        </Button>
+      </form>
 
-      <Button type="submit" disabled={loading} className="w-full mt-2">
-        {loading ? 'Verificando...' : 'Confirmar Código'}
-      </Button>
-
-      <div className="flex justify-between items-center text-sm mt-4">
+      <div className="mt-4 flex items-center justify-between text-sm">
         <button
           type="button"
           onClick={handleResend}
-          className="text-slate-400 hover:text-white transition-colors"
+          disabled={resending}
+          className="text-subtext hover:text-text disabled:opacity-60"
         >
-          Reenviar código
+          {resending ? "Enviando..." : "Reenviar código"}
         </button>
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-teal-400 hover:underline"
-        >
+        <button type="button" onClick={onBack} className="text-primary hover:underline">
           Voltar
         </button>
       </div>
-    </form>
+    </div>
   );
-};
+}
