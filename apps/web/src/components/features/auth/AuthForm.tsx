@@ -18,8 +18,9 @@ export interface AuthFormProps {
 
 /** dd/mm/aaaa -> aaaa-mm-dd (formato aceito pelo backend). */
 function paraIso(dataBr: string): string {
-  const [dia, mes, ano] = dataBr.split("/");
-  return dia && mes && ano ? `${ano}-${mes}-${dia}` : dataBr;
+  const trimmed = dataBr.trim();
+  const [dia, mes, ano] = trimmed.split("/");
+  return dia && mes && ano ? `${ano}-${mes}-${dia}` : trimmed;
 }
 
 /**
