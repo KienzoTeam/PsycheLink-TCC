@@ -3,10 +3,6 @@ import { useReveal } from "../../../hooks/useReveal";
 
 const SMOOTH_EASE = "ease-in-out-expo";
 
-/**
- * Lado de branding da tela de autenticação (logo + nome + descrição),
- * com animação de entrada ao ficar visível.
- */
 export function BrandPanel() {
   const { ref, show } = useReveal<HTMLDivElement>();
 

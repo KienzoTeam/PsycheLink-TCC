@@ -13,9 +13,10 @@
     "@fontsource-variable/cormorant-garamond": "^5.2.6",
     "@fontsource-variable/outfit": "^5.2.8",
     "@tailwindcss/vite": "^4.3.1",
+    "axios": "^1.20.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.18.1",
+    "react-router-dom": "^7.18.4",
     "tailwindcss": "^4.3.1",
     "zustand": "^5.0.14"
   },
