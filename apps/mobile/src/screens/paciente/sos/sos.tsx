@@ -147,7 +147,7 @@ export default function SOS() {
 
   const adicionarContato = useCallback(async () => {
     try {
-      // 1. Checa a permissão
+      // Checa a permissão
       let { status, canAskAgain } = await Contacts.getPermissionsAsync();
 
       if (status !== 'granted') {
@@ -172,7 +172,7 @@ export default function SOS() {
         return;
       }
 
-      // 2. Abre o seletor nativo do aparelho
+      // Abre o seletor nativo do aparelho
       let escolhido: any = null;
       if (Contacts.Contact && typeof Contacts.Contact.presentPicker === 'function') {
         escolhido = await Contacts.Contact.presentPicker();
@@ -182,7 +182,7 @@ export default function SOS() {
 
       if (!escolhido) return; // Cancelou
 
-      // 3. Tenta carregar detalhes se disponíveis
+      // Tenta carregar detalhes se disponíveis
       let dadosDetalhados = escolhido;
       if (typeof escolhido.getDetails === 'function') {
         try {
@@ -207,7 +207,7 @@ export default function SOS() {
         return;
       }
 
-      // 4. Preenche os dados e abre a janelinha para confirmar o NOME
+      // Preenche os dados e abre a janelinha para confirmar o NOME
       setIdPendente(escolhido.id || `${Date.now()}`);
       setTelefonePendente(telefone);
       setNomeEditado(nomeIdentificado); // Se achou o nome, já deixa preenchido
