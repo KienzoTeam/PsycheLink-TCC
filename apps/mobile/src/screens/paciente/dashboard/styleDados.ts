@@ -78,4 +78,6 @@ export const styles = StyleSheet.create({
   historyTags: {
     fontSize: 12,
   },
+
+  
 });
