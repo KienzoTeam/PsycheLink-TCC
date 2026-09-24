@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Alert, Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import axios from 'axios';
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
+import { salvarTokenSeguro, obterTokenSeguro, removerTokenSeguro } from '../lib/authToken';
 
 const devHost = Constants.expoConfig?.hostUri?.split(':')[0];
 const API_URL =
   process.env.EXPO_PUBLIC_API_URL ??
   (Platform.OS === 'web' || !devHost ? 'http://localhost:3000' : `http://${devHost}:3000`);
-const TOKEN_KEY = 'psychelink_token';
 let avisoFalhaRestauracaoEmitido = false;
 
 export type UsuarioAutenticado = {
@@ -40,39 +39,6 @@ const atualizarUsuarioCompartilhado = (
 const atualizarCarregandoUsuario = (carregando: boolean) => {
   carregandoUsuarioCompartilhado = carregando;
   notificarSessao();
-};
-
-
-//Salva o JWT: 
-const salvarTokenSeguro = async (token: string) => {
-  if (Platform.OS === 'web') {
-    localStorage.setItem(TOKEN_KEY, token);
-    return;
-  }
-
-  await SecureStore.setItemAsync(TOKEN_KEY, token);
-};
-
-
-//Recupera o JWT:
-const obterTokenSeguro = async (): Promise<string | null> => {
-  if (Platform.OS === 'web') {
-    return localStorage.getItem(TOKEN_KEY);
-  }
-
-  return SecureStore.getItemAsync(TOKEN_KEY);
-};
-
-
-//Remove o JWT ao fazer logout ou quando o token for inválido/expirado.
-
-const removerTokenSeguro = async () => {
-  if (Platform.OS === 'web') {
-    localStorage.removeItem(TOKEN_KEY);
-    return;
-  }
-
-  await SecureStore.deleteItemAsync(TOKEN_KEY);
 };
 
 const tokenInvalidoOuExpirado = (error: any) => {
@@ -445,6 +411,24 @@ export function useAuth() {
   };
 
   const logout = async () => {
+    // Avisa o servidor pra invalidar a sessão de verdade (revoga o token,
+    // não só apaga ele localmente). Best-effort: se a rede falhar, ainda
+    // assim limpa a sessão local — o usuário não pode ficar preso numa
+    // tela de logout por falta de internet. O token vai continuar válido
+    // no servidor até expirar sozinho nesse cenário raro de falha de rede.
+    try {
+      const token = await obterTokenSeguro();
+      if (token) {
+        await axios.post(
+          `${API_URL}/logout`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+      }
+    } catch (error) {
+      console.warn('Não foi possível notificar o servidor do logout:', error);
+    }
+
     // O rascunho emocional do check-in é dado do usuário: sai junto com a sessão.
     resetarRascunho();
     await limparSessao();
