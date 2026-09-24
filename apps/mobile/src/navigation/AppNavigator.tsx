@@ -10,6 +10,7 @@ import Vinculacao from '../screens/auth/vinculacao';
 import MainTabNavigator from './MainTabNavigator';
 import Checkin from '../screens/paciente/checkin/checkin';
 import BemEstar from '../screens/paciente/BemEstar/BemEstar';
+import Dados from '../screens/paciente/dashboard/dados';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -21,6 +22,7 @@ export type RootStackParamList = {
   NovaSenha: { token: string };
   Checkin: undefined;
   BemEstar: undefined;
+  Dados: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -61,6 +63,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Vinculacao" component={Vinculacao} />
         <Stack.Screen name="Main" component={MainTabNavigator} />
         <Stack.Screen name="Checkin" component={Checkin} />
+         <Stack.Screen name="Dados" component={Dados} />
       </Stack.Navigator>
     </NavigationContainer>
   );
