@@ -17,6 +17,10 @@ const limite = (n: number) => rateLimit({ windowMs: 15 * 60_000, limit: n });
 export interface TokenPayload {
   id: number;
   email: string;
+  // `iat` (issued at, em segundos) é adicionado automaticamente pelo
+  // jsonwebtoken em todo jwt.sign — não precisa declarar na hora de assinar,
+  // só declarar aqui pro TypeScript saber que pode existir ao ler de volta.
+  iat?: number;
 }
 
 declare global {
@@ -27,15 +31,37 @@ declare global {
   }
 }
 
-export const verificarToken = (req: Request, res: Response, next: NextFunction) => {
+export const verificarToken = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Acesso negado. Token não fornecido.' });
 
+  let payload: TokenPayload;
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET!) as TokenPayload;
-    next();
+    payload = jwt.verify(token, process.env.JWT_SECRET!) as TokenPayload;
   } catch {
     return res.status(403).json({ error: 'Token inválido ou expirado.' });
+  }
+
+  try {
+    const resultado = await pool.query(
+      'SELECT sessao_invalidada_em FROM users WHERE id = $1',
+      [payload.id],
+    );
+    const invalidadaEm = resultado.rows[0]?.sessao_invalidada_em as Date | null | undefined;
+
+    if (
+      invalidadaEm &&
+      payload.iat !== undefined &&
+      payload.iat * 1000 < new Date(invalidadaEm).getTime()
+    ) {
+      return res.status(403).json({ error: 'Sessão encerrada. Faça login novamente.' });
+    }
+
+    req.user = payload;
+    next();
+  } catch (err) {
+    console.error('Erro ao verificar sessão:', err);
+    return res.status(500).json({ error: 'Erro interno ao verificar sessão.' });
   }
 };
 
@@ -57,7 +83,7 @@ async function emitirCodigo(email: string, assunto?: string): Promise<void> {
 
 type ResultadoCodigo = { ok: true } | { ok: false; status: number; msg: string };
 
-/** Validação comum de OTP: existência, expiração, limite de tentativas e hash. */
+// Validação comum de OTP: existência, expiração, limite de tentativas e hash.
 async function conferirCodigo(email: string, codigo: number): Promise<ResultadoCodigo> {
   const { rows } = await pool.query(
     'SELECT codigo_hash, expira_em, tentativas FROM verificacoes_email WHERE email = $1',
@@ -81,7 +107,7 @@ async function conferirCodigo(email: string, codigo: number): Promise<ResultadoC
   return { ok: true };
 }
 
-/** Impede reenvio de código mais de uma vez por minuto. */
+// Impede reenvio de código mais de uma vez por minuto. 
 async function cooldownAtivo(email: string): Promise<boolean> {
   const { rows } = await pool.query(
     'SELECT criado_em FROM verificacoes_email WHERE email = $1',
@@ -115,9 +141,8 @@ auth.post('/registro', limite(10), async (req, res) => {
     );
 
     if (existente.rows[0]?.email_verificado) {
-      // honey: mensagem genérica (não confirma existência) mas com próximos passos
-      // explícitos. Se enumeração virar problema real, responder sempre 200 +
-      // e-mail informativo em vez de 409.
+
+     //Mensagem de Erro em questão do email 
       return res.status(409).json({
         error:
           'Não foi possível concluir o cadastro com este e-mail. Motivos possíveis: ele já pertence a uma conta ativa. Tente fazer login ou recuperar a senha.',
@@ -204,7 +229,7 @@ auth.post('/reenviar-codigo', limite(5), async (req, res) => {
   }
 });
 
-// ── Redefinição de senha ────────────────────────────────────────────
+
 
 // Passo 1: pede o código. Resposta genérica para não revelar se a conta existe.
 auth.post('/esqueci-senha', limite(5), async (req, res) => {
@@ -290,7 +315,13 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(senha.data, 10);
     const atualizado = await pool.query(
-      'UPDATE users SET password_hash = $1 WHERE email = $2 AND email_verificado RETURNING id',
+      // Trocar a senha também invalida qualquer sessão antiga: se alguém
+      // pediu essa redefinição porque a conta foi comprometida, os tokens
+      // já emitidos (que o invasor pode ter) param de funcionar aqui.
+      `UPDATE users
+          SET password_hash = $1, sessao_invalidada_em = now()
+        WHERE email = $2 AND email_verificado
+        RETURNING id`,
       [hashedPassword, email],
     );
     if (atualizado.rows.length === 0) {
@@ -327,6 +358,7 @@ auth.post('/login', limite(10), async (req, res) => {
     }
 
     if (!user.rows[0].email_verificado) {
+
       // Sem reenvio automático aqui (evita spam de e-mail via força bruta no login);
       // o app navega para a tela de código, que tem o reenvio com cooldown.
       return res.status(403).json({
@@ -360,5 +392,21 @@ auth.get('/me', verificarToken, async (req, res) => {
   } catch (err) {
     console.error('Erro ao buscar perfil:', err);
     return res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
+// Logout de verdade: sem isso, o servidor nunca saberia que o usuário saiu,
+// e o token continuaria válido no ar até expirar sozinho (até 1 dia).
+// Atualiza o corte de sessão pra agora — esse E QUALQUER outro token
+// emitido antes deste momento param de funcionar imediatamente.
+auth.post('/logout', verificarToken, async (req, res) => {
+  try {
+    await pool.query('UPDATE users SET sessao_invalidada_em = now() WHERE id = $1', [
+      req.user!.id,
+    ]);
+    return res.json({ message: 'Sessão encerrada.' });
+  } catch (err) {
+    console.error('Erro ao encerrar sessão:', err);
+    return res.status(500).json({ error: 'Erro interno ao encerrar sessão.' });
   }
 });
