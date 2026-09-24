@@ -22,12 +22,6 @@ export interface Exercise {
   icon: FeatherIcon;
   type: ExerciseType;
   steps: string[];
-  /**
-   * Peso relativo de cada passo em relação ao tempo total do exercício.
-   * Se omitido, os passos são distribuídos em partes iguais.
-   * O array precisa ter o mesmo tamanho de `steps` e a soma pode ser
-   * qualquer valor (é normalizada internamente).
-   */
   stepWeights?: number[];
 }
 
@@ -44,11 +38,8 @@ export interface MoodOption {
   label: string;
 }
 
-/**
- * Registro de humor após um momento de autocuidado.
- * Pronto para futura integração com a API (LGPD: nunca é
- * compartilhado automaticamente com o psicólogo).
- */
+// Registro de humor após um momento de autocuidado. Pronto para futura integração com a API 
+ 
 export interface MoodEntry {
   mood: string;
   source: 'exercise' | 'technique';
