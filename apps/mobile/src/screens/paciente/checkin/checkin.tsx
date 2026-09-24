@@ -13,6 +13,7 @@ import { styles } from './styleCheckin';
 import { salvarRascunho, lerRascunho, resetarRascunho } from '../../../lib/rascunhoCheckin';
 import { vibrarLeve } from '../../../lib/hapticos';
 import SeloDemonstracao from '../../../components/ui/SeloDemonstracao';
+import { enviarCheckin } from '../../../lib/checkinService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Checkin'>;
 
@@ -30,10 +31,6 @@ type RascunhoCheckin = {
   habitos: string[];
   notas: string;
 };
-
-// Rascunho em nível de módulo: o wizard sobrevive a troca de app/background
-// kill dentro da sessão (sem persistência em disco — protótipo).
-// Rascunho vive em src/lib/rascunhoCheckin.ts (compartilhado com o logout).
 
 const emocoes = [
   { id: 'feliz', label: 'Feliz', icone: 'smile' },
@@ -76,6 +73,7 @@ function SliderControl({
   const { theme } = useTheme();
   const trackRef = useRef<View>(null);
   const trackGeo = useRef({ x: 0, width: 1 });
+  
   // Espelho do valor: o PanResponder captura aplicar na criação, então
   // comparações precisam ler o valor atual por ref (não por closure).
   const valorRef = useRef(value);
@@ -180,6 +178,9 @@ export default function Checkin({ navigation }: Props) {
   const [etapa, setEtapa] = useState(lerRascunho()?.etapa ?? 1);
   const [erroEmocoes, setErroEmocoes] = useState(false);
 
+  // Envio final do check-in pro backend.
+  const [enviando, setEnviando] = useState(false);
+
   // Etapa 1 - Aba de Emoções
   const [emocoesSelecionadas, setEmocoesSelecionadas] = useState<string[]>(lerRascunho()?.emocoes ?? []);
 
@@ -246,9 +247,41 @@ export default function Checkin({ navigation }: Props) {
     }
   };
 
-  // Swipe horizontal entre etapas: esquerda avança, direita volta.
-  // failOffsetY entrega o gesto vertical ao ScrollView; os sliders
-  // (PanResponder próprio, que captura no toque) continuam funcionando.
+  // Etapa 6 e 7: em vez de só avançar, manda o check-in pro backend de verdade.
+  
+  const finalizarCheckin = async () => {
+    if (enviando) return;
+
+    setEnviando(true);
+
+    try {
+      await enviarCheckin({
+        etapa,
+        emocoes: emocoesSelecionadas,
+        intensidade,
+        humor,
+        ansiedade,
+        horasSono,
+        qualidadeSono,
+        contextos: contextosSelecionados,
+        habitos: habitosSelecionados,
+        notas,
+      });
+
+      resetarRascunho();
+      setDirecao('frente');
+      setEtapa(total_etapas); // vai direto pra etapa 7 (sucesso)
+    } catch (error: any) {
+      Alert.alert(
+        'Não foi possível salvar',
+        error.response?.data?.error ||
+          'Verifique sua internet e tente novamente.',
+      );
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   const gestoSwipe = Gesture.Pan()
     .activeOffsetX([-14, 14])
     .failOffsetY([-10, 10])
@@ -554,12 +587,22 @@ export default function Checkin({ navigation }: Props) {
         Seus registros são privados e compartilhados apenas com seu psicólogo vinculado.
       </Text>
     </View>
+    {/*
+      TODO (futuro — sistema web da psicóloga): o texto acima já promete
+      esse compartilhamento, mas ele ainda NÃO está implementado — hoje o
+      check-in fica só no banco, visível apenas pro próprio paciente via
+      GET /checkins/resumo. Quando a tabela de vínculo e o endpoint da
+      psicóloga existirem, é aqui que esse texto passa a ser verdade.
+    */}
     <View style={styles.footer}>
       <TouchableOpacity style={[styles.btnVoltar, { borderColor: theme.colors.outline }]} onPress={etapaAnterior}>
         <Text style={[styles.btnVoltarTexto, { color: theme.colors.onBackground }]}>Voltar</Text>
       </TouchableOpacity>
       <View style={{ flex: 1 }}>
-        <CustomButton title="✓ Salvar Registro" onPress={proximaEtapa} />
+        <CustomButton
+          title={enviando ? 'Salvando...' : '✓ Salvar Registro'}
+          onPress={finalizarCheckin}
+        />
       </View>
     </View>
   </View>
@@ -638,7 +681,7 @@ export default function Checkin({ navigation }: Props) {
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Header */}
+     
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity
           onPress={() => {
@@ -671,10 +714,10 @@ export default function Checkin({ navigation }: Props) {
         <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>Check-in Diário</Text>
       </View>
 
-      {/* Progresso */}
+     
       {renderProgresso()}
 
-      {/* Etapa atual: swipe horizontal navega; entrada/saída seguem a direção */}
+     
       <GestureDetector gesture={gestoSwipe}>
         <Animated.View
           key={etapa}
