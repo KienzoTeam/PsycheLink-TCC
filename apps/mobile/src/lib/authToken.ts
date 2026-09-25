@@ -4,6 +4,8 @@ import * as SecureStore from 'expo-secure-store';
 const TOKEN_KEY = 'psychelink_token';
 
 export const salvarTokenSeguro = async (token: string) => {
+  if (!token || typeof token !== 'string') return;
+
   if (Platform.OS === 'web') {
     localStorage.setItem(TOKEN_KEY, token);
     return;
