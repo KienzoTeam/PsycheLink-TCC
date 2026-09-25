@@ -8,17 +8,13 @@ import { comContextoPaciente } from '../lib/contextoseguro';
 
 export const checkin = Router();
 
-// Mesmo padrão do auth.ts: balde por rota, não compartilhado — um limite
-// único faria o uso normal do app inteiro contar contra a mesma cota.
 const limite = (n: number) => rateLimit({ windowMs: 15 * 60_000, limit: n });
 
-// Mapeamento ordinal simples — ajuste aqui se a escala precisar ser outra.
 const QUALIDADE_SONO_MAP: Record<'Ruim' | 'Regular' | 'Boa', number> = {
   Ruim: 1,
   Regular: 2,
   Boa: 3,
 };
-
 
 async function obterOuCriarPacienteId(userId: number): Promise<number> {
   const existente = await pool.query('SELECT id FROM paciente WHERE user_id = $1', [userId]);
@@ -38,7 +34,8 @@ async function obterPacienteId(userId: number): Promise<number | null> {
   return (resultado.rows[0]?.id as number | undefined) ?? null;
 }
 
-checkin.post('/checkins', limite(20), verificarToken, async (req, res) => {
+// POST /checkin - Salva o check-in diário
+checkin.post('/', limite(20), verificarToken, async (req, res) => {
   const parsed = checkinSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Dados inválidos.' });
@@ -54,8 +51,6 @@ checkin.post('/checkins', limite(20), verificarToken, async (req, res) => {
   try {
     const pacienteId = await obterOuCriarPacienteId(req.user!.id);
 
-    // Futuro, ficaria a integração geral com a psicologa.
-   
     const resultado = await comContextoPaciente(pacienteId, (client) =>
       client.query(
         `INSERT INTO checkin_diario
@@ -76,12 +71,9 @@ checkin.post('/checkins', limite(20), verificarToken, async (req, res) => {
       ),
     );
 
-  
-
     return res.status(201).json({ checkin: resultado.rows[0] });
   } catch (err: any) {
-
-    // Só 1 check-in por paciente por dia 
+    // Trata caso o paciente já tenha feito check-in hoje
     if (err?.code === '23505' && err?.constraint === 'uk_paciente_data') {
       return res.status(409).json({ error: 'Você já registrou um check-in hoje.' });
     }
@@ -91,7 +83,8 @@ checkin.post('/checkins', limite(20), verificarToken, async (req, res) => {
   }
 });
 
-checkin.get('/checkins/resumo', limite(60), verificarToken, async (req, res) => {
+// GET /checkin/resumo - Busca dados para a tela de gráficos/estatísticas
+checkin.get('/resumo', limite(60), verificarToken, async (req, res) => {
   try {
     const pacienteId = await obterPacienteId(req.user!.id);
 
