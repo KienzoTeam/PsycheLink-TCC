@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Alert, Platform } from 'react-native';
-import Constants from 'expo-constants';
-import axios from 'axios';
+import { Alert } from 'react-native';
+import { api } from '../lib/api';
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
-import { salvarTokenSeguro, obterTokenSeguro, removerTokenSeguro } from '../lib/authToken';
-
-const devHost = Constants.expoConfig?.hostUri?.split(':')[0];
-const API_URL =
-  process.env.EXPO_PUBLIC_API_URL ??
-  (Platform.OS === 'web' || !devHost ? 'http://localhost:3000' : `http://${devHost}:3000`);
+import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,} from '../lib/authToken';
 let avisoFalhaRestauracaoEmitido = false;
 
 export type UsuarioAutenticado = {
@@ -29,9 +23,7 @@ const notificarSessao = () => {
   ouvintesSessao.forEach((ouvinte) => ouvinte());
 };
 
-const atualizarUsuarioCompartilhado = (
-  usuario: UsuarioAutenticado | null
-) => {
+const atualizarUsuarioCompartilhado = (usuario: UsuarioAutenticado | null) => {
   usuarioCompartilhado = usuario;
   notificarSessao();
 };
@@ -43,32 +35,37 @@ const atualizarCarregandoUsuario = (carregando: boolean) => {
 
 const tokenInvalidoOuExpirado = (error: any) => {
   const status = error?.response?.status;
-
   return status === 401 || status === 403;
 };
 
+/** DD/MM/YYYY → YYYY-MM-DD (formato que o PostgreSQL aceita) */
+function dataParaISO(dataBR: string): string | null {
+  const [dia, mes, ano] = dataBR.split('/').map(Number);
+  if (!dia || !mes || !ano || String(ano).length !== 4) return null;
 
- //Busca o perfil do usuário autenticado.
-const buscarUsuarioComToken = async (
-  token: string
-): Promise<UsuarioAutenticado> => {
+  const d = new Date(ano, mes - 1, dia);
+  if (d.getFullYear() !== ano || d.getMonth() !== mes - 1 || d.getDate() !== dia) {
+    return null;
+  }
+
+  const mm = String(mes).padStart(2, '0');
+  const dd = String(dia).padStart(2, '0');
+  return `${ano}-${mm}-${dd}`;
+}
+
+const buscarUsuarioComToken = async (token: string): Promise<UsuarioAutenticado> => {
   atualizarCarregandoUsuario(true);
 
   try {
-    const response = await axios.get<UsuarioAutenticado>(`${API_URL}/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
+    // Garante que o token está no storage antes do interceptor rodar
+    await salvarTokenSeguro(token);
+    const response = await api.get<UsuarioAutenticado>('/auth/me');
     atualizarUsuarioCompartilhado(response.data);
-
     return response.data;
   } finally {
     atualizarCarregandoUsuario(false);
   }
 };
-
 
 const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
   if (sessaoInicializada) {
@@ -85,27 +82,23 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
     }
 
     const usuario = await buscarUsuarioComToken(token);
-
     sessaoInicializada = true;
-
     return usuario;
   } catch (error: any) {
     if (tokenInvalidoOuExpirado(error)) {
       await removerTokenSeguro();
       atualizarUsuarioCompartilhado(null);
       sessaoInicializada = true;
-
       return null;
     }
-  
+
     console.warn('Erro ao restaurar sessão:', error);
 
-    // Falha inesperada (ex.: rede): avisamos uma vez em vez de cair no Login em silêncio.
     if (!avisoFalhaRestauracaoEmitido) {
       avisoFalhaRestauracaoEmitido = true;
       Alert.alert(
         'Não foi possível reconectar',
-        'Sem problemas — é só entrar novamente para continuar.'
+        'Sem problemas — é só entrar novamente para continuar.',
       );
     }
 
@@ -115,26 +108,17 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
 
 const limparSessao = async () => {
   await removerTokenSeguro();
-
   usuarioCompartilhado = null;
   carregandoUsuarioCompartilhado = false;
   sessaoInicializada = true;
-
   notificarSessao();
 };
 
 export function useAuth() {
   const [carregando, setCarregando] = useState(false);
+  const [usuario, setUsuarioLocal] = useState<UsuarioAutenticado | null>(usuarioCompartilhado);
+  const [carregandoUsuario, setCarregandoUsuarioLocal] = useState(carregandoUsuarioCompartilhado);
 
-  const [usuario, setUsuarioLocal] = useState<UsuarioAutenticado | null>(
-    usuarioCompartilhado
-  );
-
-  const [carregandoUsuario, setCarregandoUsuarioLocal] = useState(
-    carregandoUsuarioCompartilhado
-  );
-
-  
   useEffect(() => {
     const sincronizarEstado = () => {
       setUsuarioLocal(usuarioCompartilhado);
@@ -142,21 +126,16 @@ export function useAuth() {
     };
 
     ouvintesSessao.add(sincronizarEstado);
-
     sincronizarEstado();
-
     void restaurarSessaoSalva();
 
     return () => {
       ouvintesSessao.delete(sincronizarEstado);
     };
   }, []);
-  
-    //Função para buscar novamente o usuário autenticado.
-    //Pode ser útil futuramente em uma tela de Perfil, por exemplo.
+
   const buscarUsuario = async (): Promise<UsuarioAutenticado | null> => {
     const token = await obterTokenSeguro();
-
     if (!token) {
       atualizarUsuarioCompartilhado(null);
       return null;
@@ -165,13 +144,11 @@ export function useAuth() {
     try {
       const usuarioAtual = await buscarUsuarioComToken(token);
       sessaoInicializada = true;
-
       return usuarioAtual;
     } catch (error: any) {
       if (tokenInvalidoOuExpirado(error)) {
         await limparSessao();
       }
-
       throw error;
     }
   };
@@ -180,13 +157,12 @@ export function useAuth() {
     email: string,
     senha: string,
     onSuccess: () => void,
-    onEmailNaoVerificado?: () => void
+    onEmailNaoVerificado?: () => void,
   ) => {
     if (!email.trim()) {
       Alert.alert('Campo faltando', 'Digite seu e-mail para continuar.');
       return;
     }
-
     if (!senha.trim()) {
       Alert.alert('Campo faltando', 'Digite sua senha para continuar.');
       return;
@@ -195,39 +171,29 @@ export function useAuth() {
     setCarregando(true);
 
     try {
-
       atualizarUsuarioCompartilhado(null);
 
-      const response = await axios.post(`${API_URL}/login`, {
+      const response = await api.post('/auth/login', {
         email: email.trim(),
-        password: senha
+        password: senha,
       });
 
       const { token } = response.data;
-
       await salvarTokenSeguro(token);
-
-
       await buscarUsuarioComToken(token);
-
       sessaoInicializada = true;
-
-
       onSuccess();
     } catch (error: any) {
-
-      if (tokenInvalidoOuExpirado(error)) {
-        await limparSessao();
-      }
-
-      // Conta existe e senha confere, mas o e-mail ainda não foi confirmado:
-      // o app navega para a tela de código em vez de mostrar erro genérico.
       if (
         error.response?.status === 403 &&
         error.response?.data?.codigo === 'EMAIL_NAO_VERIFICADO'
       ) {
         onEmailNaoVerificado?.();
         return;
+      }
+
+      if (tokenInvalidoOuExpirado(error)) {
+        await limparSessao();
       }
 
       const mensagemErro =
@@ -247,14 +213,13 @@ export function useAuth() {
     confirmarSenha: string,
     dataNascimento: string,
     aceito: boolean,
-    onSuccess: () => void
+    onSuccess: () => void,
   ) => {
     if (!nome.trim()) {
       Alert.alert('Campo faltando', 'Digite seu nome completo para criar sua conta.');
       return;
     }
 
-    // Checagem leve só para UX; a validação definitiva é a do servidor.
     const erroEmailMsg = erroEmail(email);
     if (erroEmailMsg) {
       Alert.alert('E-mail inválido', erroEmailMsg);
@@ -276,15 +241,8 @@ export function useAuth() {
       return;
     }
 
-    // Validação real de calendário: 31/02 não passa, mesmo com o clamp da máscara.
-    const [diaNasc, mesNasc, anoNasc] = dataNascimento.split('/').map(Number);
-    const dataValida = new Date(anoNasc, (mesNasc || 0) - 1, diaNasc || 0);
-    if (
-      !anoNasc ||
-      String(anoNasc).length !== 4 ||
-      dataValida.getDate() !== diaNasc ||
-      dataValida.getMonth() !== (mesNasc || 0) - 1
-    ) {
+    const dataISO = dataParaISO(dataNascimento);
+    if (!dataISO) {
       Alert.alert('Data inválida', 'Confira o dia, o mês e o ano da sua data de nascimento.');
       return;
     }
@@ -292,7 +250,7 @@ export function useAuth() {
     if (!aceito) {
       Alert.alert(
         'Falta confirmar',
-        'Para criar sua conta, leia e aceite os Termos de Uso e a Política de Privacidade.'
+        'Para criar sua conta, leia e aceite os Termos de Uso e a Política de Privacidade.',
       );
       return;
     }
@@ -300,12 +258,12 @@ export function useAuth() {
     setCarregando(true);
 
     try {
-      // Normalização final (lowercase, IDN/punycode) é responsabilidade do servidor.
-      await axios.post(`${API_URL}/registro`, {
+      // NÃO salva token no cadastro — conta ainda precisa verificar e-mail
+      await api.post('/auth/registro', {
         nome: nome.trim(),
         email: email.trim(),
         password: senha,
-        dataNascimento
+        dataNascimento: dataISO, // YYYY-MM-DD
       });
 
       onSuccess();
@@ -320,26 +278,22 @@ export function useAuth() {
     }
   };
 
-  const confirmarEmail = async (
-    email: string,
-    codigo: string
-  ): Promise<boolean> => {
+  const confirmarEmail = async (email: string, codigo: string): Promise<boolean> => {
     if (codigo.length < 6) {
       Alert.alert('Código incompleto', 'Digite os 6 dígitos que enviamos para o seu e-mail.');
       return false;
     }
 
     try {
-      await axios.post(`${API_URL}/verificar-email`, {
+      await api.post('/auth/verificar-email', {
         email: email.trim(),
-        codigo
+        codigo: Number(codigo),
       });
       return true;
     } catch (error: any) {
       Alert.alert(
         'Código não verificado',
-        error.response?.data?.error ||
-          'Confira os dígitos e tente novamente.'
+        error.response?.data?.error || 'Confira os dígitos e tente novamente.',
       );
       return false;
     }
@@ -347,37 +301,38 @@ export function useAuth() {
 
   const reenviarCodigo = async (email: string): Promise<boolean> => {
     try {
-      await axios.post(`${API_URL}/reenviar-codigo`, { email: email.trim() });
+      await api.post('/auth/reenviar-codigo', { email: email.trim() });
       Alert.alert(
         'Verifique seu e-mail',
-        'Se houver uma conta pendente, você receberá um novo código em instantes.'
+        'Se houver uma conta pendente, você receberá um novo código em instantes.',
       );
       return true;
     } catch (error: any) {
       Alert.alert(
         'Não foi possível reenviar',
-        error.response?.data?.error || 'Tente novamente em instantes.'
+        error.response?.data?.error || 'Tente novamente em instantes.',
       );
       return false;
     }
   };
 
-  // Redefinição de senha, passo 1: pede o código. O servidor responde
-  // genericamente para não revelar se o e-mail tem conta ativa.
   const solicitarRedefinicao = async (email: string): Promise<boolean> => {
     try {
-      await axios.post(`${API_URL}/esqueci-senha`, { email: email.trim() });
+      await api.post('/auth/esqueci-senha', { email: email.trim() });
       return true;
     } catch (error: any) {
-      Alert.alert('Não foi possível enviar o código', error.response?.data?.error || 'Tente novamente em instantes.');
+      Alert.alert(
+        'Não foi possível enviar o código',
+        error.response?.data?.error || 'Tente novamente em instantes.',
+      );
       return false;
     }
   };
 
-  // Passo 2: valida o código e recebe o token de redefinição.
+  // Retorna token TEMPORÁRIO — NÃO salvar no SecureStore
   const confirmarCodigoRedefinicao = async (
     email: string,
-    codigo: string
+    codigo: string,
   ): Promise<string | null> => {
     if (codigo.length < 6) {
       Alert.alert('Código incompleto', 'Digite os 6 dígitos que enviamos para o seu e-mail.');
@@ -385,51 +340,47 @@ export function useAuth() {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/verificar-codigo-senha`, {
+      const response = await api.post('/auth/verificar-codigo-senha', {
         email: email.trim(),
-        codigo
+        codigo: Number(codigo),
       });
       return response.data.token as string;
     } catch (error: any) {
       Alert.alert(
         'Código não confirmado',
-        error.response?.data?.error || 'Confira os dígitos ou peça um novo código.'
+        error.response?.data?.error || 'Confira os dígitos ou peça um novo código.',
       );
       return null;
     }
   };
 
-  // Passo 3: troca a senha com o token do passo 2.
   const redefinirSenha = async (token: string, senha: string): Promise<boolean> => {
     try {
-      await axios.post(`${API_URL}/redefinir-senha`, { token, password: senha });
+      await api.post('/auth/redefinir-senha', { token, password: senha });
+      // Garante que nenhum token antigo de acesso continue válido no aparelho
+      await removerTokenSeguro();
+      atualizarUsuarioCompartilhado(null);
       return true;
     } catch (error: any) {
-      Alert.alert('Não foi possível trocar a senha', error.response?.data?.error || 'O pedido pode ter expirado — comece novamente pelo e-mail.');
+      Alert.alert(
+        'Não foi possível trocar a senha',
+        error.response?.data?.error ||
+          'O pedido pode ter expirado — comece novamente pelo e-mail.',
+      );
       return false;
     }
   };
 
   const logout = async () => {
-    // Avisa o servidor pra invalidar a sessão de verdade (revoga o token,
-    // não só apaga ele localmente). Best-effort: se a rede falhar, ainda
-    // assim limpa a sessão local — o usuário não pode ficar preso numa
-    // tela de logout por falta de internet. O token vai continuar válido
-    // no servidor até expirar sozinho nesse cenário raro de falha de rede.
     try {
       const token = await obterTokenSeguro();
       if (token) {
-        await axios.post(
-          `${API_URL}/logout`,
-          {},
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+        await api.post('/auth/logout');
       }
     } catch (error) {
       console.warn('Não foi possível notificar o servidor do logout:', error);
     }
 
-    // O rascunho emocional do check-in é dado do usuário: sai junto com a sessão.
     resetarRascunho();
     await limparSessao();
   };
@@ -446,6 +397,6 @@ export function useAuth() {
     buscarUsuario,
     carregando,
     carregandoUsuario,
-    usuario
+    usuario,
   };
 }
