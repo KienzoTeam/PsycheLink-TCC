@@ -7,11 +7,6 @@ export type CheckinSalvo = {
   criado_em: string;
 };
 
-/**
- * Envia o rascunho do check-in pro backend. Lança o erro do axios adiante
- * (com `error.response.data.error` já no formato que o resto do app usa)
- * pra quem chamar decidir como mostrar a falha.
- */
 export async function enviarCheckin(rascunho: RascunhoCheckin): Promise<CheckinSalvo> {
   const payload = {
     emocoes: rascunho.emocoes,
@@ -25,7 +20,8 @@ export async function enviarCheckin(rascunho: RascunhoCheckin): Promise<CheckinS
     notas: rascunho.notas || undefined,
   };
 
-  const response = await api.post<{ checkin: CheckinSalvo }>('/checkins', payload);
+  // Chama POST /checkin no servidor
+  const response = await api.post<{ checkin: CheckinSalvo }>('/checkin', payload);
 
   return response.data.checkin;
 }
@@ -46,8 +42,8 @@ export type ResumoCheckins = {
   frequenciaEmocional: FrequenciaEmocional[];
 };
 
-/** Busca o histórico já pronto pra alimentar os gráficos de "Meus Dados". */
 export async function buscarResumoCheckins(): Promise<ResumoCheckins> {
-  const response = await api.get<ResumoCheckins>('/checkins/resumo');
+  // Chama GET /checkin/resumo no servidor
+  const response = await api.get<ResumoCheckins>('/checkin/resumo');
   return response.data;
 }
