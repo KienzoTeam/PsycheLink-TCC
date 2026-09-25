@@ -4,22 +4,17 @@ import bcrypt from 'bcrypt';
 import rateLimit from 'express-rate-limit';
 import { pool } from '../db';
 import { registroSchema, senhaSchema } from '../schemas';
-import { normalizarEmail, dominioTemMX } from '../lib/validarEmail';
+import { normalizarEmail } from '../lib/validarEmail';
 import { gerarCodigo, hashCodigo, codigoConfere } from '../lib/codigo';
 import { enviarCodigo } from '../lib/mailer';
 
 export const auth = Router();
 
-// Balde separado por rota: um limite compartilhado faria o uso normal de
-// várias rotas derrubar o IP inteiro (e travaria o teste E2E com 429).
 const limite = (n: number) => rateLimit({ windowMs: 15 * 60_000, limit: n });
 
 export interface TokenPayload {
   id: number;
   email: string;
-  // `iat` (issued at, em segundos) é adicionado automaticamente pelo
-  // jsonwebtoken em todo jwt.sign — não precisa declarar na hora de assinar,
-  // só declarar aqui pro TypeScript saber que pode existir ao ler de volta.
   iat?: number;
 }
 
@@ -31,6 +26,7 @@ declare global {
   }
 }
 
+// Middleware de Verificação de Token JWT
 export const verificarToken = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Acesso negado. Token não fornecido.' });
@@ -42,6 +38,10 @@ export const verificarToken = async (req: Request, res: Response, next: NextFunc
     return res.status(403).json({ error: 'Token inválido ou expirado.' });
   }
 
+  if (!payload || !payload.id) {
+    return res.status(403).json({ error: 'Token de acesso inválido.' });
+  }
+
   try {
     const resultado = await pool.query(
       'SELECT sessao_invalidada_em FROM users WHERE id = $1',
@@ -49,12 +49,13 @@ export const verificarToken = async (req: Request, res: Response, next: NextFunc
     );
     const invalidadaEm = resultado.rows[0]?.sessao_invalidada_em as Date | null | undefined;
 
-    if (
-      invalidadaEm &&
-      payload.iat !== undefined &&
-      payload.iat * 1000 < new Date(invalidadaEm).getTime()
-    ) {
-      return res.status(403).json({ error: 'Sessão encerrada. Faça login novamente.' });
+    if (invalidadaEm && payload.iat !== undefined) {
+      const dataCorteMs = new Date(invalidadaEm).getTime();
+      const dataTokenMs = payload.iat * 1000;
+
+      if (dataTokenMs + 10000 < dataCorteMs) {
+        return res.status(403).json({ error: 'Sessão encerrada. Faça login novamente.' });
+      }
     }
 
     req.user = payload;
@@ -65,9 +66,22 @@ export const verificarToken = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-/** Gera novo OTP, persiste o HASH (TTL 15 min, zera tentativas) e envia por e-mail. */
-async function emitirCodigo(email: string, assunto?: string): Promise<void> {
+/**
+ * Tenta enviar o código via SMTP de verdade.
+ * Salva na tabela verificacoes_email apenas se o envio SMTP for aceito.
+ */
+async function emitirCodigo(email: string, assunto?: string): Promise<boolean> {
   const codigo = gerarCodigo();
+
+  try {
+    // 1. Disparo real via SMTP
+    await enviarCodigo(email, codigo, assunto);
+  } catch (erroSmtp) {
+    console.error(`[SMTP Error] Falha ao entregar e-mail para ${email}:`, erroSmtp);
+    return false;
+  }
+
+  // 2. Com o e-mail já existente na tabela `users`, a Foreign Key é respeitada
   await pool.query(
     `INSERT INTO verificacoes_email (email, codigo_hash, expira_em, tentativas, criado_em)
      VALUES ($1, $2, now() + interval '15 minutes', 0, now())
@@ -78,12 +92,12 @@ async function emitirCodigo(email: string, assunto?: string): Promise<void> {
            criado_em   = now()`,
     [email, hashCodigo(codigo, email)],
   );
-  await enviarCodigo(email, codigo, assunto);
+
+  return true;
 }
 
 type ResultadoCodigo = { ok: true } | { ok: false; status: number; msg: string };
 
-// Validação comum de OTP: existência, expiração, limite de tentativas e hash.
 async function conferirCodigo(email: string, codigo: number): Promise<ResultadoCodigo> {
   const { rows } = await pool.query(
     'SELECT codigo_hash, expira_em, tentativas FROM verificacoes_email WHERE email = $1',
@@ -107,7 +121,6 @@ async function conferirCodigo(email: string, codigo: number): Promise<ResultadoC
   return { ok: true };
 }
 
-// Impede reenvio de código mais de uma vez por minuto. 
 async function cooldownAtivo(email: string): Promise<boolean> {
   const { rows } = await pool.query(
     'SELECT criado_em FROM verificacoes_email WHERE email = $1',
@@ -116,7 +129,7 @@ async function cooldownAtivo(email: string): Promise<boolean> {
   return Boolean(rows[0] && Date.now() - new Date(rows[0].criado_em).getTime() < 60_000);
 }
 
-// Cadastro: conta nasce pendente de confirmação (double opt-in).
+// Rota de Cadastro de Usuário
 auth.post('/registro', limite(10), async (req, res) => {
   const parsed = registroSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -124,15 +137,7 @@ auth.post('/registro', limite(10), async (req, res) => {
   }
 
   const email = normalizarEmail(parsed.data.email);
-  if (!email) return res.status(400).json({ error: 'E-mail inválido.' });
-
-  if (process.env.VALIDAR_MX !== 'false') {
-    if (!(await dominioTemMX(email.split('@')[1]))) {
-      return res
-        .status(400)
-        .json({ error: 'Este domínio de e-mail não está ativo para receber mensagens.' });
-    }
-  }
+  if (!email) return res.status(400).json({ error: 'Formato de e-mail inválido.' });
 
   try {
     const existente = await pool.query(
@@ -141,8 +146,6 @@ auth.post('/registro', limite(10), async (req, res) => {
     );
 
     if (existente.rows[0]?.email_verificado) {
-
-     //Mensagem de Erro em questão do email 
       return res.status(409).json({
         error:
           'Não foi possível concluir o cadastro com este e-mail. Motivos possíveis: ele já pertence a uma conta ativa. Tente fazer login ou recuperar a senha.',
@@ -152,8 +155,8 @@ auth.post('/registro', limite(10), async (req, res) => {
     const { nome, password, dataNascimento } = parsed.data;
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 1. PRIMEIRO cria ou atualiza o usuário pendente na tabela `users`
     if (existente.rows[0]) {
-      // Conta nunca confirmada pode ser reclamada: sobrescreve dados e reenvia código.
       await pool.query(
         'UPDATE users SET nome = $1, password_hash = $2, data_nascimento = $3 WHERE email = $4',
         [nome, hashedPassword, dataNascimento, email],
@@ -166,7 +169,15 @@ auth.post('/registro', limite(10), async (req, res) => {
       );
     }
 
-    await emitirCodigo(email);
+    // 2. AGORA QUE O REGISTRO EXISTE EM `users`, envia o código via SMTP e salva em `verificacoes_email`
+    const enviadoPeloSmtp = await emitirCodigo(email);
+
+    if (!enviadoPeloSmtp) {
+      return res.status(400).json({
+        error:
+          'Não foi possível entregar o código para este e-mail. Verifique se o endereço foi digitado corretamente.',
+      });
+    }
 
     return res.status(201).json({
       message: 'Enviamos um código de 6 dígitos para o seu e-mail.',
@@ -178,7 +189,7 @@ auth.post('/registro', limite(10), async (req, res) => {
   }
 });
 
-// Confirma a posse do e-mail; fecha o double opt-in.
+// Confirmar Código do E-mail
 auth.post('/verificar-email', limite(10), async (req, res) => {
   const email = normalizarEmail(req.body.email);
   const codigo = Number(req.body.codigo);
@@ -203,7 +214,7 @@ auth.post('/verificar-email', limite(10), async (req, res) => {
   }
 });
 
-// Resposta genérica de propósito: não revela se a conta existe.
+// Reenviar Código
 auth.post('/reenviar-codigo', limite(5), async (req, res) => {
   const email = normalizarEmail(req.body.email);
   if (!email) return res.status(400).json({ error: 'E-mail inválido.' });
@@ -221,7 +232,11 @@ auth.post('/reenviar-codigo', limite(5), async (req, res) => {
       return res.status(429).json({ error: 'Aguarde um minuto antes de pedir um novo código.' });
     }
 
-    await emitirCodigo(email);
+    const enviado = await emitirCodigo(email);
+    if (!enviado) {
+      return res.status(400).json({ error: 'Não foi possível entregar o código para este e-mail.' });
+    }
+
     return res.json({ message: 'Novo código enviado.' });
   } catch (err) {
     console.error('Erro ao reenviar código:', err);
@@ -229,9 +244,7 @@ auth.post('/reenviar-codigo', limite(5), async (req, res) => {
   }
 });
 
-
-
-// Passo 1: pede o código. Resposta genérica para não revelar se a conta existe.
+// Esqueci a Senha
 auth.post('/esqueci-senha', limite(5), async (req, res) => {
   const email = normalizarEmail(req.body.email);
   if (!email) return res.status(400).json({ error: 'E-mail inválido.' });
@@ -244,7 +257,6 @@ auth.post('/esqueci-senha', limite(5), async (req, res) => {
     if (alvo.rows.length > 0 && !(await cooldownAtivo(email))) {
       await emitirCodigo(email, 'PsycheLink · Código de redefinição de senha');
     }
-    // Mesmo sem conta, a resposta é igual (não confirma existência).
     return res.json({
       message: 'Se houver uma conta ativa com este e-mail, você receberá um código.',
     });
@@ -254,7 +266,7 @@ auth.post('/esqueci-senha', limite(5), async (req, res) => {
   }
 });
 
-// Passo 2: valida o código e devolve token curto de redefinição.
+// Validar Código da Redefinição de Senha
 auth.post('/verificar-codigo-senha', limite(10), async (req, res) => {
   const email = normalizarEmail(req.body.email);
   const codigo = Number(req.body.codigo);
@@ -277,7 +289,6 @@ auth.post('/verificar-codigo-senha', limite(10), async (req, res) => {
       return res.status(resultado.status).json({ error: resultado.msg });
     }
 
-    // O código é consumido aqui; quem prossegue precisa do token.
     await pool.query('DELETE FROM verificacoes_email WHERE email = $1', [email]);
 
     const token = jwt.sign(
@@ -292,7 +303,7 @@ auth.post('/verificar-codigo-senha', limite(10), async (req, res) => {
   }
 });
 
-// Passo 3: troca a senha de fato; exige o token do passo 2.
+// Redefinir Senha
 auth.post('/redefinir-senha', limite(5), async (req, res) => {
   const senha = senhaSchema.safeParse(req.body.password);
 
@@ -315,9 +326,6 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(senha.data, 10);
     const atualizado = await pool.query(
-      // Trocar a senha também invalida qualquer sessão antiga: se alguém
-      // pediu essa redefinição porque a conta foi comprometida, os tokens
-      // já emitidos (que o invasor pode ter) param de funcionar aqui.
       `UPDATE users
           SET password_hash = $1, sessao_invalidada_em = now()
         WHERE email = $2 AND email_verificado
@@ -335,6 +343,7 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
   }
 });
 
+// Login
 auth.post('/login', limite(10), async (req, res) => {
   const email = normalizarEmail(req.body.email);
   const { password } = req.body;
@@ -358,9 +367,6 @@ auth.post('/login', limite(10), async (req, res) => {
     }
 
     if (!user.rows[0].email_verificado) {
-
-      // Sem reenvio automático aqui (evita spam de e-mail via força bruta no login);
-      // o app navega para a tela de código, que tem o reenvio com cooldown.
       return res.status(403).json({
         codigo: 'EMAIL_NAO_VERIFICADO',
         error: 'Confirme seu e-mail para acessar.',
@@ -379,6 +385,7 @@ auth.post('/login', limite(10), async (req, res) => {
   }
 });
 
+// Perfil do Usuário
 auth.get('/me', verificarToken, async (req, res) => {
   try {
     const user = await pool.query(
@@ -395,10 +402,7 @@ auth.get('/me', verificarToken, async (req, res) => {
   }
 });
 
-// Logout de verdade: sem isso, o servidor nunca saberia que o usuário saiu,
-// e o token continuaria válido no ar até expirar sozinho (até 1 dia).
-// Atualiza o corte de sessão pra agora — esse E QUALQUER outro token
-// emitido antes deste momento param de funcionar imediatamente.
+// Logout
 auth.post('/logout', verificarToken, async (req, res) => {
   try {
     await pool.query('UPDATE users SET sessao_invalidada_em = now() WHERE id = $1', [
