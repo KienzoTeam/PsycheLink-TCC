@@ -20,7 +20,7 @@ export async function enviarCheckin(rascunho: RascunhoCheckin): Promise<CheckinS
     notas: rascunho.notas || undefined,
   };
 
-  // Chama POST /checkin no servidor
+  // Chama o endpoint POST /checkin alinhado com o servidor
   const response = await api.post<{ checkin: CheckinSalvo }>('/checkin', payload);
 
   return response.data.checkin;
@@ -42,8 +42,28 @@ export type ResumoCheckins = {
   frequenciaEmocional: FrequenciaEmocional[];
 };
 
+/** Busca o histórico já pronto pra alimentar os gráficos de "Meus Dados". */
 export async function buscarResumoCheckins(): Promise<ResumoCheckins> {
-  // Chama GET /checkin/resumo no servidor
+  // Chama GET /checkin/resumo alinhado com o servidor
   const response = await api.get<ResumoCheckins>('/checkin/resumo');
+  return response.data;
+}
+
+export type PainelCheckin = {
+  semDados: boolean;
+  humorMedio?: number | null;
+  humorVariacaoSemana?: number | null;
+  ansiedadeMedia?: number | null;
+  ansiedadeVariacaoSemana?: number | null;
+  sonoMedioHoras?: number | null;
+  qualidadeSonoPredominante?: string | null;
+  checkinsEstaSemana?: number;
+  emocoesRecentes?: string[];
+  percepcao?: string;
+};
+
+export async function buscarPainelCheckin(): Promise<PainelCheckin> {
+  // Chama GET /checkin/painel alinhado com o servidor
+  const response = await api.get<PainelCheckin>('/checkin/painel');
   return response.data;
 }
