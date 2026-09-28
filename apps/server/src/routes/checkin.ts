@@ -8,6 +8,7 @@ import { comContextoPaciente } from '../lib/contextoseguro';
 
 export const checkin = Router();
 
+// Limite de requisições por rota
 const limite = (n: number) => rateLimit({ windowMs: 15 * 60_000, limit: n });
 
 const QUALIDADE_SONO_MAP: Record<'Ruim' | 'Regular' | 'Boa', number> = {
@@ -16,26 +17,159 @@ const QUALIDADE_SONO_MAP: Record<'Ruim' | 'Regular' | 'Boa', number> = {
   Boa: 3,
 };
 
+const QUALIDADE_SONO_REVERSO: Record<number, string> = {
+  1: 'Ruim',
+  2: 'Regular',
+  3: 'Boa',
+};
+
+
+interface CheckinPostResultRow {
+  id: number;
+  data: string;
+  criado_em: Date | string;
+}
+
+interface CheckinResumoRow {
+  data: string;
+  intensidade_humor: number | null;
+  intensidade_ansiedade: number | null;
+  emocao_predominante: string | null;
+}
+
+interface CheckinPainelRow {
+  data: string;
+  intensidade_humor: number | null;
+  intensidade_ansiedade: number | null;
+  horas_sono: number | null;
+  qualidade_sono: number | null;
+  emocao_predominante: string | null;
+}
+
+
 async function obterOuCriarPacienteId(userId: number): Promise<number> {
   const existente = await pool.query('SELECT id FROM paciente WHERE user_id = $1', [userId]);
   if (existente.rows[0]) {
-    return existente.rows[0].id as number;
+    return (existente.rows[0] as { id: number }).id;
   }
 
   const criado = await pool.query(
     'INSERT INTO paciente (user_id) VALUES ($1) RETURNING id',
     [userId],
   );
-  return criado.rows[0].id as number;
+  return (criado.rows[0] as { id: number }).id;
 }
+
 
 async function obterPacienteId(userId: number): Promise<number | null> {
   const resultado = await pool.query('SELECT id FROM paciente WHERE user_id = $1', [userId]);
-  return (resultado.rows[0]?.id as number | undefined) ?? null;
+  const row = resultado.rows[0] as { id: number } | undefined;
+  return row?.id ?? null;
 }
 
-// POST /checkin - Salva o check-in diário
-checkin.post('/', limite(20), verificarToken, async (req, res) => {
+function formatarDataISO(data: Date): string {
+  return data.toISOString().slice(0, 10);
+}
+
+function media(valores: Array<number | null | undefined>): number | null {
+  const validos = valores.filter((v: number | null | undefined): v is number => v !== null && v !== undefined);
+  if (validos.length === 0) return null;
+  return validos.reduce((soma: number, v: number) => soma + Number(v), 0) / validos.length;
+}
+
+type DadosPercepcao = {
+  humorMedio: number | null;
+  humorMedioAnterior: number | null;
+  ansiedadeMedia: number | null;
+  ansiedadeMediaAnterior: number | null;
+  sonoMedioHoras: number | null;
+  checkinsEstaSemana: number;
+  emocoesRecentes: string[];
+};
+
+// Geração de frases de acordo com as alterações de humor(simples)
+function gerarPercepcao(d: DadosPercepcao): string {
+  const candidatos: string[][] = [];
+
+  if (d.humorMedio !== null && d.humorMedioAnterior !== null) {
+    const diff = d.humorMedio - d.humorMedioAnterior;
+    if (diff >= 0.5) {
+      candidatos.push([
+        'Seu humor tem melhorado nos últimos dias — bom sinal.',
+        'Notamos uma evolução positiva no seu humor esta semana.',
+        'Você tem se sentido cada vez melhor ultimamente.',
+      ]);
+    } else if (diff <= -0.5) {
+      candidatos.push([
+        'Seu humor caiu um pouco esta semana — vale se cuidar com carinho.',
+        'Notamos uma queda no seu humor recente. Que tal um momento de autocuidado?',
+        'Esta semana tem sido mais difícil emocionalmente — você não está sozinho.',
+      ]);
+    }
+  }
+
+  if (d.ansiedadeMedia !== null && d.ansiedadeMediaAnterior !== null) {
+    const diff = d.ansiedadeMedia - d.ansiedadeMediaAnterior;
+    if (diff <= -0.5) {
+      candidatos.push([
+        'Sua ansiedade diminuiu esta semana — continue assim.',
+        'Você tem registrado menos ansiedade ultimamente, ótimo progresso.',
+      ]);
+    } else if (diff >= 0.5) {
+      candidatos.push([
+        'Sua ansiedade aumentou um pouco — que tal um exercício de respiração?',
+        'Notamos mais ansiedade nos seus registros recentes. Respire fundo.',
+      ]);
+    }
+  }
+
+  if (d.sonoMedioHoras !== null) {
+    if (d.sonoMedioHoras < 6) {
+      candidatos.push([
+        'Seu sono tem estado abaixo do ideal — descansar bem ajuda no equilíbrio emocional.',
+        'Poucas horas de sono essa semana. Tente priorizar o descanso.',
+      ]);
+    } else if (d.sonoMedioHoras >= 7.5) {
+      candidatos.push([
+        'Você tem dormido bem — isso costuma refletir no seu bem-estar.',
+        'Seu sono está numa boa média essa semana.',
+      ]);
+    }
+  }
+
+  if (d.checkinsEstaSemana >= 5) {
+    candidatos.push([
+      'Você está sendo consistente com seus check-ins — isso ajuda muito no acompanhamento.',
+      'Ótima constância nos seus registros esta semana.',
+    ]);
+  } else if (d.checkinsEstaSemana > 0 && d.checkinsEstaSemana <= 2) {
+    candidatos.push([
+      'Poucos check-ins essa semana — que tal registrar como você está se sentindo hoje?',
+      'Notamos poucos registros recentes. Sua jornada importa, mesmo nos dias corridos.',
+    ]);
+  }
+
+  if (d.emocoesRecentes.length > 0) {
+    const emocao = d.emocoesRecentes[0];
+    candidatos.push([
+      `"${emocao}" tem aparecido bastante nos seus registros recentes.`,
+      `Você tem sentido bastante "${emocao}" ultimamente.`,
+    ]);
+  }
+
+  if (candidatos.length === 0) {
+    candidatos.push([
+      'Continue registrando — quanto mais dados, melhores as percepções.',
+      'Cada check-in ajuda a entender melhor sua jornada emocional.',
+    ]);
+  }
+
+  const grupoEscolhido = candidatos[Math.floor(Math.random() * candidatos.length)];
+  return grupoEscolhido[Math.floor(Math.random() * grupoEscolhido.length)];
+}
+
+// Registro do CheckIn
+checkin.post(['/', '/checkins'], limite(20), verificarToken, async (req, res) => {
   const parsed = checkinSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Dados inválidos.' });
@@ -51,7 +185,8 @@ checkin.post('/', limite(20), verificarToken, async (req, res) => {
   try {
     const pacienteId = await obterOuCriarPacienteId(req.user!.id);
 
-    const resultado = await comContextoPaciente(pacienteId, (client) =>
+    
+    const { rows } = (await comContextoPaciente(pacienteId, (client) =>
       client.query(
         `INSERT INTO checkin_diario
            (paciente_id, emocao_predominante, intensidade_humor, intensidade_ansiedade,
@@ -69,11 +204,10 @@ checkin.post('/', limite(20), verificarToken, async (req, res) => {
           diarioLivre,
         ],
       ),
-    );
+    )) as { rows: CheckinPostResultRow[] };
 
-    return res.status(201).json({ checkin: resultado.rows[0] });
+    return res.status(201).json({ checkin: rows[0] });
   } catch (err: any) {
-    // Trata caso o paciente já tenha feito check-in hoje
     if (err?.code === '23505' && err?.constraint === 'uk_paciente_data') {
       return res.status(409).json({ error: 'Você já registrou um check-in hoje.' });
     }
@@ -83,8 +217,8 @@ checkin.post('/', limite(20), verificarToken, async (req, res) => {
   }
 });
 
-// GET /checkin/resumo - Busca dados para a tela de gráficos/estatísticas
-checkin.get('/resumo', limite(60), verificarToken, async (req, res) => {
+// Resumo dos Graficos para o banco de dados.
+checkin.get(['/resumo', '/checkins/resumo'], limite(60), verificarToken, async (req, res) => {
   try {
     const pacienteId = await obterPacienteId(req.user!.id);
 
@@ -92,7 +226,8 @@ checkin.get('/resumo', limite(60), verificarToken, async (req, res) => {
       return res.json({ serieTemporal: [], frequenciaEmocional: [] });
     }
 
-    const { rows } = await comContextoPaciente(pacienteId, (client) =>
+    // Tipagem direta do resultado da consulta
+    const { rows } = (await comContextoPaciente(pacienteId, (client) =>
       client.query(
         `SELECT to_char(data, 'YYYY-MM-DD') AS data,
                 intensidade_humor, intensidade_ansiedade, emocao_predominante
@@ -102,12 +237,12 @@ checkin.get('/resumo', limite(60), verificarToken, async (req, res) => {
           LIMIT 30`,
         [pacienteId],
       ),
-    );
+    )) as { rows: CheckinResumoRow[] };
 
-    const serieTemporal = rows.map((linha) => ({
-      data: linha.data as string,
-      humor: linha.intensidade_humor as number | null,
-      ansiedade: linha.intensidade_ansiedade as number | null,
+    const serieTemporal = rows.map((linha: CheckinResumoRow) => ({
+      data: linha.data,
+      humor: linha.intensidade_humor,
+      ansiedade: linha.intensidade_ansiedade,
     }));
 
     const contagemEmocoes = new Map<string, number>();
@@ -123,7 +258,7 @@ checkin.get('/resumo', limite(60), verificarToken, async (req, res) => {
         continue;
       }
 
-      for (const emocao of bruto.split(',').map((e) => e.trim()).filter(Boolean)) {
+      for (const emocao of bruto.split(',').map((e: string) => e.trim()).filter(Boolean)) {
         contagemEmocoes.set(emocao, (contagemEmocoes.get(emocao) ?? 0) + 1);
       }
     }
@@ -137,5 +272,112 @@ checkin.get('/resumo', limite(60), verificarToken, async (req, res) => {
   } catch (err) {
     console.error('Erro ao buscar resumo de check-ins:', err);
     return res.status(500).json({ error: 'Erro interno ao buscar dados.' });
+  }
+});
+
+// Home Inicial
+checkin.get(['/painel', '/checkins/painel'], limite(60), verificarToken, async (req, res) => {
+  try {
+    const pacienteId = await obterPacienteId(req.user!.id);
+
+    if (pacienteId === null) {
+      return res.json({ semDados: true });
+    }
+
+    const hoje = new Date();
+    const seteDiasAtras = new Date(hoje);
+    seteDiasAtras.setDate(hoje.getDate() - 6);
+    const catorzeDiasAtras = new Date(hoje);
+    catorzeDiasAtras.setDate(hoje.getDate() - 13);
+
+    // Tipagem direta do resultado do painel
+    const { rows } = (await comContextoPaciente(pacienteId, (client) =>
+      client.query(
+        `SELECT to_char(data, 'YYYY-MM-DD') AS data,
+                intensidade_humor, intensidade_ansiedade, horas_sono,
+                qualidade_sono, emocao_predominante
+           FROM checkin_diario
+          WHERE paciente_id = $1 AND data >= $2
+          ORDER BY data DESC`,
+        [pacienteId, formatarDataISO(catorzeDiasAtras)],
+      ),
+    )) as { rows: CheckinPainelRow[] };
+
+    if (rows.length === 0) {
+      return res.json({ semDados: true });
+    }
+
+    const corteSemanaAtual = formatarDataISO(seteDiasAtras);
+
+    const estaSemana = rows.filter((r: CheckinPainelRow) => r.data >= corteSemanaAtual);
+    const semanaAnterior = rows.filter((r: CheckinPainelRow) => r.data < corteSemanaAtual);
+
+    const humorMedio = media(estaSemana.map((r: CheckinPainelRow) => r.intensidade_humor));
+    const humorMedioAnterior = media(semanaAnterior.map((r: CheckinPainelRow) => r.intensidade_humor));
+    const ansiedadeMedia = media(estaSemana.map((r: CheckinPainelRow) => r.intensidade_ansiedade));
+    const ansiedadeMediaAnterior = media(semanaAnterior.map((r: CheckinPainelRow) => r.intensidade_ansiedade));
+    const sonoMedioHoras = media(estaSemana.map((r: CheckinPainelRow) => r.horas_sono));
+
+    const qualidadesEstaSemanaValidas = estaSemana
+      .map((r: CheckinPainelRow) => r.qualidade_sono)
+      .filter((v: number | null | undefined): v is number => v !== null && v !== undefined);
+
+    let qualidadeSonoPredominante: string | null = null;
+    if (qualidadesEstaSemanaValidas.length > 0) {
+      const contagem = new Map<number, number>();
+      qualidadesEstaSemanaValidas.forEach((q: number) => contagem.set(q, (contagem.get(q) ?? 0) + 1));
+      const maisFrequente = Array.from(contagem.entries()).sort((a, b) => b[1] - a[1])[0][0];
+      qualidadeSonoPredominante = QUALIDADE_SONO_REVERSO[maisFrequente] ?? null;
+    }
+
+    const emocoesRecentesSet = new Set<string>();
+    for (const linha of rows.slice(0, 5)) {
+      const cifrado: string | null = linha.emocao_predominante;
+      if (!cifrado) continue;
+
+      try {
+        const decifrado = descriptografar(cifrado);
+        decifrado
+          .split(',')
+          .map((e: string) => e.trim())
+          .filter(Boolean)
+          .forEach((e: string) => emocoesRecentesSet.add(e));
+      } catch (erro) {
+        console.warn('Não foi possível descriptografar emocao_predominante:', erro);
+      }
+    }
+    const emocoesRecentes = Array.from(emocoesRecentesSet).slice(0, 5);
+
+    const percepcao = gerarPercepcao({
+      humorMedio,
+      humorMedioAnterior,
+      ansiedadeMedia,
+      ansiedadeMediaAnterior,
+      sonoMedioHoras,
+      checkinsEstaSemana: estaSemana.length,
+      emocoesRecentes,
+    });
+
+    return res.json({
+      semDados: false,
+      humorMedio: humorMedio !== null ? Number(humorMedio.toFixed(1)) : null,
+      humorVariacaoSemana:
+        humorMedio !== null && humorMedioAnterior !== null
+          ? Number((humorMedio - humorMedioAnterior).toFixed(1))
+          : null,
+      ansiedadeMedia: ansiedadeMedia !== null ? Number(ansiedadeMedia.toFixed(1)) : null,
+      ansiedadeVariacaoSemana:
+        ansiedadeMedia !== null && ansiedadeMediaAnterior !== null
+          ? Number((ansiedadeMedia - ansiedadeMediaAnterior).toFixed(1))
+          : null,
+      sonoMedioHoras: sonoMedioHoras !== null ? Number(sonoMedioHoras.toFixed(1)) : null,
+      qualidadeSonoPredominante,
+      checkinsEstaSemana: estaSemana.length,
+      emocoesRecentes,
+      percepcao,
+    });
+  } catch (err) {
+    console.error('Erro ao montar painel:', err);
+    return res.status(500).json({ error: 'Erro interno ao montar o painel.' });
   }
 });
