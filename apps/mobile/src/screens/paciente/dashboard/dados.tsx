@@ -6,6 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../../../theme/ThemeContext';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import {  buscarResumoCheckins, ResumoCheckins,} from '../../../lib/checkinService';
+import { rotularEmocao } from '../../../lib/emocoes';
 
 // Paleta pro gráfico de barras — na ordem em que as emoções mais frequentes
 // aparecem (a mais citada pega a primeira cor).
@@ -67,7 +68,7 @@ export default function MeusDados({ navigation }: Props) {
   const dadosFrequencia =
     resumo?.frequenciaEmocional.map((item, indice) => ({
       value: item.quantidade,
-      label: item.emocao,
+      label: rotularEmocao(item.emocao),
       frontColor: CORES_BARRAS[indice % CORES_BARRAS.length],
     })) ?? [];
 

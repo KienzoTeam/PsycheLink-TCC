@@ -51,6 +51,7 @@ export async function buscarResumoCheckins(): Promise<ResumoCheckins> {
 
 export type PainelCheckin = {
   semDados: boolean;
+  inativo?: boolean;
   humorMedio?: number | null;
   humorVariacaoSemana?: number | null;
   ansiedadeMedia?: number | null;

@@ -68,7 +68,13 @@ async function obterPacienteId(userId: number): Promise<number | null> {
 }
 
 function formatarDataISO(data: Date): string {
-  return data.toISOString().slice(0, 10);
+  // Data local (calendário do dispositivo/servidor), não UTC: evita deslocar
+  // o corte semanal em ±1 dia perto da meia-noite quando a coluna `data`
+  // é DATE (dia corrido, sem fuso).
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  const dia = String(data.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
 }
 
 function media(valores: Array<number | null | undefined>): number | null {
@@ -85,6 +91,7 @@ type DadosPercepcao = {
   sonoMedioHoras: number | null;
   checkinsEstaSemana: number;
   emocoesRecentes: string[];
+  emocoesContagem: Record<string, number>;
 };
 
 // Geração de frases de acordo com as alterações de humor(simples)
@@ -151,10 +158,13 @@ function gerarPercepcao(d: DadosPercepcao): string {
 
   if (d.emocoesRecentes.length > 0) {
     const emocao = d.emocoesRecentes[0];
-    candidatos.push([
-      `"${emocao}" tem aparecido bastante nos seus registros recentes.`,
-      `Você tem sentido bastante "${emocao}" ultimamente.`,
-    ]);
+    // Só afirma frequência quando a emoção realmente se repetiu.
+    if ((d.emocoesContagem[emocao] ?? 0) >= 2) {
+      candidatos.push([
+        `"${emocao}" tem aparecido bastante nos seus registros recentes.`,
+        `Você tem sentido bastante "${emocao}" ultimamente.`,
+      ]);
+    }
   }
 
   if (candidatos.length === 0) {
@@ -304,7 +314,31 @@ checkin.get(['/painel', '/checkins/painel'], limite(60), verificarToken, async (
     )) as { rows: CheckinPainelRow[] };
 
     if (rows.length === 0) {
-      return res.json({ semDados: true });
+      // Distingue "nunca registrou" de "inativo há +14 dias": inativo recebe
+      // métricas zeradas reais (0/7, sem médias), nunca exemplo nem semDados.
+      const historico = (await comContextoPaciente(pacienteId, (client) =>
+        client.query('SELECT 1 FROM checkin_diario WHERE paciente_id = $1 LIMIT 1', [
+          pacienteId,
+        ]),
+      )) as { rows: unknown[] };
+
+      if (historico.rows.length === 0) {
+        return res.json({ semDados: true });
+      }
+
+      return res.json({
+        semDados: false,
+        inativo: true,
+        humorMedio: null,
+        humorVariacaoSemana: null,
+        ansiedadeMedia: null,
+        ansiedadeVariacaoSemana: null,
+        sonoMedioHoras: null,
+        qualidadeSonoPredominante: null,
+        checkinsEstaSemana: 0,
+        emocoesRecentes: [],
+        percepcao: 'Faz um tempo que você não registra — que tal fazer um check-in hoje?',
+      });
     }
 
     const corteSemanaAtual = formatarDataISO(seteDiasAtras);
@@ -330,7 +364,7 @@ checkin.get(['/painel', '/checkins/painel'], limite(60), verificarToken, async (
       qualidadeSonoPredominante = QUALIDADE_SONO_REVERSO[maisFrequente] ?? null;
     }
 
-    const emocoesRecentesSet = new Set<string>();
+    const contagemEmocoes = new Map<string, number>();
     for (const linha of rows.slice(0, 5)) {
       const cifrado: string | null = linha.emocao_predominante;
       if (!cifrado) continue;
@@ -341,12 +375,17 @@ checkin.get(['/painel', '/checkins/painel'], limite(60), verificarToken, async (
           .split(',')
           .map((e: string) => e.trim())
           .filter(Boolean)
-          .forEach((e: string) => emocoesRecentesSet.add(e));
+          .forEach((e: string) => contagemEmocoes.set(e, (contagemEmocoes.get(e) ?? 0) + 1));
       } catch (erro) {
         console.warn('Não foi possível descriptografar emocao_predominante:', erro);
       }
     }
-    const emocoesRecentes = Array.from(emocoesRecentesSet).slice(0, 5);
+    // Mais frequentes primeiro, para a percepção de frequência ser sustentada.
+    const emocoesRecentes = Array.from(contagemEmocoes.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([emocao]) => emocao);
+    const emocoesContagem = Object.fromEntries(contagemEmocoes);
 
     const percepcao = gerarPercepcao({
       humorMedio,
@@ -356,6 +395,7 @@ checkin.get(['/painel', '/checkins/painel'], limite(60), verificarToken, async (
       sonoMedioHoras,
       checkinsEstaSemana: estaSemana.length,
       emocoesRecentes,
+      emocoesContagem,
     });
 
     return res.json({

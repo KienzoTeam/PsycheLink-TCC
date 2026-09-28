@@ -15,6 +15,7 @@ import ExercicioRespiracao from '../../../components/ui/ExercicioRespiracao';
 import type { MainTabParamList } from '../../../navigation/MainTabNavigator';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import { buscarPainelCheckin, PainelCheckin } from '../../../lib/checkinService';
+import { rotularEmocao } from '../../../lib/emocoes';
 import { styles } from './styleHome';
 
 const getGreeting = () => {
@@ -48,19 +49,25 @@ export default function Home() {
   const [respirandoAberta, setRespirandoAberta] = useState(false);
   const [painel, setPainel] = useState<PainelCheckin | null>(null);
   const [carregandoPainel, setCarregandoPainel] = useState(true);
+  const [erroPainel, setErroPainel] = useState(false);
+  const [tentativaPainel, setTentativaPainel] = useState(0);
 
   // Recarrega toda vez que a Home ganha foco
   useFocusEffect(
     useCallback(() => {
       let telaAtiva = true;
+      setCarregandoPainel(true);
+      setErroPainel(false);
 
       buscarPainelCheckin()
         .then((dados) => {
           if (telaAtiva) setPainel(dados);
         })
         .catch((erro) => {
+          // Erro de rede/servidor não é "sem dados": mantém o painel anterior
+          // (se houver) e sinaliza a falha em vez de exibir números de exemplo.
           console.warn('Não foi possível carregar o painel da Home:', erro);
-          if (telaAtiva) setPainel({ semDados: true });
+          if (telaAtiva) setErroPainel(true);
         })
         .finally(() => {
           if (telaAtiva) setCarregandoPainel(false);
@@ -69,10 +76,13 @@ export default function Home() {
       return () => {
         telaAtiva = false;
       };
-    }, []),
+    }, [tentativaPainel]),
   );
 
   const temDados = painel !== null && !painel.semDados;
+  // Exemplo só após carregar, com sucesso e sem dados reais — nunca durante
+  // o carregamento inicial nem após falha de rede.
+  const mostrarExemplo = !carregandoPainel && !temDados && !erroPainel;
 
   // Parallax: o header sobe mais devagar que o conteúdo
   const scrollY = useSharedValue(0);
@@ -94,29 +104,31 @@ export default function Home() {
   const nome = usuario?.nome?.trim() || 'Usuário';
   const { texto, emoji } = getGreeting();
 
-  const humorMedioExibido = temDados ? (painel!.humorMedio ?? null) : 7.5;
+  const humorMedioExibido = temDados ? (painel!.humorMedio ?? null) : mostrarExemplo ? 7.5 : null;
   const humorTendenciaExibida = temDados
     ? formatarTendencia(painel!.humorVariacaoSemana)
-    : '↑ +0.8 esta semana';
+    : mostrarExemplo ? '↑ +0.8 esta semana' : null;
 
-  const ansiedadeMediaExibida = temDados ? (painel!.ansiedadeMedia ?? null) : 4.2;
+  const ansiedadeMediaExibida = temDados ? (painel!.ansiedadeMedia ?? null) : mostrarExemplo ? 4.2 : null;
   const ansiedadeTendenciaExibida = temDados
     ? formatarTendencia(painel!.ansiedadeVariacaoSemana)
-    : '↓ -1.2 esta semana';
+    : mostrarExemplo ? '↓ -1.2 esta semana' : null;
 
   const sonoExibido = temDados
     ? painel!.sonoMedioHoras !== null && painel!.sonoMedioHoras !== undefined
       ? `${painel!.sonoMedioHoras}h`
       : '—'
-    : '7.2h';
+    : mostrarExemplo ? '7.2h' : '—';
   const qualidadeSonoExibida = temDados
     ? painel!.qualidadeSonoPredominante
       ? `Qualidade: ${painel!.qualidadeSonoPredominante}`
       : 'Ainda sem dados de sono'
-    : 'Qualidade: Boa';
+    : mostrarExemplo ? 'Qualidade: Boa' : '—';
 
-  const frequenciaExibida = temDados ? `${painel!.checkinsEstaSemana ?? 0}/7` : '6/7';
-  const emocoesExibidas = temDados ? (painel!.emocoesRecentes ?? []) : EMOCOES_EXEMPLO;
+  const frequenciaExibida = temDados ? `${painel!.checkinsEstaSemana ?? 0}/7` : mostrarExemplo ? '6/7' : '—';
+  const emocoesExibidas = temDados
+    ? (painel!.emocoesRecentes ?? []).map(rotularEmocao)
+    : mostrarExemplo ? EMOCOES_EXEMPLO : [];
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -165,14 +177,31 @@ export default function Home() {
         </Animated.View>
 
         <View style={styles.content}>
-          {/* Só exibe o selo de demonstração APÓS carregar e confirmar que NÃO há dados reais */}
-          {!carregandoPainel && !temDados && (
+          {/* Só exibe o selo de demonstração APÓS carregar, sem erro e sem dados reais */}
+          {mostrarExemplo && (
             <>
               <SeloDemonstracao style={{ alignSelf: 'flex-start', marginBottom: 8 }} />
               <Text style={[styles.dadosExemploAviso, { color: theme.colors.onSurfaceVariant }]}>
                 Estes números são um exemplo. Faça seu check-in diário para ver os seus aqui.
               </Text>
             </>
+          )}
+          {erroPainel && !temDados && !carregandoPainel && (
+            <View style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}>
+              <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 14, lineHeight: 20 }}>
+                Não foi possível carregar seus dados agora. Verifique sua conexão.
+              </Text>
+              <TouchableOpacity onPress={() => setTentativaPainel((n) => n + 1)} accessibilityRole="button">
+                <Text style={{ color: theme.colors.primary, fontWeight: '600', marginTop: 8 }}>
+                  Tentar de novo
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {temDados && painel?.inativo && (
+            <Text style={[styles.dadosExemploAviso, { color: theme.colors.onSurfaceVariant }]}>
+              Faz um tempo que você não registra. Seus números desta semana estão zerados — faça um check-in hoje.
+            </Text>
           )}
 
           <View style={styles.metricsGrid}>
