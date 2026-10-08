@@ -12,3 +12,10 @@ input, select { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+@media (max-width: 820px) {
+  .auth-split { flex-direction: column; }
+  .auth-brand { min-height: 200px; flex: none !important; }
+  .auth-formwrap { flex: none !important; padding: 24px !important; }
+  .dash-grid { grid-template-columns: 1fr !important; }
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { brand } from '../theme';
 import { Sidebar, type NavId } from './Sidebar';
@@ -34,6 +34,10 @@ export function Dashboard() {
   const [ativo, setAtivo] = useState<NavId>('inicio');
   const [periodo, setPeriodo] = useState('7 dias');
 
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 820px)').matches) setColapsada(true);
+  }, []);
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: brand.background, color: brand.text }}>
       <Sidebar ativo={ativo} colapsada={colapsada} onToggle={() => setColapsada((v) => !v)} onNavegar={setAtivo} />
@@ -50,7 +54,7 @@ export function Dashboard() {
           </label>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16 }}>
+        <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16 }}>
           <section style={card}>
             <span style={{ fontSize: 13 }}>Pacientes vinculados</span>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>

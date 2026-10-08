@@ -66,8 +66,9 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
   const cadastro = modo === 'cadastro';
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: brand.surface }}>
+    <div className="auth-split" style={{ minHeight: '100vh', display: 'flex', background: brand.surface }}>
       <div
+        className="auth-brand"
         style={{
           flex: 1,
           padding: 32,
@@ -87,7 +88,7 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
         <span style={{ opacity: 0.85 }}>[Acompanhamento psicológico contínuo]</span>
       </div>
 
-      <div style={{ flex: 1.2, display: 'grid', placeItems: 'center', padding: 48, background: brand.background }}>
+      <div className="auth-formwrap" style={{ flex: 1.2, display: 'grid', placeItems: 'center', padding: 48, background: brand.background }}>
         <form
           onSubmit={(e) => { e.preventDefault(); onNeed2FA(email); }}
           style={{ width: 'min(460px, 100%)', display: 'grid', gap: 20, alignContent: 'start' }}
