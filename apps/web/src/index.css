@@ -16,6 +16,6 @@ input, select { font: inherit; }
 @media (max-width: 820px) {
   .auth-split { flex-direction: column; }
   .auth-brand { min-height: 200px; flex: none !important; }
-  .auth-formwrap { flex: none !important; padding: 24px !important; }
+  .auth-formwrap { flex: 1 !important; padding: 24px !important; }
   .dash-grid { grid-template-columns: 1fr !important; }
 }
