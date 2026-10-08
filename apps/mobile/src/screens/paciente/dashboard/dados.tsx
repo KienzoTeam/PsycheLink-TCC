@@ -21,7 +21,7 @@ function formatarDataCurta(iso: string) {
   return `${dia}/${mes}`;
 }
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Dados'>;
+type Props = Partial<NativeStackScreenProps<RootStackParamList, 'Dados'>>;
 
 export default function MeusDados({ navigation }: Props) {
   const { theme } = useTheme();
@@ -76,7 +76,7 @@ export default function MeusDados({ navigation }: Props) {
     <SafeAreaView style={[estilos.tela, { backgroundColor: theme.colors.background }]}>
       <View style={estilos.cabecalho}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation?.goBack()}
           accessibilityRole="button"
           accessibilityLabel="Voltar"
         >
