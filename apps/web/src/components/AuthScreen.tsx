@@ -26,31 +26,31 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
   const [email, setEmail] = useState('');
 
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: brand.background }}>
-      <div style={{ display: 'flex', borderRadius: brand.radius.xl, overflow: 'hidden', border: `1px solid ${brand.outline}`, background: brand.surface, maxWidth: 720, width: 'min(720px, 92vw)' }}>
-        <div
-          style={{
-            flex: 1,
-            padding: 32,
-            display: 'grid',
-            placeContent: 'center',
-            justifyItems: 'center',
-            gap: 8,
-            background: `linear-gradient(135deg, ${brand.gradient[0]}, ${brand.gradient[1]})`,
-            color: '#fff',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ width: 72, height: 72, borderRadius: brand.radius.lg, border: '2px solid #fff', display: 'grid', placeItems: 'center' }}>
-            Logo
-          </div>
-          <strong style={{ fontSize: 28 }}>PsycheLink</strong>
-          <span style={{ opacity: 0.85 }}>[Acompanhamento psicológico contínuo]</span>
+    <div style={{ minHeight: '100vh', display: 'flex', background: brand.surface }}>
+      <div
+        style={{
+          flex: 1,
+          padding: 32,
+          display: 'grid',
+          placeContent: 'center',
+          justifyItems: 'center',
+          gap: 8,
+          background: `linear-gradient(135deg, ${brand.gradient[0]}, ${brand.gradient[1]})`,
+          color: '#fff',
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ width: 72, height: 72, borderRadius: brand.radius.lg, border: '2px solid #fff', display: 'grid', placeItems: 'center' }}>
+          Logo
         </div>
+        <strong style={{ fontSize: 28 }}>PsycheLink</strong>
+        <span style={{ opacity: 0.85 }}>[Acompanhamento psicológico contínuo]</span>
+      </div>
 
+      <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24, background: brand.background }}>
         <form
           onSubmit={(e) => { e.preventDefault(); onNeed2FA(email); }}
-          style={{ flex: 1, padding: 24, display: 'grid', gap: 12, alignContent: 'start' }}
+          style={{ width: 'min(360px, 100%)', display: 'grid', gap: 12, alignContent: 'start' }}
         >
           <div style={{ position: 'relative', display: 'flex', background: '#e6e9ef', borderRadius: brand.radius.full, padding: 4 }}>
             <span
