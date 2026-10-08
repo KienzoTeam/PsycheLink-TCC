@@ -1,0 +1,14 @@
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #eff1f5;
+  color: #4c4f69;
+}
+button { font: inherit; cursor: pointer; }
+input, select { font: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
