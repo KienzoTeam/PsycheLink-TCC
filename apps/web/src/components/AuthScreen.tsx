@@ -3,27 +3,67 @@ import { brand } from '../theme';
 
 type Modo = 'login' | 'cadastro';
 
-const input = (placeholder: string, type = 'text', label?: string) => (
-  <label style={{ display: 'grid', gap: 4, fontSize: 14 }}>
-    {label ?? placeholder}
-    <input
-      type={type}
-      placeholder={placeholder}
-      required
+function Campo({ placeholder, type = 'text', label, required = true }: {
+  placeholder: string;
+  type?: string;
+  label?: string;
+  required?: boolean;
+}) {
+  return (
+    <label style={{ display: 'grid', gap: 6, fontSize: 16 }}>
+      {label ?? placeholder}
+      <input
+        type={type}
+        placeholder={placeholder}
+        required={required}
+        style={{
+          padding: '14px 16px',
+          fontSize: 16,
+          borderRadius: brand.radius.md,
+          border: `1px solid ${brand.outline}`,
+          background: '#fff',
+          color: brand.text,
+        }}
+      />
+    </label>
+  );
+}
+
+// Bloco colapsável com grow/shrink + blur, sem fade (conforme wireframe).
+function TrechoExpansivel({ aberto, blur, children }: {
+  aberto: boolean;
+  blur?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
       style={{
-        padding: '10px 12px',
-        borderRadius: brand.radius.md,
-        border: `1px solid ${brand.outline}`,
-        background: '#fff',
-        color: brand.text,
+        display: 'grid',
+        gridTemplateRows: aberto ? '1fr' : '0fr',
+        transition: 'grid-template-rows 280ms ease',
       }}
-    />
-  </label>
-);
+    >
+      <div
+        style={{
+          overflow: 'hidden',
+          display: 'grid',
+          gap: 16,
+          alignContent: 'start',
+          visibility: aberto ? 'visible' : 'hidden',
+          filter: blur ? (aberto ? 'blur(0)' : 'blur(8px)') : undefined,
+          transition: blur ? 'filter 280ms ease' : undefined,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }) {
   const [modo, setModo] = useState<Modo>('login');
   const [email, setEmail] = useState('');
+  const cadastro = modo === 'cadastro';
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', background: brand.surface }}>
@@ -47,10 +87,10 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
         <span style={{ opacity: 0.85 }}>[Acompanhamento psicológico contínuo]</span>
       </div>
 
-      <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24, background: brand.background }}>
+      <div style={{ flex: 1.2, display: 'grid', placeItems: 'center', padding: 48, background: brand.background }}>
         <form
           onSubmit={(e) => { e.preventDefault(); onNeed2FA(email); }}
-          style={{ width: 'min(360px, 100%)', display: 'grid', gap: 12, alignContent: 'start' }}
+          style={{ width: 'min(460px, 100%)', display: 'grid', gap: 20, alignContent: 'start' }}
         >
           <div style={{ position: 'relative', display: 'flex', background: '#e6e9ef', borderRadius: brand.radius.full, padding: 4 }}>
             <span
@@ -60,7 +100,7 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
                 top: 4, bottom: 4, left: 4, width: 'calc(50% - 4px)',
                 borderRadius: brand.radius.full,
                 background: brand.primary,
-                transform: modo === 'login' ? 'translateX(0)' : 'translateX(100%)',
+                transform: cadastro ? 'translateX(100%)' : 'translateX(0)',
                 transition: 'transform 200ms ease',
               }}
             />
@@ -71,9 +111,9 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
                 onClick={() => setModo(m)}
                 style={{
                   position: 'relative', flex: 1, border: 0, background: 'transparent',
-                  color: modo === m ? '#fff' : brand.text,
-                  padding: '8px 0', borderRadius: brand.radius.full, zIndex: 1,
-                  textTransform: 'capitalize',
+                  color: (m === 'cadastro') === cadastro ? '#fff' : brand.text,
+                  padding: '12px 0', borderRadius: brand.radius.full, zIndex: 1,
+                  textTransform: 'capitalize', fontSize: 16,
                 }}
               >
                 {m === 'login' ? 'Login' : 'Cadastro'}
@@ -81,35 +121,35 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
             ))}
           </div>
 
-          <div style={{ display: 'grid', gap: 12 }} key={modo}>
-            {modo === 'cadastro' && (
-              <>
-                {input('Nome completo')}
-                {input('CRP (ex: 06/123456)')}
-                {input('Área de atuação')}
-              </>
-            )}
-            <label style={{ display: 'grid', gap: 4, fontSize: 14 }}>
+          <TrechoExpansivel aberto={cadastro} blur>
+            <Campo placeholder="Nome completo" required={cadastro} />
+            <Campo placeholder="CRP (ex: 06/123456)" required={cadastro} />
+            <Campo placeholder="Área de atuação" required={cadastro} />
+          </TrechoExpansivel>
+
+          <div style={{ display: 'grid', gap: 20 }}>
+            <label style={{ display: 'grid', gap: 6, fontSize: 16 }}>
               Email
               <input
                 type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                style={{ padding: '10px 12px', borderRadius: brand.radius.md, border: `1px solid ${brand.outline}`, background: '#fff', color: brand.text }}
+                style={{ padding: '14px 16px', fontSize: 16, borderRadius: brand.radius.md, border: `1px solid ${brand.outline}`, background: '#fff', color: brand.text }}
               />
             </label>
-            {input('Senha', 'password', 'Senha')}
+            <Campo placeholder="Senha" type="password" label="Senha" />
           </div>
 
-          {modo === 'login' && (
-            <button type="button" style={{ border: 0, background: 'transparent', color: brand.subtext, fontSize: 13, justifySelf: 'center' }}>
+          <TrechoExpansivel aberto={!cadastro}>
+            <button type="button" style={{ border: 0, background: 'transparent', color: brand.subtext, fontSize: 14, justifySelf: 'center' }}>
               Esqueci a senha
             </button>
-          )}
+          </TrechoExpansivel>
+
           <button
             type="submit"
-            style={{ padding: 12, borderRadius: brand.radius.md, border: `1px solid ${brand.outline}`, background: brand.surface, color: brand.text }}
+            style={{ padding: 16, fontSize: 16, borderRadius: brand.radius.md, border: `1px solid ${brand.outline}`, background: brand.surface, color: brand.text }}
           >
-            Entrar
+            {cadastro ? 'Cadastrar' : 'Entrar'}
           </button>
         </form>
       </div>
