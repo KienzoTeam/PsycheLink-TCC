@@ -6,7 +6,7 @@ const BIOMETRIA_ATIVADA_KEY = 'psychelink_biometria_ativa';
 const EMAIL_BIOMETRIA_KEY = 'psychelink_bio_email';
 const SENHA_BIOMETRIA_KEY = 'psychelink_bio_senha';
 
-/** Verifica se o aparelho tem leitor de impressão digital (sem Face ID) */
+// Verifica se o aparelho tem leitor de impressão digital 
 export async function dispositivoTemDigital(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
 
@@ -17,14 +17,14 @@ export async function dispositivoTemDigital(): Promise<boolean> {
   return tipos.includes(LocalAuthentication.AuthenticationType.FINGERPRINT);
 }
 
-/** Verifica se o usuário ativou a biometria no app */
+// Verifica se o usuário ativou a biometria no app 
 export async function biometriaEstaAtivada(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
   const ativada = await SecureStore.getItemAsync(BIOMETRIA_ATIVADA_KEY);
   return ativada === 'true';
 }
 
-/** Salva as credenciais no cofre seguro do celular para uso futuro com a digital */
+// Salva as credenciais no cofre seguro do celular para uso futuro com a digital 
 export async function salvarCredenciaisBiometria(email: string, senha: string): Promise<void> {
   if (!email || !senha) return;
   await SecureStore.setItemAsync(BIOMETRIA_ATIVADA_KEY, 'true');
@@ -32,7 +32,7 @@ export async function salvarCredenciaisBiometria(email: string, senha: string): 
   await SecureStore.setItemAsync(SENHA_BIOMETRIA_KEY, senha);
 }
 
-/** Remove a biometria e limpa o cofre do dispositivo */
+// Remove a biometria e limpa o cofre do dispositivo 
 export async function desativarBiometria(): Promise<void> {
   await SecureStore.deleteItemAsync(BIOMETRIA_ATIVADA_KEY);
   await SecureStore.deleteItemAsync(EMAIL_BIOMETRIA_KEY);
