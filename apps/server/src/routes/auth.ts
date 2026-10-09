@@ -343,7 +343,7 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
   }
 });
 
-// Login
+// Login com bloqueio. 
 auth.post('/login', limite(10), async (req, res) => {
   const email = normalizarEmail(req.body.email);
   const { password } = req.body;
@@ -354,27 +354,78 @@ auth.post('/login', limite(10), async (req, res) => {
 
   try {
     const user = await pool.query(
-      'SELECT id, email, password_hash, email_verificado FROM users WHERE email = $1',
+      `SELECT id, email, password_hash, email_verificado,
+              tentativas_falhas, bloqueio_acesso
+         FROM users WHERE email = $1`,
       [email],
     );
+
     if (user.rows.length === 0) {
       return res.status(400).json({ error: 'E-mail ou senha inválidos.' });
     }
 
-    const valido = await bcrypt.compare(password, user.rows[0].password_hash);
-    if (!valido) {
-      return res.status(400).json({ error: 'E-mail ou senha inválidos.' });
+    const usuario = user.rows[0];
+
+    // 1. checagem de bloqueio
+    if (usuario.bloqueio_acesso && new Date(usuario.bloqueio_acesso).getTime() > Date.now()) {
+      const minutosRestantes = Math.ceil(
+        (new Date(usuario.bloqueio_acesso).getTime() - Date.now()) / 60000,
+      );
+      return res.status(403).json({
+        error: `Acesso bloqueado temporariamente por excesso de tentativas. Tente novamente em ${minutosRestantes} minuto(s).`,
+      });
     }
 
-    if (!user.rows[0].email_verificado) {
+    const valido = await bcrypt.compare(password, usuario.password_hash);
+
+    // 2. senha incorreta - faz a soma das falhas, e faz o bloqueio.
+    if (!valido) {
+      const falhas = (usuario.tentativas_falhas || 0) + 1;
+
+      if (falhas >= 5) {
+        // Atingiu 5 falhas: bloqueia por 15 minutos
+        await pool.query(
+          `UPDATE users
+              SET tentativas_falhas = $1,
+                  bloqueio_acesso = now() + interval '15 minutes'
+            WHERE id = $2`,
+          [falhas, usuario.id],
+        );
+
+        return res.status(403).json({
+          error: 'Muitas tentativas incorretas. Por segurança, seu acesso foi bloqueado por 15 minutos.',
+        });
+      } else {
+
+        // Ainda não atingiu o limite: atualiza contador e avisa quantas restam
+        await pool.query('UPDATE users SET tentativas_falhas = $1 WHERE id = $2', [
+          falhas,
+          usuario.id,
+        ]);
+
+        const restantes = 5 - falhas;
+        return res.status(400).json({
+          error: `E-mail ou senha inválidos. Você tem mais ${restantes} tentativa(s) antes do bloqueio de acesso.`,
+        });
+      }
+    }
+
+    // Email não verificado (tem que checar isso antes de dar sucesso, mas depois da senha)
+    if (!usuario.email_verificado) {
       return res.status(403).json({
         codigo: 'EMAIL_NAO_VERIFICADO',
         error: 'Confirme seu e-mail para acessar.',
       });
     }
 
+    // 3. login com sucesso - zera as tentativas, e faz o login normalmente.
+    await pool.query(
+      'UPDATE users SET tentativas_falhas = 0, bloqueio_acesso = NULL WHERE id = $1',
+      [usuario.id],
+    );
+
     const token = jwt.sign(
-      { id: user.rows[0].id, email: user.rows[0].email },
+      { id: usuario.id, email: usuario.email },
       process.env.JWT_SECRET!,
       { expiresIn: '1d' },
     );
