@@ -16,6 +16,8 @@
     "expo-contacts": "~56.0.13",
     "expo-haptics": "~56.0.3",
     "expo-linear-gradient": "~56.0.4",
+    "expo-local-authentication": "~56.0.5",
+    "expo-notifications": "~56.0.26",
     "expo-secure-store": "~56.0.4",
     "expo-status-bar": "~56.0.4",
     "react": "19.2.3",
