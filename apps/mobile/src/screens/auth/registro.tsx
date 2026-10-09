@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, DimensionValue } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
@@ -15,6 +15,60 @@ import { styles } from './registroStyles';
 import { erroEmail } from '../../lib/email';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Registro'>;
+
+interface ForcaSenhaResult {
+  nivel: number;
+  texto: string;
+  cor: string;
+  percentual: DimensionValue; // Tipagem do React Native para evitar o erro de style
+}
+
+// Função para calcular a força da senha em tempo real 
+
+function calcularForcaSenha(s: string): ForcaSenhaResult {
+  if (!s) return { nivel: 0, texto: '', cor: 'transparent', percentual: '0%' };
+
+  if (s.length < 8) {
+    return {
+      nivel: 1,
+      texto: 'Senha fraca (mínimo 8 caracteres)',
+      cor: '#EF4444', // Vermelho
+      percentual: '33%',
+    };
+  }
+
+  const temNumero = /\d/.test(s);
+  const temLetra = /[a-zA-Z]/.test(s);
+  const temMaiuscula = /[A-Z]/.test(s);
+  const temEspecial = /[!@#$%^&*(),.?":{}|<>]/.test(s);
+
+  // Se tiver letras, números, maiúscula e caractere especial -> Forte
+  if (temNumero && temLetra && temMaiuscula && temEspecial) {
+    return {
+      nivel: 3,
+      texto: 'Senha forte',
+      cor: '#10B981', // Verde
+      percentual: '100%',
+    };
+  }
+
+  // Se tiver letras e números -> Razoável
+  if (temNumero && temLetra) {
+    return {
+      nivel: 2,
+      texto: 'Senha razoável (adicione maiúscula e caractere especial)',
+      cor: '#F59E0B', // Amarelo
+      percentual: '66%',
+    };
+  }
+
+  return {
+    nivel: 1,
+    texto: 'Senha fraca (misture letras e números)',
+    cor: '#EF4444', // Vermelho
+    percentual: '33%',
+  };
+}
 
 export default function Registro({ navigation }: Props) {
   const { theme } = useTheme();
@@ -35,12 +89,13 @@ export default function Registro({ navigation }: Props) {
   const todosAceitos = termosAceitos && privacidadeAceita && consentimentoAceito && avisoAceito;
   const aceitosCount = [termosAceitos, privacidadeAceita, consentimentoAceito, avisoAceito].filter(Boolean).length;
 
+  const forcaSenha = calcularForcaSenha(senha);
+
   const handleDataChange = (texto: string) => {
     const apenasNumeros = texto.replace(/\D/g, '');
     let dd = apenasNumeros.slice(0, 2);
     let mm = apenasNumeros.slice(2, 4);
 
-    // Clamp durante a digitação: nunca deixa passar de 31/99 ou 12/9999.
     if (dd.length === 2 && Number(dd) > 31) dd = '31';
     if (mm.length === 2 && Number(mm) > 12) mm = '12';
 
@@ -69,10 +124,9 @@ export default function Registro({ navigation }: Props) {
       dataNascimento,
       todosAceitos,
       () => {
-        // Conta criada como pendente: o próximo passo é confirmar o e-mail (OTP).
         navigation.navigate('VerificarCodigo', {
           email: email.trim(),
-          modo: 'cadastro'
+          modo: 'cadastro',
         });
       }
     );
@@ -132,7 +186,7 @@ export default function Registro({ navigation }: Props) {
         value={email}
         onChangeText={(texto) => {
           setEmail(texto);
-          if (erroEmailCampo) setErroEmailCampo(null); // nunca bloqueia a digitação
+          if (erroEmailCampo) setErroEmailCampo(null);
         }}
         onBlur={() => setErroEmailCampo(erroEmail(email))}
       />
@@ -144,7 +198,7 @@ export default function Registro({ navigation }: Props) {
             fontSize: 13,
             marginLeft: 4,
             marginTop: -10,
-            marginBottom: 12
+            marginBottom: 12,
           }}
           accessibilityRole="alert"
         >
@@ -160,6 +214,46 @@ export default function Registro({ navigation }: Props) {
         autoComplete="new-password"
         textContentType="newPassword"
       />
+
+      {/* Indicador visual(Senha) */}
+
+      {senha.length > 0 && (
+        <View style={{ marginTop: -8, marginBottom: 12, paddingHorizontal: 4 }}>
+          
+          {/* Trilho da Barrinha */}
+          <View
+            style={{
+              height: 5,
+              width: '100%',
+              backgroundColor: theme.colors.surfaceVariant,
+              borderRadius: 3,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Preenchimento Colorido */}
+            <View
+              style={{
+                height: '100%',
+                width: forcaSenha.percentual,
+                backgroundColor: forcaSenha.cor,
+                borderRadius: 3,
+              }}
+            />
+          </View>
+
+          {/* Texto Indicativo */}
+          <Text
+            style={{
+              fontSize: 12,
+              color: forcaSenha.cor,
+              marginTop: 4,
+              fontWeight: '600',
+            }}
+          >
+            {forcaSenha.texto}
+          </Text>
+        </View>
+      )}
 
       <PasswordInput
         label="Confirmar senha"
@@ -226,7 +320,6 @@ export default function Registro({ navigation }: Props) {
           loading={carregando}
         />
       </View>
-
     </ScrollView>
   );
 }
