@@ -1,7 +1,8 @@
-import React, { useRef, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text,TouchableOpacity, ScrollView, TextInput, Alert,Switch} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Feather } from "@expo/vector-icons";
 import { RootStackParamList } from "../../navigation/AppNavigator";
 import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../theme/ThemeContext";
@@ -10,37 +11,131 @@ import PasswordInput from "../../components/ui/PasswordInput";
 import CustomButton from "../../components/ui/CustomButton";
 import AppLogo from "../../components/ui/AppLogo";
 import { styles } from "./loginStyles";
+import { dispositivoTemDigital, biometriaEstaAtivada,salvarCredenciaisBiometria, desativarBiometria, autenticarComDigital, obterCredenciaisBiometria,} from "../../lib/biometria";
 
 type LoginNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
 export default function Login() {
   const navigation = useNavigation<LoginNavigationProp>();
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [biometriaAtiva, setBiometriaAtiva] = useState(false);
+  const [suportaDigital, setSuportaDigital] = useState(false);
+  const [validandoDigital, setValidandoDigital] = useState(false);
   const senhaRef = useRef<TextInput>(null);
+
   const { login, carregando } = useAuth();
 
-  const handleLogin = () => {
+  // Carrega as configurações Iniciais 
+  useEffect(() => {
+    (async () => {
+      const temDigital = await dispositivoTemDigital();
+      const jaAtivada = await biometriaEstaAtivada();
+      const { email: emailSalvo } = await obterCredenciaisBiometria();
+
+      setSuportaDigital(temDigital);
+      setBiometriaAtiva(temDigital && jaAtivada);
+
+      // Se já tiver e-mail salvo, preenche o campo para conveniência
+      if (emailSalvo) {
+        setEmail(emailSalvo);
+      }
+    })();
+  }, []);
+
+  // Lógica do Switch/Toggle na tela
+  const aoAlternarSwitchBiometria = async (valor: boolean) => {
+    if (!suportaDigital) {
+      Alert.alert("Indisponível", "Seu aparelho não possui leitor de digital compatível.");
+      return;
+    }
+
+    setBiometriaAtiva(valor);
+
+    if (!valor) {
+      await desativarBiometria();
+    } else {
+      Alert.alert(
+        "Autenticação por Biometria",
+        "Entre com e-mail e senha uma vez para salvar o acesso por digital."
+      );
+    }
+  };
+
+  // Login Manual (E-mail + Senha)
+  const handleLoginManual = () => {
     login(
       email,
       senha,
-      () => {
-        // Sessão iniciada: limpa a pilha para o back não voltar ao Login.
+      async () => {
+
+        // Se a chave de biometria estiver ativa, salva as credenciais no SecureStore
+        if (biometriaAtiva && suportaDigital) {
+          await salvarCredenciaisBiometria(email, senha);
+        } else {
+          await desativarBiometria();
+        }
+
         navigation.reset({ index: 0, routes: [{ name: "Main" }] });
       },
-      // Conta pendente de confirmação: vai direto para a tela do código OTP.
       () => {
         navigation.navigate("VerificarCodigo", {
           email: email.trim(),
-          modo: "cadastro"
+          modo: "cadastro",
         });
       }
     );
   };
 
+  // Login acionado EXCLUSIVAMENTE pelo clique no botão "Entrar com Digital"
+  const handleLoginComDigital = async () => {
+    try {
+      setValidandoDigital(true);
+
+      // Pede a digital no leitor
+      const digitalOk = await autenticarComDigital();
+      if (!digitalOk) {
+        setValidandoDigital(false);
+        return;
+      }
+
+      // Lê e-mail e senha salvos no SecureStore
+      const { email: emailSalvo, senha: senhaSalva } = await obterCredenciaisBiometria();
+
+      if (!emailSalvo || !senhaSalva) {
+        Alert.alert(
+          "Configuração necessária",
+          "Entre com e-mail e senha uma vez marcando a opção de biometria para ativá-la."
+        );
+        setValidandoDigital(false);
+        return;
+      }
+
+      // Faz o login REAL na API do servidor
+      login(
+        emailSalvo,
+        senhaSalva,
+        () => {
+          navigation.reset({ index: 0, routes: [{ name: "Main" }] });
+        },
+        () => {
+          navigation.navigate("VerificarCodigo", {
+            email: emailSalvo.trim(),
+            modo: "cadastro",
+          });
+        }
+      );
+    } catch (erro) {
+      console.warn("Erro no login por biometria:", erro);
+      Alert.alert("Erro", "Falha ao validar a digital. Tente entrar com sua senha.");
+    } finally {
+      setValidandoDigital(false);
+    }
+  };
+
   return (
-    <ScrollView 
+    <ScrollView
       contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}
       bounces={false}
       keyboardShouldPersistTaps="handled"
@@ -51,11 +146,16 @@ export default function Login() {
         Cuidando da sua saúde mental
       </Text>
 
-      <View style={[styles.card, {
-        backgroundColor: theme.colors.surfaceContainer,
-        borderRadius: theme.borderRadius.xl,
-        borderColor: theme.colors.outline
-      }]}>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.colors.surfaceContainer,
+            borderRadius: theme.borderRadius.xl,
+            borderColor: theme.colors.outline,
+          },
+        ]}
+      >
         <CustomInput
           label="Email"
           placeholder="seu@email.com"
@@ -79,21 +179,95 @@ export default function Login() {
           autoComplete="password"
           textContentType="password"
           returnKeyType="done"
-          onSubmitEditing={handleLogin}
+          onSubmitEditing={handleLoginManual}
         />
+
+        {/* TOGGLE DE BIOMETRIA */}
+        {suportaDigital && (
+          <View
+            style={{
+              marginTop: 4,
+              marginBottom: 16,
+              paddingHorizontal: 4,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text
+              style={{
+                color: theme.colors.onSurface,
+                fontSize: 15,
+                fontWeight: "500",
+                flex: 1,
+                paddingRight: 12,
+              }}
+            >
+              Autenticação por biometria
+            </Text>
+
+            <Switch
+              value={biometriaAtiva}
+              onValueChange={aoAlternarSwitchBiometria}
+              trackColor={{
+                false: theme.colors.surfaceVariant,
+                true: theme.colors.primary,
+              }}
+              thumbColor={"#FFFFFF"}
+              ios_backgroundColor={theme.colors.surfaceVariant}
+            />
+          </View>
+        )}
 
         <CustomButton
-          title={carregando ? 'Entrando...' : 'Entrar'}
-          onPress={handleLogin}
+          title={carregando && !validandoDigital ? "Entrando..." : "Entrar"}
+          onPress={handleLoginManual}
         />
 
-        <TouchableOpacity onPress={() => navigation.navigate("EsqueciSenha")} hitSlop={{ top: 8, bottom: 8 }}>
+        {/* BOTÃO "ENTRAR COM DIGITAL" */}
+        {biometriaAtiva && suportaDigital && (
+          <TouchableOpacity
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: theme.colors.primaryContainer,
+              paddingVertical: 12,
+              borderRadius: theme.borderRadius.lg || 12,
+              marginTop: 12,
+              gap: 8,
+              opacity: validandoDigital || carregando ? 0.7 : 1,
+            }}
+            onPress={handleLoginComDigital}
+            disabled={validandoDigital || carregando}
+          >
+            <Feather name="shield" size={18} color={theme.colors.primary} />
+            <Text
+              style={{
+                color: theme.colors.onPrimaryContainer,
+                fontWeight: "bold",
+                fontSize: 15,
+              }}
+            >
+              {validandoDigital ? "Validando digital..." : "Entrar com Digital"}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate("EsqueciSenha")}
+          hitSlop={{ top: 8, bottom: 8 }}
+          style={{ marginTop: 12 }}
+        >
           <Text style={[styles.forgotPasswordText, { color: theme.colors.onSurfaceVariant }]}>
             Esqueci minha senha
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Vinculacao")} hitSlop={{ top: 8, bottom: 8 }}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Vinculacao")}
+          hitSlop={{ top: 8, bottom: 8 }}
+        >
           <Text style={[styles.linkText, { color: theme.colors.primary }]}>
             Vincular-se a um psicólogo
           </Text>
@@ -113,8 +287,8 @@ export default function Login() {
       </View>
 
       <Text style={[styles.footer, { color: theme.colors.subtext1 }]}>
-        Ao continuar, você concorda com nossos Termos de Uso e Política de
-        Privacidade em conformidade com a LGPD
+        Ao continuar, você concorda com nossos Termos de Uso e Política de Privacidade em
+        conformidade com a LGPD
       </Text>
     </ScrollView>
   );
