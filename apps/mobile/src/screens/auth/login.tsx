@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text,TouchableOpacity, ScrollView, TextInput, Alert,Switch} from "react-native";
+import { View, Text,TouchableOpacity, ScrollView, TextInput,Alert, Switch,} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons"; // Importado Ionicons para o ícone de digital
 import { RootStackParamList } from "../../navigation/AppNavigator";
 import { useAuth } from "../../hooks/useAuth";
 import { useTheme } from "../../theme/ThemeContext";
@@ -11,7 +11,7 @@ import PasswordInput from "../../components/ui/PasswordInput";
 import CustomButton from "../../components/ui/CustomButton";
 import AppLogo from "../../components/ui/AppLogo";
 import { styles } from "./loginStyles";
-import { dispositivoTemDigital, biometriaEstaAtivada,salvarCredenciaisBiometria, desativarBiometria, autenticarComDigital, obterCredenciaisBiometria,} from "../../lib/biometria";
+import { dispositivoTemDigital, biometriaEstaAtivada, salvarCredenciaisBiometria, desativarBiometria,autenticarComDigital,obterCredenciaisBiometria,} from "../../lib/biometria";
 
 type LoginNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
 
@@ -70,7 +70,7 @@ export default function Login() {
       senha,
       async () => {
 
-        // Se a chave de biometria estiver ativa, salva as credenciais no SecureStore
+        // Se a biometria estiver ativada, salva as credenciais no SecureStore
         if (biometriaAtiva && suportaDigital) {
           await salvarCredenciaisBiometria(email, senha);
         } else {
@@ -88,19 +88,19 @@ export default function Login() {
     );
   };
 
-  // Login acionado EXCLUSIVAMENTE pelo clique no botão "Entrar com Digital"
+  //Login acionado EXCLUSIVAMENTE pelo clique no botão "Entrar com Digital"
   const handleLoginComDigital = async () => {
     try {
       setValidandoDigital(true);
 
-      // Pede a digital no leitor
+      //Pede a digital no leitor
       const digitalOk = await autenticarComDigital();
       if (!digitalOk) {
         setValidandoDigital(false);
         return;
       }
 
-      // Lê e-mail e senha salvos no SecureStore
+      //Lê e-mail e senha salvos no SecureStore
       const { email: emailSalvo, senha: senhaSalva } = await obterCredenciaisBiometria();
 
       if (!emailSalvo || !senhaSalva) {
@@ -112,7 +112,7 @@ export default function Login() {
         return;
       }
 
-      // Faz o login REAL na API do servidor
+      // Faz o login REAL no servidor
       login(
         emailSalvo,
         senhaSalva,
@@ -224,7 +224,7 @@ export default function Login() {
           onPress={handleLoginManual}
         />
 
-        {/* BOTÃO "ENTRAR COM DIGITAL" */}
+        {/* Botão "ENTRAR COM DIGITAL" com o icone de digital*/}
         {biometriaAtiva && suportaDigital && (
           <TouchableOpacity
             style={{
@@ -241,7 +241,7 @@ export default function Login() {
             onPress={handleLoginComDigital}
             disabled={validandoDigital || carregando}
           >
-            <Feather name="shield" size={18} color={theme.colors.primary} />
+            <Ionicons name="finger-print" size={22} color={theme.colors.primary} />
             <Text
               style={{
                 color: theme.colors.onPrimaryContainer,
