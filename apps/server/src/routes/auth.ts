@@ -140,6 +140,18 @@ auth.post('/registro', limite(10), async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Formato de e-mail inválido.' });
 
   try {
+    // Conta de psicólogo nunca passa pelo cadastro de paciente (evita perfil misto).
+    const ehPsicologo = await pool.query(
+      'SELECT 1 FROM psicologo p JOIN users u ON u.id = p.user_id WHERE u.email = $1',
+      [email],
+    );
+    if (ehPsicologo.rows.length > 0) {
+      return res.status(409).json({
+        error:
+          'Não foi possível concluir o cadastro com este e-mail. Motivos possíveis: ele já pertence a uma conta ativa. Tente fazer login ou recuperar a senha.',
+      });
+    }
+
     const existente = await pool.query(
       'SELECT id, email_verificado FROM users WHERE email = $1',
       [email],

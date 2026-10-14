@@ -3,7 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { auth } from './routes/auth';
+import { authPsicologo } from './routes/auth-psicologo';
 import { checkin } from './routes/checkin';
+import { psicologo } from './routes/psicologo';
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ENCRYPTION_KEY) {
   console.error(
@@ -25,7 +27,9 @@ app.use(cors(origensPermitidas ? { origin: origensPermitidas } : undefined));
 
 // ✅ ROTAS PREFIXADAS (Alinhadas 100% com o aplicativo Mobile)
 app.use('/auth', auth);
+app.use('/auth', authPsicologo);
 app.use('/checkin', checkin);
+app.use('/psicologo', psicologo);
 
 // JSON malformado no corpo → resposta JSON consistente (o app lê data.error)
 app.use(

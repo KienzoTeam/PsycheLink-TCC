@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+import { NavLink } from 'react-router';
 import { brand } from '../theme';
 import { Icon } from './Icon';
 
@@ -13,16 +15,7 @@ export const NAV = [
   { id: 'auditoria', rotulo: 'Auditoria' },
 ] as const;
 
-export type NavId = (typeof NAV)[number]['id'];
-
-export function Sidebar({
-  ativo, colapsada, onToggle, onNavegar,
-}: {
-  ativo: NavId;
-  colapsada: boolean;
-  onToggle: () => void;
-  onNavegar: (id: NavId) => void;
-}) {
+export function Sidebar({ colapsada, onToggle }: { colapsada: boolean; onToggle: () => void }) {
   return (
     <aside
       style={{
@@ -35,6 +28,7 @@ export function Sidebar({
         gap: 4,
         background: brand.surface,
         overflow: 'hidden',
+        flexShrink: 0,
       }}
     >
       <button
@@ -44,32 +38,28 @@ export function Sidebar({
       >
         {colapsada ? '|>' : '<|'}
       </button>
-      {NAV.map((item) => {
-        const ligado = item.id === ativo;
-        const cor = ligado ? '#fff' : brand.text;
-        return (
-          <button
-            key={item.id}
-            onClick={() => onNavegar(item.id)}
-            style={{
-              display: 'flex',
-              flexDirection: colapsada ? 'column' : 'row',
-              alignItems: 'center',
-              gap: colapsada ? 2 : 10,
-              padding: colapsada ? '10px 4px' : '10px 12px',
-              border: 0,
-              borderRadius: brand.radius.md,
-              background: ligado ? brand.primary : 'transparent',
-              color: cor,
-              fontSize: colapsada ? 10 : 14,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            <Icon name={item.id} size={colapsada ? 22 : 20} />
-            {colapsada ? item.rotulo.split(' ')[0] : item.rotulo}
-          </button>
-        );
-      })}
+      {NAV.map((item) => (
+        <NavLink
+          key={item.id}
+          to={`/${item.id}`}
+          style={({ isActive }): CSSProperties => ({
+            display: 'flex',
+            flexDirection: colapsada ? 'column' : 'row',
+            alignItems: 'center',
+            gap: colapsada ? 2 : 10,
+            padding: colapsada ? '10px 4px' : '10px 12px',
+            borderRadius: brand.radius.md,
+            background: isActive ? brand.primary : 'transparent',
+            color: isActive ? '#fff' : brand.text,
+            fontSize: colapsada ? 10 : 14,
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+          })}
+        >
+          <Icon name={item.id} size={colapsada ? 22 : 20} />
+          {colapsada ? item.rotulo.split(' ')[0] : item.rotulo}
+        </NavLink>
+      ))}
     </aside>
   );
 }

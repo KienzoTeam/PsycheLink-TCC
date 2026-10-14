@@ -1,40 +1,39 @@
-import { useState } from 'react';
+import {
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from 'react';
+import { useNavigate } from 'react-router';
+import { api } from '../lib/api';
+import { codigoDeErro, mensagemDeErro } from '../lib/erros';
+import { iniciarSessao } from '../lib/sessao';
 import { brand } from '../theme';
+import { VerificarEmailModal } from './VerificarEmailModal';
 
 type Modo = 'login' | 'cadastro';
 
-function Campo({ placeholder, type = 'text', label, required = true }: {
-  placeholder: string;
-  type?: string;
-  label?: string;
-  required?: boolean;
-}) {
+const inputStyle: CSSProperties = {
+  padding: '14px 16px',
+  fontSize: 16,
+  borderRadius: brand.radius.md,
+  border: `1px solid ${brand.outline}`,
+  background: '#fff',
+  color: brand.text,
+};
+
+function Campo({ label, ...props }: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label style={{ display: 'grid', gap: 6, fontSize: 16 }}>
-      {label ?? placeholder}
-      <input
-        type={type}
-        placeholder={placeholder}
-        required={required}
-        style={{
-          padding: '14px 16px',
-          fontSize: 16,
-          borderRadius: brand.radius.md,
-          border: `1px solid ${brand.outline}`,
-          background: '#fff',
-          color: brand.text,
-        }}
-      />
+      {label}
+      <input style={inputStyle} {...props} />
     </label>
   );
 }
 
-// Bloco colapsável com grow/shrink + blur, sem fade (conforme wireframe).
-function TrechoExpansivel({ aberto, blur, children }: {
-  aberto: boolean;
-  blur?: boolean;
-  children: React.ReactNode;
-}) {
+// Bloco de campos que aparece só no cadastro (transição suave, sem perder o layout).
+function TrechoCadastro({ aberto, children }: { aberto: boolean; children: ReactNode }) {
   return (
     <div
       style={{
@@ -50,8 +49,8 @@ function TrechoExpansivel({ aberto, blur, children }: {
           gap: 16,
           alignContent: 'start',
           visibility: aberto ? 'visible' : 'hidden',
-          filter: blur ? (aberto ? 'blur(0)' : 'blur(8px)') : undefined,
-          transition: blur ? 'filter 280ms ease' : undefined,
+          filter: aberto ? 'blur(0)' : 'blur(8px)',
+          transition: 'filter 280ms ease',
         }}
       >
         {children}
@@ -60,10 +59,85 @@ function TrechoExpansivel({ aberto, blur, children }: {
   );
 }
 
-export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }) {
+export function AuthScreen() {
+  const navigate = useNavigate();
   const [modo, setModo] = useState<Modo>('login');
-  const [email, setEmail] = useState('');
   const cadastro = modo === 'cadastro';
+
+  const [nome, setNome] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
+  const [crp, setCrp] = useState('');
+  const [especialidade, setEspecialidade] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [confirmacao, setConfirmacao] = useState('');
+
+  const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [verificandoEmail, setVerificandoEmail] = useState<string | null>(null);
+
+  function trocarModo(novo: Modo) {
+    setModo(novo);
+    setErro(null);
+    setAviso(null);
+  }
+
+  async function entrar() {
+    const emailLimpo = email.trim();
+    try {
+      const { data } = await api.post<{ token: string }>('/auth/login-psicologo', {
+        email: emailLimpo,
+        password: senha,
+      });
+      iniciarSessao(data.token);
+      navigate('/inicio', { replace: true });
+    } catch (erroReq) {
+      if (codigoDeErro(erroReq) === 'EMAIL_NAO_VERIFICADO') {
+        // Reenvia o código (ignora cooldown); o modal permite digitar o código recebido.
+        await api.post('/auth/reenviar-codigo', { email: emailLimpo }).catch(() => undefined);
+        setVerificandoEmail(emailLimpo);
+        return;
+      }
+      setErro(mensagemDeErro(erroReq, 'Não foi possível entrar.'));
+    }
+  }
+
+  async function cadastrar() {
+    if (nome.trim().length < 2) return setErro('Informe seu nome completo.');
+    if (!dataNascimento) return setErro('Informe sua data de nascimento.');
+    if (!/^\d{2}\/\d{5,6}$/.test(crp.replace(/\s+/g, ''))) {
+      return setErro('CRP inválido. Use o formato 00/000000.');
+    }
+    if (senha.length < 8) return setErro('A senha deve ter no mínimo 8 caracteres.');
+    if (senha !== confirmacao) return setErro('As senhas não coincidem.');
+
+    try {
+      await api.post('/auth/registro-psicologo', {
+        nome: nome.trim(),
+        email: email.trim(),
+        password: senha,
+        dataNascimento,
+        crp: crp.trim(),
+        especialidade: especialidade.trim() || undefined,
+      });
+      setVerificandoEmail(email.trim());
+    } catch (erroReq) {
+      setErro(mensagemDeErro(erroReq, 'Não foi possível concluir o cadastro.'));
+    }
+  }
+
+  async function enviar(evento: FormEvent) {
+    evento.preventDefault();
+    setErro(null);
+    setAviso(null);
+    setEnviando(true);
+    try {
+      await (cadastro ? cadastrar() : entrar());
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   return (
     <div className="auth-split" style={{ minHeight: '100vh', display: 'flex', background: brand.surface }}>
@@ -81,18 +155,13 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
           textAlign: 'center',
         }}
       >
-        <div style={{ width: 72, height: 72, borderRadius: brand.radius.lg, border: '2px solid #fff', display: 'grid', placeItems: 'center' }}>
-          Logo
-        </div>
         <strong style={{ fontSize: 28 }}>PsycheLink</strong>
-        <span style={{ opacity: 0.85 }}>[Acompanhamento psicológico contínuo]</span>
+        <span style={{ opacity: 0.85 }}>Acompanhamento psicológico contínuo</span>
+        <span style={{ opacity: 0.7, fontSize: 13, marginTop: 8 }}>Área exclusiva para psicólogos</span>
       </div>
 
       <div className="auth-formwrap" style={{ flex: 1.2, display: 'grid', placeItems: 'center', padding: 48, background: brand.background }}>
-        <form
-          onSubmit={(e) => { e.preventDefault(); onNeed2FA(email); }}
-          style={{ width: 'min(460px, 100%)', display: 'grid', gap: 20, alignContent: 'start' }}
-        >
+        <form onSubmit={enviar} style={{ width: 'min(460px, 100%)', display: 'grid', gap: 20, alignContent: 'start' }}>
           <div style={{ position: 'relative', display: 'flex', background: '#e6e9ef', borderRadius: brand.radius.full, padding: 4 }}>
             <span
               aria-hidden
@@ -109,12 +178,11 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
               <button
                 key={m}
                 type="button"
-                onClick={() => setModo(m)}
+                onClick={() => trocarModo(m)}
                 style={{
                   position: 'relative', flex: 1, border: 0, background: 'transparent',
                   color: (m === 'cadastro') === cadastro ? '#fff' : brand.text,
-                  padding: '12px 0', borderRadius: brand.radius.full, zIndex: 1,
-                  textTransform: 'capitalize', fontSize: 16,
+                  padding: '12px 0', borderRadius: brand.radius.full, zIndex: 1, fontSize: 16,
                 }}
               >
                 {m === 'login' ? 'Login' : 'Cadastro'}
@@ -122,38 +190,48 @@ export function AuthScreen({ onNeed2FA }: { onNeed2FA: (email: string) => void }
             ))}
           </div>
 
-          <TrechoExpansivel aberto={cadastro} blur>
-            <Campo placeholder="Nome completo" required={cadastro} />
-            <Campo placeholder="CRP (ex: 06/123456)" required={cadastro} />
-            <Campo placeholder="Área de atuação" required={cadastro} />
-          </TrechoExpansivel>
+          <TrechoCadastro aberto={cadastro}>
+            <Campo label="Nome completo" value={nome} onChange={(e) => setNome(e.target.value)} required={cadastro} disabled={!cadastro} />
+            <Campo label="Data de nascimento" type="date" value={dataNascimento} onChange={(e) => setDataNascimento(e.target.value)} required={cadastro} disabled={!cadastro} />
+            <Campo label="CRP (ex: 06/123456)" value={crp} onChange={(e) => setCrp(e.target.value)} required={cadastro} disabled={!cadastro} />
+            <Campo label="Especialidade (opcional)" value={especialidade} onChange={(e) => setEspecialidade(e.target.value)} disabled={!cadastro} />
+          </TrechoCadastro>
 
           <div style={{ display: 'grid', gap: 20 }}>
-            <label style={{ display: 'grid', gap: 6, fontSize: 16 }}>
-              Email
-              <input
-                type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                style={{ padding: '14px 16px', fontSize: 16, borderRadius: brand.radius.md, border: `1px solid ${brand.outline}`, background: '#fff', color: brand.text }}
-              />
-            </label>
-            <Campo placeholder="Senha" type="password" label="Senha" />
+            <Campo label="E-mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+            <Campo label="Senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} required autoComplete={cadastro ? 'new-password' : 'current-password'} />
           </div>
 
-          <TrechoExpansivel aberto={!cadastro}>
-            <button type="button" style={{ border: 0, background: 'transparent', color: brand.subtext, fontSize: 14, justifySelf: 'center' }}>
-              Esqueci a senha
-            </button>
-          </TrechoExpansivel>
+          <TrechoCadastro aberto={cadastro}>
+            <Campo label="Confirmar senha" type="password" value={confirmacao} onChange={(e) => setConfirmacao(e.target.value)} required={cadastro} disabled={!cadastro} autoComplete="new-password" />
+          </TrechoCadastro>
+
+          {erro && <p role="alert" style={{ margin: 0, color: '#d20f39', fontSize: 14 }}>{erro}</p>}
+          {aviso && <p role="status" style={{ margin: 0, color: '#40a02b', fontSize: 14 }}>{aviso}</p>}
 
           <button
             type="submit"
-            style={{ padding: 16, fontSize: 16, borderRadius: brand.radius.md, border: `1px solid ${brand.outline}`, background: brand.surface, color: brand.text }}
+            disabled={enviando}
+            style={{ padding: 16, fontSize: 16, borderRadius: brand.radius.md, border: `1px solid ${brand.outline}`, background: brand.surface, color: brand.text, opacity: enviando ? 0.6 : 1 }}
           >
             {cadastro ? 'Cadastrar' : 'Entrar'}
           </button>
         </form>
       </div>
+
+      {verificandoEmail !== null && (
+        <VerificarEmailModal
+          email={verificandoEmail}
+          onFechar={() => setVerificandoEmail(null)}
+          onConfirmado={() => {
+            setVerificandoEmail(null);
+            setSenha('');
+            setConfirmacao('');
+            setModo('login');
+            setAviso('E-mail confirmado. Faça login para continuar.');
+          }}
+        />
+      )}
     </div>
   );
 }

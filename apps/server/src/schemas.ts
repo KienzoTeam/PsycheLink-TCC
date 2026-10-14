@@ -53,3 +53,30 @@ export const checkinSchema = z.object({
 
 export type DadosCheckin = z.infer<typeof checkinSchema>;
 
+
+// Cadastro exclusivo de psicólogos (web). Reaproveita as regras do cadastro comum
+// e acrescenta o CRP obrigatório e a especialidade opcional.
+export const psicologoRegistroSchema = registroSchema.extend({
+  crp: z
+    .string()
+    .transform((v) => v.replace(/\s+/g, ''))
+    .refine((v) => /^\d{2}\/\d{5,6}$/.test(v), {
+      message: 'CRP inválido. Use o formato 00/000000.',
+    }),
+  especialidade: z
+    .string()
+    .trim()
+    .max(255, 'Especialidade muito longa.')
+    .optional()
+    .transform((v) => (v ? v : null)),
+});
+
+export type DadosRegistroPsicologo = z.infer<typeof psicologoRegistroSchema>;
+
+export const anotacaoSchema = z.object({
+  conteudo: z
+    .string()
+    .trim()
+    .min(1, 'A anotação não pode ser vazia.')
+    .max(5000, 'A anotação excede 5000 caracteres.'),
+});

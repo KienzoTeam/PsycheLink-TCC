@@ -1,108 +1,117 @@
-import { useEffect, useState } from 'react';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import type { CSSProperties } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Link } from 'react-router';
+import { listarPacientes } from '../lib/psicologoApi';
+import { diasDesde, formatarDataCurta, media, primeiroNome } from '../lib/formatar';
 import { brand } from '../theme';
-import { Sidebar, type NavId } from './Sidebar';
-import { Fab } from './Fab';
 
-// honey: mocks até os endpoints do psicólogo existirem no backend.
-const SPARK = [12, 18, 15, 22, 28, 24, 32, 40].map((v, i) => ({ i, v }));
-const CHECKINS = [
-  { nome: 'Ana', data: '08/10 09:12', emocao: 'Ansiosa' },
-  { nome: 'Bruno', data: '08/10 08:40', emocao: 'Calmo' },
-  { nome: 'Carla', data: '07/10 18:05', emocao: 'Triste' },
-];
-const ATIVIDADES = [
-  { nome: 'Ana', acao: 'respondeu PHQ-9', data: '08/10 09:30' },
-  { nome: 'Bruno', acao: 'novo check-in', data: '08/10 08:40' },
-  { nome: 'Carla', acao: 'mensagem no chat', data: '07/10 18:10' },
-  { nome: 'Ana', acao: 'check-in', data: '07/10 09:02' },
-];
-
-const card: React.CSSProperties = {
+const card: CSSProperties = {
   background: brand.surface,
   border: `1px solid ${brand.outline}`,
   borderRadius: brand.radius.xl,
   padding: 16,
+  minWidth: 0,
 };
 
-const linha: React.CSSProperties = {
-  display: 'flex', gap: 8, padding: '8px 0', borderBottom: `1px solid ${brand.outline}`, fontSize: 14,
+const linha: CSSProperties = {
+  display: 'flex', gap: 8, alignItems: 'center', padding: '8px 0',
+  borderBottom: `1px solid ${brand.outline}`, fontSize: 14,
 };
 
 export function Dashboard() {
-  const [colapsada, setColapsada] = useState(false);
-  const [ativo, setAtivo] = useState<NavId>('inicio');
-  const [periodo, setPeriodo] = useState('7 dias');
+  const consulta = useQuery({ queryKey: ['pacientes'], queryFn: listarPacientes });
 
-  useEffect(() => {
-    if (window.matchMedia('(max-width: 820px)').matches) setColapsada(true);
-  }, []);
+  if (consulta.isPending) return <p>Carregando painel…</p>;
+  if (consulta.isError) return <p role="alert">Não foi possível carregar o painel.</p>;
+
+  const pacientes = consulta.data.pacientes;
+  const checkinsSemana = pacientes.reduce((soma, p) => soma + p.checkinsUltimos7Dias, 0);
+  const humorGeral = media(pacientes.map((p) => p.humorMedio7d));
+
+  // Pacientes que compartilham humor e estão há 3+ dias sem check-in (ou nunca fizeram).
+  const semCheckinRecente = pacientes.filter(
+    (p) => p.compartilhaHumor && (!p.ultimoCheckin || diasDesde(p.ultimoCheckin.data) >= 3),
+  );
+
+  const recentes = pacientes
+    .flatMap((p) => (p.ultimoCheckin ? [{ paciente: p, checkin: p.ultimoCheckin }] : []))
+    .sort((a, b) => b.checkin.data.localeCompare(a.checkin.data))
+    .slice(0, 6);
+
+  const grafico = pacientes.map((p) => ({ nome: primeiroNome(p.nome), checkins: p.checkinsUltimos7Dias }));
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: brand.background, color: brand.text }}>
-      <Sidebar ativo={ativo} colapsada={colapsada} onToggle={() => setColapsada((v) => !v)} onNavegar={setAtivo} />
-      <main style={{ flex: 1, padding: 20, display: 'grid', gap: 16, alignContent: 'start', maxWidth: 1100 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0 }}>Dashboard pós-login</h1>
-          <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14 }}>
-            Filtrar
-            <select value={periodo} onChange={(e) => setPeriodo(e.target.value)} style={{ padding: '6px 10px', borderRadius: brand.radius.md, border: `1px solid ${brand.outline}` }}>
-              <option>7 dias</option>
-              <option>14 dias</option>
-              <option>30 dias</option>
-            </select>
-          </label>
-        </div>
+    <>
+      <h1 style={{ margin: 0 }}>Painel</h1>
 
-        <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16 }}>
-          <section style={card}>
-            <span style={{ fontSize: 13 }}>Pacientes vinculados</span>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
-              <strong style={{ fontSize: 40, lineHeight: 1 }}>92</strong>
-              <div style={{ flex: 1, height: 56 }}>
-                <ResponsiveContainer>
-                  <LineChart data={SPARK}>
-                    <Line type="monotone" dataKey="v" stroke={brand.primary} strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+      <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 16 }}>
+        <section style={card}>
+          <span style={{ fontSize: 13 }}>Pacientes vinculados</span>
+          <strong style={{ display: 'block', fontSize: 40, lineHeight: 1.2 }}>{pacientes.length}</strong>
+        </section>
+        <section style={card}>
+          <span style={{ fontSize: 13 }}>Check-ins nos últimos 7 dias</span>
+          <strong style={{ display: 'block', fontSize: 40, lineHeight: 1.2 }}>{checkinsSemana}</strong>
+        </section>
+        <section style={card}>
+          <span style={{ fontSize: 13 }}>Humor médio (7 dias)</span>
+          <strong style={{ display: 'block', fontSize: 40, lineHeight: 1.2 }}>
+            {humorGeral !== null ? humorGeral.toFixed(1) : '—'}
+          </strong>
+        </section>
+      </div>
+
+      <div className="dash-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <section style={card}>
+          <h2 style={{ margin: '0 0 8px', fontSize: 18 }}>Check-ins por paciente (7 dias)</h2>
+          {pacientes.length === 0 ? (
+            <p style={{ color: brand.subtext, fontSize: 14 }}>Nenhum paciente vinculado ainda.</p>
+          ) : (
+            <div style={{ height: 220 }}>
+              <ResponsiveContainer>
+                <BarChart data={grafico}>
+                  <XAxis dataKey="nome" fontSize={12} />
+                  <YAxis allowDecimals={false} fontSize={12} width={28} />
+                  <Tooltip />
+                  <Bar dataKey="checkins" fill={brand.primary} radius={4} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          </section>
-
-          <section style={card}>
-            <h2 style={{ margin: '0 0 8px' }}>Resumo de Check-ins</h2>
-            {CHECKINS.map((c) => (
-              <div key={`${c.nome}-${c.data}`} style={linha}>
-                <span>{c.nome}</span>
-                <span style={{ color: brand.subtext }}>| {c.data} |</span>
-                <span>{c.emocao}</span>
-              </div>
-            ))}
-          </section>
-        </div>
+          )}
+        </section>
 
         <section style={card}>
-          <h2 style={{ margin: '0 0 8px' }}>Atividades Recentes</h2>
-          <div
-            style={{
-              maxHeight: 160,
-              overflowY: 'auto',
-              maskImage: 'linear-gradient(to bottom, #000 70%, transparent)',
-              WebkitMaskImage: 'linear-gradient(to bottom, #000 70%, transparent)',
-            }}
-          >
-            {ATIVIDADES.map((a, i) => (
-              <div key={i} style={linha}>
-                <span>{a.nome}</span>
-                <span style={{ color: brand.subtext }}>| {a.acao} |</span>
-                <span>{a.data}</span>
+          <h2 style={{ margin: '0 0 8px', fontSize: 18 }}>Atenção</h2>
+          {semCheckinRecente.length === 0 ? (
+            <p style={{ color: brand.subtext, fontSize: 14 }}>Nenhum paciente sem registro recente.</p>
+          ) : (
+            semCheckinRecente.map((p) => (
+              <div key={p.id} style={linha}>
+                <Link to={`/pacientes/${p.id}`} style={{ color: brand.text, fontWeight: 600 }}>{p.nome}</Link>
+                <span style={{ color: brand.subtext, marginLeft: 'auto' }}>
+                  {p.ultimoCheckin ? `último há ${diasDesde(p.ultimoCheckin.data)} dias` : 'sem check-ins'}
+                </span>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </section>
-        <span style={{ fontSize: 12, color: brand.subtext }}>Período: {periodo} · dados de exemplo até ligar o backend</span>
-      </main>
-      <Fab />
-    </div>
+      </div>
+
+      <section style={card}>
+        <h2 style={{ margin: '0 0 8px', fontSize: 18 }}>Últimos check-ins compartilhados</h2>
+        {recentes.length === 0 ? (
+          <p style={{ color: brand.subtext, fontSize: 14 }}>Nenhum check-in compartilhado.</p>
+        ) : (
+          recentes.map(({ paciente, checkin }) => (
+            <div key={paciente.id} style={linha}>
+              <Link to={`/pacientes/${paciente.id}`} style={{ color: brand.text, fontWeight: 600 }}>{paciente.nome}</Link>
+              <span style={{ color: brand.subtext }}>{formatarDataCurta(checkin.data)}</span>
+              <span style={{ marginLeft: 'auto' }}>{checkin.emocoes?.join(', ') ?? '—'}</span>
+            </div>
+          ))
+        )}
+      </section>
+    </>
   );
 }
