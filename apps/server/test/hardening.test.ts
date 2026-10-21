@@ -8,10 +8,10 @@ import { carregarApp, definirAmbiente, iniciar, limpar } from './ajuda';
 after(limpar);
 
 describe('Cache-Control', () => {
-  it('é no-store em /auth e /psicologo', async () => {
+  it('é no-store em /auth, /psicologo e /paciente', async () => {
     const servidor = await iniciar(app);
     try {
-      for (const caminho of ['/auth/me', '/psicologo/pacientes', '/auth/rota-inexistente']) {
+      for (const caminho of ['/auth/me', '/psicologo/pacientes', '/paciente/vinculo', '/auth/rota-inexistente']) {
         const res = await fetch(servidor.url + caminho);
         assert.equal(res.headers.get('cache-control'), 'no-store', caminho);
       }

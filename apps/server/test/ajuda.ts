@@ -4,7 +4,18 @@ import type { AddressInfo } from 'node:net';
 import { mock } from 'node:test';
 import bcrypt from 'bcrypt';
 import type { Express } from 'express';
+import jwt from 'jsonwebtoken';
+import { Pool } from 'pg';
 import { pool } from '../src/db';
+import { criptografar } from '../src/lib/criptografia';
+
+// A app roda como psychelink_app, que as policies de RLS limitam. Fixtures em tabelas com RLS
+// e a limpeza usam o dono (neondb_owner, com BYPASSRLS) para não depender do contexto.
+export const dono = new Pool({ connectionString: process.env.DATABASE_URL_DIRETA });
+
+// Os arquivos de teste rodam em paralelo; o alvo por processo evita que a limpeza de um apague
+// linhas de auditoria que outro ainda está testando.
+export const ALVO_TESTE = `teste_imutavel_${process.pid}`;
 
 const idsCriados: number[] = [];
 const ipsUsados: string[] = [];
@@ -41,14 +52,14 @@ export function carregarApp(env: Record<string, string | undefined>): Express {
   }
 }
 
-export async function criarUsuario() {
+export async function criarUsuario(nome = 'Teste') {
   const email = `teste-${randomBytes(6).toString('hex')}@psychelink.test`;
   const senha = `Sn!${randomBytes(8).toString('hex')}`;
   const { rows } = await pool.query<{ id: number }>(
     `INSERT INTO users (nome, email, password_hash, data_nascimento, email_verificado)
-     VALUES ('Teste', $1, $2, '1990-01-01', true)
+     VALUES ($3, $1, $2, '1990-01-01', true)
      RETURNING id`,
-    [email, await bcrypt.hash(senha, 4)],
+    [email, await bcrypt.hash(senha, 4), nome],
   );
   idsCriados.push(rows[0].id);
   return { id: rows[0].id, email, senha };
@@ -63,27 +74,97 @@ export async function criarPsicologo() {
   return usuario;
 }
 
-export async function criarPaciente() {
-  const usuario = await criarUsuario();
+export async function criarPaciente(nome?: string) {
+  const usuario = await criarUsuario(nome);
   await pool.query('INSERT INTO paciente (user_id) VALUES ($1)', [usuario.id]);
   return usuario;
 }
 
 export async function vincular(psicologo: { id: number }, paciente: { id: number }) {
   await pool.query(
-    `INSERT INTO vinculo (paciente_id, psicologo_id, codigo_unico, status)
-     SELECT pa.id, ps.id, $3, 'ativo'
+    `INSERT INTO vinculo (paciente_id, psicologo_id, status)
+     SELECT pa.id, ps.id, 'ativo'
        FROM paciente pa, psicologo ps
       WHERE pa.user_id = $1 AND ps.user_id = $2`,
-    [paciente.id, psicologo.id, randomBytes(8).toString('hex')],
+    [paciente.id, psicologo.id],
   );
 }
+
+export const pacienteIdDe = async (paciente: { id: number }) =>
+  (await pool.query<{ id: number }>('SELECT id FROM paciente WHERE user_id = $1', [paciente.id]))
+    .rows[0].id;
+
+export const psicologoIdDe = async (psicologo: { id: number }) =>
+  (await pool.query<{ id: number }>('SELECT id FROM psicologo WHERE user_id = $1', [psicologo.id]))
+    .rows[0].id;
+
+export async function definirConsentimento(
+  pacienteId: number,
+  c: { humor?: boolean; habitos?: boolean; escalas?: boolean; diario?: boolean },
+) {
+  await dono.query(
+    `INSERT INTO consentimento
+       (paciente_id, compartilha_humor, compartilha_habitos, compartilha_escalas, compartilha_diario)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (paciente_id) DO UPDATE SET
+       compartilha_humor = $2, compartilha_habitos = $3, compartilha_escalas = $4, compartilha_diario = $5`,
+    [pacienteId, c.humor ?? false, c.habitos ?? false, c.escalas ?? false, c.diario ?? false],
+  );
+}
+
+interface OpcoesCheckin {
+  diasAtras?: number;
+  // Hora UTC de criado_em (São Paulo é UTC-3).
+  horaUtc?: string;
+  humor?: number;
+  ansiedade?: number;
+  horasSono?: number | null;
+  emocoes?: string[];
+  gatilhos?: string[];
+  diario?: string;
+  diarioCompartilhado?: boolean;
+  exercicio?: boolean;
+}
+
+export async function criarCheckin(pacienteId: number, o: OpcoesCheckin = {}): Promise<number> {
+  const { rows } = await dono.query<{ id: number }>(
+    `INSERT INTO checkin_diario
+       (paciente_id, data, criado_em, emocao_predominante, intensidade_humor, intensidade_ansiedade,
+        horas_sono, qualidade_sono, contexto_gatilho, diario_livre, diario_compartilhado)
+     VALUES ($1, CURRENT_DATE - $2::int, (CURRENT_DATE - $2::int) + $3::time, $4, $5, $6, $7, 2, $8, $9, $10)
+     RETURNING id`,
+    [
+      pacienteId,
+      o.diasAtras ?? 0,
+      o.horaUtc ?? '15:00',
+      criptografar((o.emocoes ?? ['Calmo']).join(', ')),
+      o.humor ?? 6,
+      o.ansiedade ?? 4,
+      o.horasSono === undefined ? 7 : o.horasSono,
+      o.gatilhos ? criptografar(o.gatilhos.join(', ')) : null,
+      o.diario ? criptografar(o.diario) : null,
+      o.diarioCompartilhado ?? false,
+    ],
+  );
+  if (o.exercicio !== undefined) {
+    await dono.query('INSERT INTO habito (checkin_id, exercicio) VALUES ($1, $2)', [
+      rows[0].id,
+      o.exercicio,
+    ]);
+  }
+  return rows[0].id;
+}
+
+/** Cabeçalho Bearer do app mobile. */
+export const bearer = (usuario: { id: number }) => ({
+  authorization: `Bearer ${jwt.sign({ id: usuario.id }, process.env.JWT_SECRET!)}`,
+});
 
 // Apaga o que os testes criaram (as FKs em cascata levam paciente/psicologo junto) e fecha o pool.
 // A auditoria é imutável: o trigger só é desligado aqui, dentro de uma transação que o religa
 // antes do COMMIT, então nenhuma outra sessão chega a vê-lo desligado.
 export async function limpar() {
-  const client = await pool.connect();
+  const client = await dono.connect();
   try {
     await client.query('BEGIN');
     await client.query('ALTER TABLE auditoria DISABLE TRIGGER trg_auditoria_imutavel');
@@ -92,8 +173,8 @@ export async function limpar() {
         WHERE ator_user_id = ANY($1)
            OR paciente_id IN (SELECT id FROM paciente WHERE user_id = ANY($1))
            OR ip = ANY($2::inet[])
-           OR alvo_tipo = 'teste_imutavel'`,
-      [idsCriados, ipsUsados],
+           OR alvo_tipo = $3`,
+      [idsCriados, ipsUsados, ALVO_TESTE],
     );
     await client.query('ALTER TABLE auditoria ENABLE TRIGGER trg_auditoria_imutavel');
     await client.query('DELETE FROM users WHERE id = ANY($1)', [idsCriados]);
@@ -104,7 +185,7 @@ export async function limpar() {
   } finally {
     client.release();
   }
-  await pool.end();
+  await Promise.all([pool.end(), dono.end()]);
 }
 
 export const ORIGEM_WEB = 'http://localhost:5173';

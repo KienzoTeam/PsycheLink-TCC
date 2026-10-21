@@ -2,12 +2,14 @@ import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { pool } from '../src/db';
 import {
+  ALVO_TESTE,
   capturarCodigos,
   carregarApp,
   criarCliente,
   criarPaciente,
   criarPsicologo,
   criarUsuario,
+  dono,
   entrar,
   iniciar,
   limpar,
@@ -114,7 +116,7 @@ describe('auditoria dos dados do paciente', () => {
     assert.equal(linhas[0].alvo_id, String(anotacao.id));
     assert.ok(!JSON.stringify(linhas).includes(texto));
 
-    const guardada = await pool.query(
+    const guardada = await dono.query(
       "SELECT expira_em > now() + interval '4 years 364 days' AS cinco_anos FROM anotacao_clinica WHERE id = $1",
       [anotacao.id],
     );
@@ -137,13 +139,20 @@ describe('imutabilidade da auditoria', () => {
   async function novaLinha(atorId: number, pacienteId: number | null = null) {
     const { rows } = await pool.query<{ id: string }>(
       `INSERT INTO auditoria (ator_user_id, ator_papel, acao, paciente_id, alvo_tipo, metadados)
-       VALUES ($1, 'psicologo', 'teste_imutavel', $2, 'teste_imutavel', '{"k": 1}') RETURNING id`,
-      [atorId, pacienteId],
+       VALUES ($1, 'psicologo', 'teste_imutavel', $2, $3, '{"k": 1}') RETURNING id`,
+      [atorId, pacienteId, ALVO_TESTE],
     );
     return rows[0].id;
   }
 
-  it('rejeita UPDATE e DELETE diretos', async () => {
+  it('o papel da app nem tem permissão de UPDATE ou DELETE', async () => {
+    const ator = await criarUsuario();
+    const id = await novaLinha(ator.id);
+    await assert.rejects(pool.query("UPDATE auditoria SET acao = 'x' WHERE id = $1", [id]), /permission denied/);
+    await assert.rejects(pool.query('DELETE FROM auditoria WHERE id = $1', [id]), /permission denied/);
+  });
+
+  it('rejeita UPDATE e DELETE diretos, até do dono', async () => {
     const ator = await criarUsuario();
     const outro = await criarUsuario();
     const id = await novaLinha(ator.id);
@@ -155,7 +164,7 @@ describe('imutabilidade da auditoria', () => {
       `UPDATE auditoria SET ator_user_id = ${outro.id} WHERE id = $1`,
       'DELETE FROM auditoria WHERE id = $1',
     ]) {
-      await assert.rejects(pool.query(sql, [id]), /imutável/, sql);
+      await assert.rejects(dono.query(sql, [id]), /imutável/, sql);
     }
     const { rows } = await pool.query('SELECT acao, ator_user_id FROM auditoria WHERE id = $1', [id]);
     assert.deepEqual(rows[0], { acao: 'teste_imutavel', ator_user_id: ator.id });

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { auth } from './routes/auth';
 import { authPsicologo } from './routes/auth-psicologo';
 import { checkin } from './routes/checkin';
+import { paciente } from './routes/paciente';
 import { psicologo } from './routes/psicologo';
 import { exigirOrigem } from './lib/sessaoWeb';
 
@@ -21,7 +22,7 @@ app.use(express.json({ limit: '10kb' }));
 const origensPermitidas = process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim());
 app.use(cors({ origin: origensPermitidas ?? false }));
 
-app.use(['/auth', '/psicologo'], (_req, res, next) => {
+app.use(['/auth', '/psicologo', '/paciente'], (_req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });
@@ -34,6 +35,7 @@ app.use('/auth', auth);
 app.use('/auth', authPsicologo);
 app.use('/checkin', checkin);
 app.use('/psicologo', psicologo);
+app.use('/paciente', paciente);
 
 // JSON malformado no corpo → resposta JSON consistente (o app lê data.error)
 app.use(

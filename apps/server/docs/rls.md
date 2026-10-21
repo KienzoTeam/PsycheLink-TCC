@@ -1,35 +1,75 @@
-# RLS e dono das tabelas
+# RLS e papel da aplicação
 
-Fonte: `pg_dump --schema-only` e consultas ao catálogo no banco de dev (branch Neon, PostgreSQL 18.6). O banco da equipe não foi consultado; assuma que é igual até conferir.
+Implementado em `migrations/0003_papel_app_rls.sql`. Medido no banco de dev (branch Neon, PostgreSQL 18).
 
-## Estado atual
+## Por que um papel novo
 
-- **Policy (uma):** `checkin_isolamento_paciente` em `checkin_diario`, PERMISSIVE, `ALL`, para `PUBLIC`. USING e WITH CHECK: `paciente_id = NULLIF(current_setting('app.paciente_id', true), '')::integer`. Sem a variável o resultado é NULL, então nenhuma linha passa (falha fechada).
-- **RLS ligado:** só `checkin_diario`, com `ENABLE` e `FORCE`. As outras 13 tabelas de `public` não têm RLS: `alerta`, `anotacao_clinica`, `aplicacao_escala`, `consentimento`, `escala`, `habito`, `mensagem`, `paciente`, `psicologo`, `resposta_escala`, `users`, `verificacoes_email`, `vinculo`.
-- **Dono:** todas as tabelas pertencem a `neondb_owner`, o mesmo papel que a aplicação usa para conectar.
-- **`neondb_owner` tem `BYPASSRLS`** (não é superuser, mas é membro de `neon_superuser`). `BYPASSRLS` ignora RLS mesmo com `FORCE`. O próprio papel não consegue removê-lo (`ALTER ROLE ... NOBYPASSRLS` retorna `permission denied`).
+`neondb_owner`, dono das tabelas e usado pela aplicação até o WP1, tem `BYPASSRLS` (é membro de `neon_superuser`) e não consegue remover o atributo de si mesmo. `BYPASSRLS` vale até com `FORCE ROW LEVEL SECURITY`, então a policy de `checkin_diario` nunca filtrou nada: sem contexto, com `app.paciente_id = -1` ou com id real, o dono lia as mesmas linhas.
 
-## `comContextoPaciente` protege algo hoje?
+`psychelink_app` é `LOGIN NOSUPERUSER NOBYPASSRLS`, não é dono de nada e só recebe o que a aplicação usa:
 
-Não. Medido em transação revertida:
+- `USAGE` no schema `public`; `SELECT/INSERT/UPDATE/DELETE` nas tabelas; `USAGE/SELECT` nas sequences.
+- `auditoria`: só `SELECT/INSERT` (o trigger de imutabilidade continua valendo para o dono).
+- `schema_migrations`: nada. Quem migra é o dono.
+- `ALTER DEFAULT PRIVILEGES` cobre tabelas e sequences criadas depois por quem roda a migração. Tabela futura só de acréscimo precisa de um `REVOKE` próprio.
 
-| Papel | Sem contexto | `app.paciente_id = -1` | Id real |
-|---|---|---|---|
-| `neondb_owner` (o da app) | 8 linhas | 8 linhas | 8 linhas |
-| papel novo, sem `BYPASSRLS` | 0 | 0 | 5 |
+`DATABASE_URL` (pooler) usa `psychelink_app`. `DATABASE_URL_DIRETA` continua `neondb_owner` e serve só para migrar e para fixtures de teste.
 
-A policy está correta. O papel de conexão é que a anula. Todo o isolamento de hoje está na aplicação (`vinculoOuNegar`, `WHERE paciente_id = $1`).
+## Contextos
 
-Em `routes/psicologo.ts` o psicólogo lê dados do paciente dentro de `comContextoPaciente(v.paciente_id, ...)`. Quem escolhe o paciente do contexto é o código, depois de conferir o vínculo. A policy atual não verifica vínculo nem psicólogo.
+Toda leitura de tabela com RLS roda numa transação que seta uma variável local (`set_config(..., true)`, compatível com o pooler em modo transaction):
 
-## Recomendação para o WP2
+| Helper (`src/lib/contextoseguro.ts`) | Variável | Quem usa |
+|---|---|---|
+| `comContextoPaciente(id, fn)` | `app.paciente_id` | rotas do mobile (`/checkin`, `/paciente`) |
+| `comContextoPsicologo(id, fn)` | `app.psicologo_id` | rotas `/psicologo` |
 
-1. **Papel de aplicação não-dono (preferido).** Uma migração, rodada por `DATABASE_URL_DIRETA` como `neondb_owner`, cria `psychelink_app` com `LOGIN NOBYPASSRLS` e concede `USAGE` no schema, `SELECT/INSERT/UPDATE/DELETE` nas tabelas, `USAGE` nas sequences e `ALTER DEFAULT PRIVILEGES` para as tabelas futuras. A senha é definida fora do repo (console do Neon). `DATABASE_URL` (pooler) passa a usar `psychelink_app`; `DATABASE_URL_DIRETA` continua `neondb_owner`, só para migrar. Para um não-dono o RLS vale sem `FORCE`; manter o `FORCE` é defesa extra. Criar um papel de login `NOBYPASSRLS` funciona no Neon (testado, revertido).
-2. **Policies por tabela, com `TO psychelink_app`:**
-   - paciente: `paciente_id = app.paciente_id` em `consentimento`, `aplicacao_escala`, `consulta`; `habito` e `resposta_escala` via `EXISTS` no pai (`checkin_diario`, `aplicacao_escala`), porque não têm `paciente_id`.
-   - psicólogo, só `SELECT`: `EXISTS (SELECT 1 FROM vinculo v WHERE v.paciente_id = <tabela>.paciente_id AND v.psicologo_id = app.psicologo_id AND v.status = 'ativo')`, nas mesmas tabelas e em `anotacao_clinica`.
-   - `vinculo`, `users`, `psicologo`, `paciente` ficam sem RLS (login, cadastro e `vinculoOuNegar` leem sem contexto).
-   - o consentimento por categoria continua filtrado na aplicação.
-3. **`comContextoPsicologo(psicologoId, fn)`** no mesmo molde do atual: `set_config('app.psicologo_id', ..., true)` dentro de transação. Compatível com o pooler do Neon (modo transaction). `resumoPaciente` e a leitura de anotações (`psicologo.ts`, hoje `pool.query` direto em `anotacao_clinica`) passam por ele.
-4. **Alternativa, se um segundo login não for viável:** manter a conexão como `neondb_owner` e executar `SET LOCAL ROLE psychelink_rls` (papel `NOLOGIN NOBYPASSRLS`, com `GRANT psychelink_rls TO neondb_owner`) no início de cada `comContexto*`. Foi testado e funciona, mas qualquer consulta fora do contexto continua com `BYPASSRLS` (falha aberta). Só use se a opção 1 não couber.
-5. **Testes do WP2:** com `psychelink_app`, `pool.query` direto numa tabela com RLS devolve 0 linhas sem contexto; psicólogo B sem vínculo recebe 0 linhas do paciente de A; `SELECT rolbypassrls FROM pg_roles WHERE rolname = current_user` é `false`. Os helpers de teste que inserem em tabelas com RLS precisam de contexto ou de um pool com `DATABASE_URL_DIRETA`.
+Sem a variável, `app_paciente_id()` e `app_psicologo_id()` devolvem NULL e nenhuma linha passa (falha fechada). A aplicação continua conferindo o vínculo e o consentimento por categoria; o RLS é a segunda barreira, por linha.
+
+## Policies
+
+Todas `TO psychelink_app`. "Vínculo" é `EXISTS (SELECT 1 FROM vinculo v WHERE v.paciente_id = <paciente da linha> AND v.psicologo_id = app_psicologo_id() AND v.status = 'ativo')`.
+
+| Tabela | Paciente (`app.paciente_id`) | Psicólogo (`app.psicologo_id`) |
+|---|---|---|
+| `checkin_diario` | tudo, `paciente_id` igual (policy `checkin_isolamento_paciente`, inalterada) | só `SELECT`, com vínculo |
+| `habito` | tudo, via `checkin_diario` pai | só `SELECT`, com vínculo via pai |
+| `consentimento` | tudo, `paciente_id` igual | só `SELECT`, com vínculo |
+| `aplicacao_escala` | tudo, `paciente_id` igual | só `SELECT`, com vínculo |
+| `resposta_escala` | tudo, via `aplicacao_escala` pai | só `SELECT`, com vínculo via pai |
+| `anotacao_clinica` | nenhuma | tudo, só as próprias (`psicologo_id = app.psicologo_id`) |
+
+`ENABLE` e `FORCE ROW LEVEL SECURITY` em todas. Encerrar o vínculo (`status = 'encerrado'`) tira o acesso na hora, no banco e na aplicação.
+
+## Tabelas sem RLS
+
+| Tabela | Motivo |
+|---|---|
+| `users`, `psicologo`, `paciente` | Lidas antes de existir contexto: login, cadastro, resolução do perfil e do id do paciente. Não guardam dado clínico. |
+| `vinculo`, `codigo_vinculo` | A própria policy consulta `vinculo`; o resgate do código acontece antes de existir vínculo. O acesso é filtrado na aplicação por `psicologo_id` / `paciente_id`. |
+| `sessao`, `desafio_2fa`, `verificacoes_email` | Autenticação, sem contexto de paciente ou psicólogo. Guardam só hashes. |
+| `auditoria` | Escrita por qualquer fluxo, inclusive o de login; imutável por trigger e por `GRANT`. |
+| `escala` | Catálogo, sem dado de pessoa. |
+| `alerta`, `mensagem` | Sem rota hoje. Ganham policy quando ganharem (chat e alertas estão fora desta rodada); até lá o papel da app tem `GRANT` mas nenhum código as toca. |
+
+## Banco da equipe (ação manual)
+
+As migrações não rodam no banco da equipe sem confirmação. Quando rodar:
+
+1. Conferir antes da `0004`: `SELECT status, count(*) FROM vinculo GROUP BY 1;` e pacientes com mais de um vínculo `ativo`. A `0004` encerra vínculos fora de `ativo`/`encerrado` e, com mais de um ativo por paciente, mantém o de maior id.
+2. Rodar `npm run migrar` (`DATABASE_URL_DIRETA`, como `neondb_owner`). Cria o papel sem senha.
+3. Definir a senha fora do repositório, no console do Neon (Roles) ou com `ALTER ROLE psychelink_app PASSWORD '<senha forte>'` como `neondb_owner`. 32 bytes aleatórios em base64url servem.
+4. Trocar `DATABASE_URL` do servidor para `psychelink_app` no mesmo host pooler, mantendo `sslmode=verify-full&channel_binding=require`.
+5. Conferir: `SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;` deve dar `psychelink_app` e `false`.
+
+Sem o passo 4 a aplicação continua funcionando como `neondb_owner`, mas sem RLS efetivo.
+
+## Testes (`test/rls.test.ts`)
+
+- O papel da aplicação tem `rolbypassrls = false`.
+- Sem contexto, `pool.query` direto em cada tabela com RLS devolve 0 linhas.
+- Psicólogo B, sem vínculo, recebe 0 linhas do paciente de A mesmo com SQL direto no contexto dele; o psicólogo A recebe.
+- Contexto de paciente não lê anotação, nem de si mesmo; o de psicólogo não escreve em `checkin_diario`.
+- O papel da aplicação não tem `UPDATE` nem `DELETE` em `auditoria`.
+
+Fixtures em tabelas com RLS e a limpeza usam um pool do dono (`dono` em `test/ajuda.ts`).

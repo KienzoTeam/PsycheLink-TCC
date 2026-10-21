@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { pool } from '../db';
 import { checkinSchema } from '../schemas';
 import { verificarToken } from './auth';
 import { criptografar, criptografarOuNulo, descriptografar } from '../lib/criptografia';
 import { comContextoPaciente } from '../lib/contextoseguro';
+import { obterOuCriarPacienteId, obterPacienteId } from '../lib/paciente';
 
 export const checkin = Router();
 
@@ -46,26 +46,6 @@ interface CheckinPainelRow {
   emocao_predominante: string | null;
 }
 
-
-async function obterOuCriarPacienteId(userId: number): Promise<number> {
-  const existente = await pool.query('SELECT id FROM paciente WHERE user_id = $1', [userId]);
-  if (existente.rows[0]) {
-    return (existente.rows[0] as { id: number }).id;
-  }
-
-  const criado = await pool.query(
-    'INSERT INTO paciente (user_id) VALUES ($1) RETURNING id',
-    [userId],
-  );
-  return (criado.rows[0] as { id: number }).id;
-}
-
-
-async function obterPacienteId(userId: number): Promise<number | null> {
-  const resultado = await pool.query('SELECT id FROM paciente WHERE user_id = $1', [userId]);
-  const row = resultado.rows[0] as { id: number } | undefined;
-  return row?.id ?? null;
-}
 
 function formatarDataISO(data: Date): string {
   // Data local (calendário do dispositivo/servidor), não UTC: evita deslocar
