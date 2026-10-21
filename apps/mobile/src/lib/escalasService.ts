@@ -36,6 +36,16 @@ export async function enviarRespostas(aplicacaoId: number, respostas: number[]):
   await api.post(`/paciente/aplicacoes/${aplicacaoId}/respostas`, { respostas });
 }
 
+// Sem resposta do servidor conta como desligado: o texto de conclusão não promete o que não sabe.
+export async function escalasCompartilhadas(): Promise<boolean> {
+  try {
+    const { data } = await api.get<{ escalas: boolean }>('/paciente/consentimento');
+    return data.escalas;
+  } catch {
+    return false;
+  }
+}
+
 export function mensagemDeErro(erro: unknown, padrao: string): string {
   return (isAxiosError<{ error?: string }>(erro) && erro.response?.data?.error) || padrao;
 }

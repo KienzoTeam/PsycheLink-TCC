@@ -7,7 +7,7 @@ import { useTheme } from '../../../theme/ThemeContext';
 import type { RootStackParamList } from '../../../navigation/AppNavigator';
 import CustomButton from '../../../components/ui/CustomButton';
 import { vibrarLeve } from '../../../lib/hapticos';
-import { Aplicacao, buscarAplicacao, enviarRespostas, mensagemDeErro } from '../../../lib/escalasService';
+import { Aplicacao, buscarAplicacao, enviarRespostas, escalasCompartilhadas, mensagemDeErro } from '../../../lib/escalasService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ResponderEscala'>;
 
@@ -25,6 +25,7 @@ export default function ResponderEscala({ navigation, route }: Props) {
   const [enviando, setEnviando] = useState(false);
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
+  const [compartilha, setCompartilha] = useState(false);
 
   const carregar = useCallback(async () => {
     setErro(null);
@@ -66,6 +67,7 @@ export default function ResponderEscala({ navigation, route }: Props) {
         aplicacao.aplicacaoId,
         respostas.filter((r): r is number => r !== null),
       );
+      setCompartilha(await escalasCompartilhadas());
       setEnviado(true);
     } catch (e) {
       setErroEnvio(mensagemDeErro(e, 'Não foi possível enviar agora. Verifique sua conexão e tente de novo.'));
@@ -226,6 +228,9 @@ export default function ResponderEscala({ navigation, route }: Props) {
 
   const renderConclusao = () => {
     const precisaApoio = aplicacao?.sigla === 'PHQ-9' && respostas[ITEM_9_PHQ_9] !== 0;
+    const avisoPsicologo = compartilha
+      ? 'Seu psicólogo vai ver suas respostas.'
+      : 'Seu psicólogo só vê as respostas enquanto o compartilhamento de escalas estiver ligado.';
     const acoes = [
       { titulo: 'Ligar para o CVV, 188', detalhe: 'Apoio emocional, 24 horas, gratuito.', icone: 'phone', aoTocar: () => void ligar('188') },
       { titulo: 'Ligar para o SAMU, 192', detalhe: 'Em caso de emergência.', icone: 'phone', aoTocar: () => void ligar('192') },
@@ -243,14 +248,14 @@ export default function ResponderEscala({ navigation, route }: Props) {
           <Feather name="check" size={36} color={theme.colors.onPrimaryContainer} />
         </View>
         <Text style={[styles.conclusaoTitulo, { color: theme.colors.onBackground }]} accessibilityRole="header">
-          Respostas enviadas ao seu psicólogo.
+          {compartilha ? 'Respostas enviadas ao seu psicólogo.' : 'Respostas registradas.'}
         </Text>
 
         {precisaApoio ? (
           <>
             <Text style={[styles.conclusaoTexto, { color: theme.colors.onBackground }]}>
-              Pelo que você respondeu, parece que está sendo um período difícil. Obrigado por contar como você está. Seu
-              psicólogo vai ver suas respostas.
+              Pelo que você respondeu, parece que está sendo um período difícil. Obrigado por contar como você está.{' '}
+              {avisoPsicologo}
             </Text>
             <Text style={[styles.conclusaoTexto, { color: theme.colors.onBackground }]}>
               Se quiser conversar com alguém agora:
@@ -277,7 +282,12 @@ export default function ResponderEscala({ navigation, route }: Props) {
             <CustomButton title="Voltar ao início" variant="outline" onPress={() => navigation.popTo('Main', { aba: 'Home' })} />
           </>
         ) : (
-          <CustomButton title="Voltar às escalas" onPress={() => navigation.goBack()} />
+          <>
+            {!compartilha && (
+              <Text style={[styles.conclusaoTexto, { color: theme.colors.onBackground }]}>{avisoPsicologo}</Text>
+            )}
+            <CustomButton title="Voltar às escalas" onPress={() => navigation.goBack()} />
+          </>
         )}
       </View>
     );
