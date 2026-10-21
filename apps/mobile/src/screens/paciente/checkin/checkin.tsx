@@ -611,13 +611,6 @@ export default function Checkin({ navigation }: Props) {
         Seus registros são privados e compartilhados apenas com seu psicólogo vinculado.
       </Text>
     </View>
-    {/*
-      TODO (futuro — sistema web da psicóloga): o texto acima já promete
-      esse compartilhamento, mas ele ainda NÃO está implementado — hoje o
-      check-in fica só no banco, visível apenas pro próprio paciente via
-      GET /checkins/resumo. Quando a tabela de vínculo e o endpoint da
-      psicóloga existirem, é aqui que esse texto passa a ser verdade.
-    */}
     <View style={styles.footer}>
       <TouchableOpacity style={[styles.btnVoltar, { borderColor: theme.colors.outline }]} onPress={etapaAnterior}>
         <Text style={[styles.btnVoltarTexto, { color: theme.colors.onBackground }]}>Voltar</Text>
@@ -669,7 +662,7 @@ export default function Checkin({ navigation }: Props) {
             Continue acompanhando sua jornada e lembre-se: você não está sozinho.
           </Text>
           <Text style={[styles.sucessoCardSubTexto, { color: theme.colors.onSurfaceVariant, marginTop: 8 }]}>
-            Na versão completa, este registro será sincronizado com seu psicólogo.
+            Seu registro de hoje foi salvo.
           </Text>
         </Animated.View>
         <Animated.View style={{ width: '100%' }} entering={FadeInDown.delay(440)}>
@@ -677,7 +670,7 @@ export default function Checkin({ navigation }: Props) {
             title="Voltar para Home"
             onPress={() => {
               resetarRascunho();
-              navigation.navigate('Main');
+              navigation.popTo('Main');
             }}
           />
         </Animated.View>
