@@ -15,7 +15,9 @@ import ExercicioRespiracao from '../../../components/ui/ExercicioRespiracao';
 import type { MainTabParamList } from '../../../navigation/MainTabNavigator';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import { buscarPainelCheckin, PainelCheckin } from '../../../lib/checkinService';
+import { formatarConsulta } from '../../../lib/consultasService';
 import { rotularEmocao } from '../../../lib/emocoes';
+import { useConsultas } from '../../../hooks/useConsultas';
 import { styles } from './styleHome';
 
 const getGreeting = () => {
@@ -78,6 +80,13 @@ export default function Home() {
       };
     }, [tentativaPainel]),
   );
+
+  const { dados: consultas, erro: erroConsultas } = useConsultas();
+  // Cancelada ainda futura vem em `proximas`, mas não é a próxima consulta.
+  const proxima = consultas?.proximas.find((c) => c.status === 'agendada');
+  const proximaConsulta = proxima
+    ? { ...formatarConsulta(proxima), nome: proxima.psicologo.nome }
+    : null;
 
   const temDados = painel !== null && !painel.semDados;
   // Exemplo só após carregar, com sucesso e sem dados reais — nunca durante
@@ -177,6 +186,38 @@ export default function Home() {
         </Animated.View>
 
         <View style={styles.content}>
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}
+            onPress={() => navigation.navigate('Consultas')}
+            accessibilityRole="button"
+            accessibilityHint="Abre a lista de consultas"
+          >
+            <View style={styles.cardHeader}>
+              <Feather name="calendar" size={18} color={theme.colors.primary} />
+              <Text style={[styles.cardTitle, styles.consultaTitulo, { color: theme.colors.onSurface }]}>
+                Próxima consulta
+              </Text>
+              <Feather name="chevron-right" size={18} color={theme.colors.subtext1} />
+            </View>
+            {erroConsultas ? (
+              <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>
+                Não foi possível carregar suas consultas.
+              </Text>
+            ) : !consultas ? (
+              <ActivityIndicator color={theme.colors.primary} accessibilityLabel="Carregando consultas" style={styles.consultaCarregando} />
+            ) : proximaConsulta ? (
+              <>
+                <Text style={[styles.consultaData, { color: theme.colors.onSurface }]}>{proximaConsulta.data}</Text>
+                <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>{proximaConsulta.horario}</Text>
+                <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>com {proximaConsulta.nome}</Text>
+              </>
+            ) : (
+              <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>
+                Nenhuma consulta agendada.
+              </Text>
+            )}
+          </TouchableOpacity>
+
           {/* Só exibe o selo de demonstração APÓS carregar, sem erro e sem dados reais */}
           {mostrarExemplo && (
             <>
