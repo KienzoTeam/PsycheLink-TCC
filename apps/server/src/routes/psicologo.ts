@@ -1,14 +1,16 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcrypt';
 import rateLimit from 'express-rate-limit';
 import { pool } from '../db';
-import { verificarToken } from './auth';
+import { registrarAuditoria } from '../lib/auditoria';
 import { comContextoPaciente } from '../lib/contextoseguro';
 import { criptografar, descriptografar } from '../lib/criptografia';
-import { anotacaoSchema } from '../schemas';
+import { exigirSessaoWeb, revogarSessoes, SESSAO_VIVA } from '../lib/sessaoWeb';
+import { anotacaoSchema, contaSchema, trocaSenhaSchema } from '../schemas';
 
 /**
  * Plataforma web do psicólogo. Regras de acesso:
- *  1. O token precisa ser válido (verificarToken: assinatura, expiração, sessão).
+ *  1. A sessão web precisa ser válida (exigirSessaoWeb: cookie pl_at, assinatura, sessão ativa).
  *  2. O usuário precisa ter registro em `psicologo` (conferido a cada requisição).
  *  3. Só é lido dado de pacientes com vínculo ativo com este psicólogo.
  *  4. Só é exibido o que o paciente consentiu, por categoria (consentimento).
@@ -73,7 +75,7 @@ async function exigirPsicologo(req: Request, res: Response, next: NextFunction) 
   }
 }
 
-psicologo.use(verificarToken, exigirPsicologo);
+psicologo.use(exigirSessaoWeb, exigirPsicologo);
 
 // Utilitários
 
@@ -233,19 +235,101 @@ async function resumoPaciente(v: VinculoAtivo) {
 
 // Rotas
 
+// Conta
+
+async function perfilDe(psicologoId: number) {
+  const { rows } = await pool.query(
+    `SELECT p.id, u.nome, u.email, p.crp, p.especialidade
+       FROM psicologo p
+       JOIN users u ON u.id = p.user_id
+      WHERE p.id = $1`,
+    [psicologoId],
+  );
+  return rows[0];
+}
+
 // Perfil do psicólogo logado
 psicologo.get(
   '/me',
   limite(60),
-  rota(async (_req, res) => {
-    const { rows } = await pool.query(
-      `SELECT p.id, u.nome, u.email, p.crp, p.especialidade
-         FROM psicologo p
-         JOIN users u ON u.id = p.user_id
-        WHERE p.id = $1`,
-      [res.locals.psicologoId],
+  rota(async (_req, res) => res.json(await perfilDe(res.locals.psicologoId))),
+);
+
+// Nome e especialidade; o e-mail e o CRP não mudam por aqui.
+psicologo.patch(
+  '/me',
+  limite(30),
+  rota(async (req, res) => {
+    const parsed = contaSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Dados inválidos.' });
+    }
+
+    await pool.query(
+      `WITH usuario AS (UPDATE users SET nome = $1 WHERE id = $3)
+       UPDATE psicologo SET especialidade = $2 WHERE user_id = $3`,
+      [parsed.data.nome, parsed.data.especialidade, req.user!.id],
     );
-    return res.json(rows[0]);
+    return res.json(await perfilDe(res.locals.psicologoId));
+  }),
+);
+
+psicologo.post(
+  '/me/senha',
+  limite(5),
+  rota(async (req, res) => {
+    const parsed = trocaSenhaSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Dados inválidos.' });
+    }
+
+    const { rows } = await pool.query<{ password_hash: string }>(
+      'SELECT password_hash FROM users WHERE id = $1',
+      [req.user!.id],
+    );
+    // 400 e não 401: o front renova a sessão em todo 401.
+    if (!(await bcrypt.compare(parsed.data.senhaAtual, rows[0].password_hash))) {
+      return res.status(400).json({ error: 'Senha atual incorreta.' });
+    }
+
+    // Revoga antes de trocar: se a troca falhar, o pior caso é perder sessões à toa.
+    await revogarSessoes(req.user!.id, res.locals.sessaoId);
+    await pool.query(
+      'UPDATE users SET password_hash = $1, sessao_invalidada_em = now() WHERE id = $2',
+      [await bcrypt.hash(parsed.data.novaSenha, 10), req.user!.id],
+    );
+    await registrarAuditoria(req, 'senha_alterada');
+    return res.json({ ok: true });
+  }),
+);
+
+psicologo.get(
+  '/me/sessoes',
+  limite(60),
+  rota(async (req, res) => {
+    const { rows } = await pool.query(
+      `SELECT id,
+              criado_em AS "criadoEm",
+              ultimo_uso_em AS "ultimoUsoEm",
+              host(ip) AS ip,
+              user_agent AS "userAgent",
+              (id = $2) AS atual
+         FROM sessao
+        WHERE user_id = $1 AND ${SESSAO_VIVA}
+        ORDER BY ultimo_uso_em DESC`,
+      [req.user!.id, res.locals.sessaoId],
+    );
+    return res.json({ sessoes: rows });
+  }),
+);
+
+psicologo.post(
+  '/me/sessoes/encerrar-outras',
+  limite(10),
+  rota(async (req, res) => {
+    const encerradas = await revogarSessoes(req.user!.id, res.locals.sessaoId);
+    await registrarAuditoria(req, 'sessoes_encerradas', { metadados: { quantidade: encerradas } });
+    return res.json({ encerradas });
   }),
 );
 
@@ -346,6 +430,10 @@ psicologo.get(
       }
     }
 
+    await registrarAuditoria(req, 'paciente_painel_visualizado', {
+      pacienteId: vinculo.paciente_id,
+    });
+
     return res.json({
       paciente: { id: vinculo.paciente_id, nome: vinculo.nome },
       consentimentos: consent,
@@ -382,6 +470,7 @@ psicologo.get(
       .map((a) => ({ id: a.id, criadoEm: a.criadoEm, conteudo: lerSeguro(a.conteudo) }))
       .filter((a): a is { id: number; criadoEm: string; conteudo: string } => a.conteudo !== null);
 
+    await registrarAuditoria(req, 'anotacoes_lidas', { pacienteId: vinculo.paciente_id });
     return res.json({ anotacoes });
   }),
 );
@@ -399,11 +488,17 @@ psicologo.post(
     }
 
     const { rows } = await pool.query<{ id: number; criado_em: string }>(
-      `INSERT INTO anotacao_clinica (psicologo_id, paciente_id, conteudo)
-       VALUES ($1, $2, $3)
+      `INSERT INTO anotacao_clinica (psicologo_id, paciente_id, conteudo, expira_em)
+       VALUES ($1, $2, $3, now() + interval '5 years')
        RETURNING id, to_char(criado_em, 'YYYY-MM-DD HH24:MI') AS criado_em`,
       [res.locals.psicologoId, vinculo.paciente_id, criptografar(parsed.data.conteudo)],
     );
+
+    await registrarAuditoria(req, 'anotacao_criada', {
+      pacienteId: vinculo.paciente_id,
+      alvoTipo: 'anotacao_clinica',
+      alvoId: rows[0].id,
+    });
 
     return res.status(201).json({
       anotacao: { id: rows[0].id, criadoEm: rows[0].criado_em, conteudo: parsed.data.conteudo },

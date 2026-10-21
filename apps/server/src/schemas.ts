@@ -80,3 +80,21 @@ export const anotacaoSchema = z.object({
     .min(1, 'A anotação não pode ser vazia.')
     .max(5000, 'A anotação excede 5000 caracteres.'),
 });
+
+export const desafioSchema = z.object({
+  desafioId: z.string().min(1).max(64),
+});
+
+export const doisFatoresSchema = desafioSchema.extend({
+  codigo: z
+    .string()
+    .regex(/^\d{6}$/)
+    .transform(Number),
+});
+
+export const contaSchema = psicologoRegistroSchema.pick({ nome: true, especialidade: true });
+
+export const trocaSenhaSchema = z.object({
+  senhaAtual: z.string().min(1, 'Informe a senha atual.'),
+  novaSenha: senhaSchema,
+});

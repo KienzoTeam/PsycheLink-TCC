@@ -5,6 +5,7 @@ import { auth } from './routes/auth';
 import { authPsicologo } from './routes/auth-psicologo';
 import { checkin } from './routes/checkin';
 import { psicologo } from './routes/psicologo';
+import { exigirOrigem } from './lib/sessaoWeb';
 
 export const app = express();
 
@@ -24,6 +25,9 @@ app.use(['/auth', '/psicologo'], (_req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });
+
+// CSRF das rotas com cookie: escritas só com Origin na allowlist (WEB_ORIGINS).
+app.use(['/auth/psicologo', '/psicologo'], exigirOrigem);
 
 // Prefixos alinhados com o aplicativo mobile
 app.use('/auth', auth);

@@ -14,7 +14,7 @@ const limite = (n: number) => rateLimit({ windowMs: 15 * 60_000, limit: n });
 
 export interface TokenPayload {
   id: number;
-  email: string;
+  email?: string;
   iat?: number;
 }
 
@@ -337,11 +337,18 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(senha.data, 10);
+    // Troca a senha e revoga as sessões web na mesma instrução: ou acontecem as duas, ou nenhuma.
     const atualizado = await pool.query(
-      `UPDATE users
-          SET password_hash = $1, sessao_invalidada_em = now()
-        WHERE email = $2 AND email_verificado
-        RETURNING id`,
+      `WITH conta AS (
+         UPDATE users
+            SET password_hash = $1, sessao_invalidada_em = now()
+          WHERE email = $2 AND email_verificado
+          RETURNING id
+       ), revogadas AS (
+         UPDATE sessao SET revogada_em = now()
+          WHERE revogada_em IS NULL AND user_id IN (SELECT id FROM conta)
+       )
+       SELECT id FROM conta`,
       [hashedPassword, email],
     );
     if (atualizado.rows.length === 0) {
