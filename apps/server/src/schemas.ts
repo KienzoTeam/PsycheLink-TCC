@@ -49,6 +49,8 @@ export const checkinSchema = z.object({
   contextos: z.array(z.string()),
   habitos: z.array(z.string()), 
   notas: z.string().max(2000).optional(),
+  // Opt-in por check-in: o psicólogo só lê o diário com isto e o consentimento de diário.
+  diarioCompartilhado: z.boolean().optional().default(false),
 });
 
 export type DadosCheckin = z.infer<typeof checkinSchema>;

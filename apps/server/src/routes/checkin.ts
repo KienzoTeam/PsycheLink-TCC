@@ -180,8 +180,8 @@ checkin.post(['/', '/checkins'], limite(20), verificarToken, async (req, res) =>
       client.query(
         `INSERT INTO checkin_diario
            (paciente_id, emocao_predominante, intensidade_humor, intensidade_ansiedade,
-            horas_sono, qualidade_sono, contexto_gatilho, diario_livre)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            horas_sono, qualidade_sono, contexto_gatilho, diario_livre, diario_compartilhado)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING id, data, criado_em`,
         [
           pacienteId,
@@ -192,6 +192,7 @@ checkin.post(['/', '/checkins'], limite(20), verificarToken, async (req, res) =>
           qualidadeSono,
           contextoGatilho,
           diarioLivre,
+          diarioLivre !== null && dados.diarioCompartilhado,
         ],
       ),
     )) as { rows: CheckinPostResultRow[] };
