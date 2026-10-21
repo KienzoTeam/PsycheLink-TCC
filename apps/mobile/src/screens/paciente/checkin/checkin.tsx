@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {View, Text, ScrollView, TouchableOpacity, TextInput, Alert, PanResponder, KeyboardAvoidingView, Platform} from 'react-native';
+import {View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Alert, PanResponder, KeyboardAvoidingView, Platform} from 'react-native';
 import Animated, { SlideInLeft, SlideInRight, SlideOutLeft, SlideOutRight, FadeInDown, FadeInUp, ZoomIn, useAnimatedStyle, useSharedValue, withSpring, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Feather } from '@expo/vector-icons';
@@ -201,12 +201,13 @@ export default function Checkin({ navigation }: Props) {
 
   // Etapa 6 - Diário Emocional
   const [notas, setNotas] = useState(lerRascunho()?.notas ?? '');
+  const [diarioCompartilhado, setDiarioCompartilhado] = useState(lerRascunho()?.diarioCompartilhado ?? false);
 
   // Espelha o rascunho nos estados que o compõem: interrupção (background/kill)
   // retoma de onde parou. Com deps, não roda em renders alheios (ex.: erro de etapa).
   useEffect(() => {
-    salvarRascunho({ etapa, emocoes: emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextos: contextosSelecionados, habitos: habitosSelecionados, notas });
-  }, [etapa, emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextosSelecionados, habitosSelecionados, notas]);
+    salvarRascunho({ etapa, emocoes: emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextos: contextosSelecionados, habitos: habitosSelecionados, notas, diarioCompartilhado });
+  }, [etapa, emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextosSelecionados, habitosSelecionados, notas, diarioCompartilhado]);
 
   const progresso = (etapa / total_etapas) * 100;
 
@@ -266,6 +267,7 @@ export default function Checkin({ navigation }: Props) {
         contextos: contextosSelecionados,
         habitos: habitosSelecionados,
         notas,
+        diarioCompartilhado,
       });
 
       resetarRascunho();
@@ -581,6 +583,28 @@ export default function Checkin({ navigation }: Props) {
       value={notas}
       onChangeText={setNotas}
     />
+    {notas.trim() !== '' && (
+      <View style={[styles.diarioLinha, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}>
+        <View style={styles.diarioTextos} aria-hidden>
+          <Text style={[styles.diarioRotulo, { color: theme.colors.onSurface }]}>
+            Compartilhar este texto com meu psicólogo
+          </Text>
+          <Text style={[styles.diarioDescricao, { color: theme.colors.subtext1 }]}>
+            Só vale se o diário estiver liberado em Psicólogo e privacidade. Desligado, o texto fica só com você.
+          </Text>
+        </View>
+        <Switch
+          value={diarioCompartilhado}
+          onValueChange={setDiarioCompartilhado}
+          trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
+          ios_backgroundColor={theme.colors.surfaceVariant}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Compartilhar este texto com meu psicólogo"
+          accessibilityHint="Só vale se o diário estiver liberado em Psicólogo e privacidade"
+          accessibilityState={{ checked: diarioCompartilhado }}
+        />
+      </View>
+    )}
     <View style={[styles.privacidadeBox, { backgroundColor: theme.colors.primaryContainer }]}>
       <Feather name="lock" size={16} color={theme.colors.onPrimaryContainer} />
       <Text style={[styles.privacidadeTexto, { color: theme.colors.onPrimaryContainer }]}>
