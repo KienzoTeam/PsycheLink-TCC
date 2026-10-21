@@ -1,0 +1,58 @@
+.abas {
+  display: grid;
+  gap: var(--espaco-16);
+  min-width: 0;
+}
+
+/* As abas rolam dentro da lista: nunca alargam a página. */
+.lista {
+  display: flex;
+  overflow-x: auto;
+  border-block-end: var(--largura-borda) solid var(--cor-contorno-variante);
+  scrollbar-width: none;
+}
+
+.aba {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  min-height: var(--altura-item-nav);
+  padding-inline: var(--espaco-16);
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-titulo-pequeno);
+  white-space: nowrap;
+  cursor: pointer;
+  outline-offset: calc(var(--foco-largura) * -1);
+  transition: color var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+.aba[data-hovered] {
+  color: var(--cor-sobre-superficie);
+}
+
+.aba[data-selected] {
+  color: var(--cor-primaria);
+}
+
+.aba[data-disabled] {
+  opacity: var(--opacidade-desabilitado-conteudo);
+  cursor: not-allowed;
+}
+
+.indicador {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  height: var(--altura-indicador-aba);
+  border-radius: var(--forma-total) var(--forma-total) 0 0;
+  background: var(--cor-primaria);
+  transition:
+    translate var(--duracao-espacial-padrao) var(--mola-espacial-padrao),
+    width var(--duracao-espacial-padrao) var(--mola-espacial-padrao);
+}
+
+.painel {
+  min-width: 0;
+}

@@ -1,0 +1,7 @@
+.cartao {
+  padding: var(--espaco-24);
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-xl);
+  background: var(--cor-cartao);
+  color: var(--cor-sobre-superficie);
+}

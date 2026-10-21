@@ -1,0 +1,110 @@
+.campo {
+  composes: campo from './TextField.module.css';
+}
+
+.rotulo {
+  composes: rotulo from './TextField.module.css';
+}
+
+.ajuda {
+  composes: ajuda from './TextField.module.css';
+}
+
+.erro {
+  composes: erro from './TextField.module.css';
+}
+
+.gatilho {
+  composes: caixa from './TextField.module.css';
+  width: 100%;
+  padding-inline-end: var(--espaco-12);
+  text-align: start;
+  cursor: pointer;
+}
+
+.gatilho svg {
+  flex-shrink: 0;
+  width: var(--tamanho-icone);
+  height: var(--tamanho-icone);
+  color: var(--cor-sobre-superficie-variante);
+}
+
+.valor {
+  flex: 1;
+  min-width: 0;
+  font: var(--tipo-corpo-grande);
+}
+
+.valor[data-placeholder] {
+  color: var(--cor-sobre-superficie-variante);
+}
+
+.popover {
+  min-width: var(--trigger-width);
+  padding: var(--espaco-8);
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-md);
+  background: var(--cor-cartao);
+  box-shadow: var(--sombra-overlay);
+  transform-origin: var(--trigger-anchor-point);
+  transition:
+    opacity var(--duracao-efeitos-padrao) var(--mola-efeitos-padrao),
+    scale var(--duracao-espacial-rapida) var(--mola-espacial-rapida);
+}
+
+.popover[data-entering],
+.popover[data-exiting] {
+  opacity: 0;
+  scale: var(--escala-entrada);
+}
+
+.lista {
+  outline: none;
+}
+
+.opcao {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-12);
+  min-height: var(--alvo-minimo);
+  padding-inline: var(--espaco-12);
+  border-radius: var(--forma-sm);
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-corpo-grande);
+  cursor: pointer;
+  outline: none;
+}
+
+.opcao::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentcolor;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.opcao[data-hovered]::before {
+  opacity: var(--camada-hover);
+}
+
+.opcao[data-focused]::before {
+  opacity: var(--camada-foco);
+}
+
+.opcao[data-pressed]::before {
+  opacity: var(--camada-pressionado);
+}
+
+.opcao[data-selected] {
+  background: var(--cor-container-secundaria);
+  color: var(--cor-sobre-container-secundaria);
+}
+
+.opcao svg {
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+}

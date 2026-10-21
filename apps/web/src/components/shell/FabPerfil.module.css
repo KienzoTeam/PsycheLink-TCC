@@ -1,0 +1,58 @@
+.fab {
+  position: fixed;
+  inset-block-end: calc(var(--espaco-16) + env(safe-area-inset-bottom));
+  inset-inline-end: calc(var(--espaco-16) + env(safe-area-inset-right));
+  z-index: var(--z-fab);
+  display: grid;
+  place-items: center;
+  width: var(--tamanho-fab);
+  height: var(--tamanho-fab);
+  border: 0;
+  border-radius: var(--forma-total);
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
+  box-shadow: var(--sombra-fab);
+  font: var(--tipo-titulo-medio-enfatico);
+  cursor: pointer;
+  transition:
+    border-radius var(--duracao-espacial-rapida) var(--mola-espacial-rapida),
+    scale var(--duracao-espacial-rapida) var(--mola-espacial-rapida);
+}
+
+.fab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentcolor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+.fab[data-hovered]::before {
+  opacity: var(--camada-hover);
+}
+
+.fab[data-focus-visible]::before {
+  opacity: var(--camada-foco);
+}
+
+.fab[data-pressed] {
+  border-radius: var(--forma-lg);
+  scale: var(--escala-pressionado);
+}
+
+.fab[data-pressed]::before {
+  opacity: var(--camada-pressionado);
+}
+
+.texto {
+  margin-block-end: var(--espaco-16);
+}
+
+.pins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-8);
+}

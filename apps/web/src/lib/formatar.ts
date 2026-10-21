@@ -22,3 +22,11 @@ export function media(valores: Array<number | null | undefined>): number | null 
 export function primeiroNome(nome: string): string {
   return nome.split(' ')[0] ?? nome;
 }
+
+/** Iniciais para o avatar: primeira letra do primeiro e do último nome. */
+export function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/);
+  const primeira = partes[0]?.[0] ?? '';
+  const ultima = partes.length > 1 ? (partes[partes.length - 1]?.[0] ?? '') : '';
+  return (primeira + ultima).toUpperCase();
+}
