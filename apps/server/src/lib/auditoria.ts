@@ -26,7 +26,7 @@ export async function registrarAuditoria(
   req: Request,
   acao: string,
   opcoes: OpcoesAuditoria = {},
-): Promise<void> {
+): Promise<number> {
   const ator: Ator =
     opcoes.ator !== undefined
       ? opcoes.ator
@@ -35,10 +35,11 @@ export async function registrarAuditoria(
         : null;
   const { ip, userAgent } = origemDe(req);
 
-  await pool.query(
+  const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO auditoria
        (ator_user_id, ator_papel, acao, paciente_id, alvo_tipo, alvo_id, ip, user_agent, metadados)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     RETURNING id`,
     [
       ator?.id ?? null,
       ator?.papel ?? null,
@@ -51,4 +52,5 @@ export async function registrarAuditoria(
       opcoes.metadados ?? {},
     ],
   );
+  return Number(rows[0].id);
 }

@@ -16,6 +16,22 @@ type LinhaPaciente = { pacienteId: number; nome: string; humor: boolean; registr
 type LinhaCheckin = { pacienteId: number; nome: string; em: Date; emocao_predominante: string | null };
 type LinhaAtividade = { pacienteId: number; nome: string; acao: string; em: Date };
 type LinhaMedias = { n: number; humor: number | null; ansiedade: number | null; sono: number | null };
+type LinhaConsultaHoje = {
+  id: number;
+  pacienteId: number;
+  nome: string;
+  inicio: Date;
+  fim: Date;
+  status: string;
+};
+type LinhaEscalaRespondida = {
+  aplicacaoId: number;
+  pacienteId: number;
+  nome: string;
+  sigla: string;
+  respondidoEm: Date;
+  scoreTotal: number;
+};
 
 // Check-ins dos pacientes vinculados a este psicólogo ($1) que compartilham humor.
 const CHECKINS_COM_HUMOR = `
@@ -24,6 +40,15 @@ const CHECKINS_COM_HUMOR = `
   JOIN consentimento co ON co.paciente_id = c.paciente_id AND co.compartilha_humor
   JOIN paciente p ON p.id = c.paciente_id
   JOIN users u ON u.id = p.user_id`;
+
+// Aplicações deste psicólogo ($1) cujo paciente compartilha escalas.
+const ESCALAS_COMPARTILHADAS = `
+  FROM aplicacao_escala a
+  JOIN escala e ON e.id = a.escala_id
+  JOIN consentimento co ON co.paciente_id = a.paciente_id AND co.compartilha_escalas
+  JOIN paciente p ON p.id = a.paciente_id
+  JOIN users u ON u.id = p.user_id
+ WHERE a.psicologo_id = $1`;
 
 // O período vale para a série de vínculos e para as médias. Check-ins recentes, atividade e
 // dados insuficientes olham sempre para os registros mais novos, qualquer que seja o período.
@@ -74,6 +99,7 @@ dashboard.get(
       );
 
       // Eventos do paciente depois do início deste vínculo; os de vínculos anteriores ficam de fora.
+      // Resposta de escala só aparece com o consentimento "escalas".
       const atividade = await client.query<LinhaAtividade>(
         `(SELECT a.paciente_id AS "pacienteId", u.nome, a.acao, a.criado_em AS em
             FROM auditoria a
@@ -82,7 +108,9 @@ dashboard.get(
                           AND a.criado_em >= (v.criado_em AT TIME ZONE 'UTC')
             JOIN paciente p ON p.id = a.paciente_id
             JOIN users u ON u.id = p.user_id
+            LEFT JOIN consentimento co ON co.paciente_id = a.paciente_id
            WHERE a.acao IN ('vinculo_criado', 'consentimento_alterado')
+              OR (a.acao = 'escala_respondida' AND co.compartilha_escalas)
            ORDER BY a.criado_em DESC
            LIMIT 15)
          UNION ALL
@@ -105,12 +133,43 @@ dashboard.get(
         [id, q.periodo],
       );
 
+      // Dia de São Paulo; remarcadas e canceladas aparecem com o status para a agenda mostrar.
+      const consultasHoje = await client.query<LinhaConsultaHoje>(
+        `SELECT c.id, c.paciente_id AS "pacienteId", u.nome, c.inicio, c.fim, c.status
+           FROM consulta c
+           JOIN paciente p ON p.id = c.paciente_id
+           JOIN users u ON u.id = p.user_id
+          WHERE c.psicologo_id = $1
+            AND (c.inicio AT TIME ZONE 'America/Sao_Paulo')::date
+                = (now() AT TIME ZONE 'America/Sao_Paulo')::date
+          ORDER BY c.inicio, c.id`,
+        [id],
+      );
+
+      // Abertas = pendentes mais em andamento: ainda sem resposta.
+      const abertas = await client.query<{ n: number }>(
+        `SELECT count(*)::int AS n ${ESCALAS_COMPARTILHADAS}
+            AND a.status IN ('pendente', 'em_andamento')`,
+        [id],
+      );
+      const respondidas = await client.query<LinhaEscalaRespondida>(
+        `SELECT a.id AS "aplicacaoId", a.paciente_id AS "pacienteId", u.nome, e.sigla,
+                a.respondido_em AS "respondidoEm", a.score_total AS "scoreTotal"
+           ${ESCALAS_COMPARTILHADAS}
+            AND a.status = 'concluida'
+          ORDER BY a.respondido_em DESC, a.id DESC
+          LIMIT 5`,
+        [id],
+      );
+
       return {
         pacientes: pacientes.rows,
         serie: serie.rows,
         recentes: recentes.rows,
         atividade: atividade.rows,
         medias: medias.rows[0],
+        consultasHoje: consultasHoje.rows,
+        escalas: { pendentes: abertas.rows[0].n, respondidasRecentes: respondidas.rows },
       };
     });
 
@@ -129,6 +188,8 @@ dashboard.get(
         .filter((l) => l.humor && l.registros7d < MIN_REGISTROS_SEMANA)
         .map((l) => ({ pacienteId: l.pacienteId, nome: l.nome, registros7d: l.registros7d })),
       medias: dados.medias,
+      consultasHoje: dados.consultasHoje,
+      escalas: dados.escalas,
     });
   }),
 );

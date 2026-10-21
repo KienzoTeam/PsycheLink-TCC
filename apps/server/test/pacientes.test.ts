@@ -529,7 +529,9 @@ describe('GET /psicologo/dashboard', () => {
     assert.deepEqual(Object.keys(corpo).sort(), [
       'atividadeRecente',
       'checkinsRecentes',
+      'consultasHoje',
       'dadosInsuficientes',
+      'escalas',
       'medias',
       'pacientesVinculados',
       'serieVinculos',

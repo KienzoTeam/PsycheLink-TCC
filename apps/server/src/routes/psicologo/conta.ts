@@ -8,8 +8,14 @@ import { contaSchema, trocaSenhaSchema } from '../../schemas';
 
 export const conta = Router();
 
-async function perfilDe(psicologoId: number) {
-  const { rows } = await pool.query(
+export async function perfilDe(psicologoId: number) {
+  const { rows } = await pool.query<{
+    id: number;
+    nome: string;
+    email: string;
+    crp: string;
+    especialidade: string | null;
+  }>(
     `SELECT p.id, u.nome, u.email, p.crp, p.especialidade
        FROM psicologo p
        JOIN users u ON u.id = p.user_id

@@ -15,7 +15,7 @@ import {
   vincular,
 } from './ajuda';
 
-const TABELAS = ['checkin_diario', 'habito', 'consentimento', 'anotacao_clinica', 'aplicacao_escala', 'resposta_escala'];
+const TABELAS = ['checkin_diario', 'habito', 'consentimento', 'anotacao_clinica', 'aplicacao_escala', 'resposta_escala', 'consulta'];
 
 let pacienteA: number;
 let pacienteOutro: number;
@@ -47,6 +47,12 @@ before(async () => {
     'INSERT INTO anotacao_clinica (psicologo_id, paciente_id, conteudo) VALUES ($1, $2, $3)',
     [psicologoA, pacienteA, criptografar('nota')],
   );
+  for (const [dias, paciente] of [[30, pacienteA], [31, pacienteOutro]]) {
+    await dono.query(
+      "INSERT INTO consulta (psicologo_id, paciente_id, inicio, fim) VALUES ($1, $2, now() + $3 * interval '1 day', now() + $3 * interval '1 day' + interval '1 hour')",
+      [psicologoA, paciente, dias],
+    );
+  }
   escalaId = (
     await dono.query<{ id: number }>(
       "INSERT INTO escala (nome, total_questoes) VALUES ('Escala de teste', 1) RETURNING id",
@@ -104,7 +110,7 @@ describe('contexto do psicólogo', () => {
 
   it('A vê só o paciente vinculado, nunca o outro', async () => {
     await comContextoPsicologo(psicologoA, async (client) => {
-      for (const tabela of ['checkin_diario', 'habito', 'consentimento', 'aplicacao_escala', 'resposta_escala']) {
+      for (const tabela of ['checkin_diario', 'habito', 'consentimento', 'aplicacao_escala', 'resposta_escala', 'consulta']) {
         assert.equal(await contar(client, tabela), 1, tabela);
       }
       const { rows } = await client.query('SELECT paciente_id FROM checkin_diario');
@@ -147,7 +153,7 @@ describe('contexto do psicólogo', () => {
 describe('contexto do paciente', () => {
   it('vê só as próprias linhas', async () => {
     await comContextoPaciente(pacienteA, async (client) => {
-      for (const tabela of ['checkin_diario', 'habito', 'consentimento', 'aplicacao_escala', 'resposta_escala']) {
+      for (const tabela of ['checkin_diario', 'habito', 'consentimento', 'aplicacao_escala', 'resposta_escala', 'consulta']) {
         assert.equal(await contar(client, tabela), 1, tabela);
       }
     });

@@ -2,18 +2,13 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { pool } from '../../db';
 import { registrarAuditoria } from '../../lib/auditoria';
-import {
-  CHECKIN_EM,
-  CHECKIN_HORARIO,
-  emocoesDe,
-  lerSeguro,
-  QUALIDADE_SONO_REVERSO,
-} from '../../lib/checkins';
+import { CHECKIN_EM, CHECKIN_HORARIO, emocoesDe, lerSeguro } from '../../lib/checkins';
 import { comContextoPsicologo } from '../../lib/contextoseguro';
 import { criptografar } from '../../lib/criptografia';
 import { codificarCursor, cursorDe } from '../../lib/cursor';
 import { arredondar, media, pearson } from '../../lib/estatistica';
 import { dia, diasEntre, periodoValido } from '../../lib/periodo';
+import { checkinsDoPeriodo, type LinhaDetalhe, resumirCheckins } from '../../lib/resumo';
 import { idDe, lerOuNegar, limite, rota } from '../../lib/rota';
 import { consentimentosDe, PACIENTE_NAO_ENCONTRADO, vinculoOuNegar } from '../../lib/vinculo';
 import { anotacaoSchema } from '../../schemas';
@@ -152,32 +147,7 @@ const resumoSchema = z
   .refine((q) => periodoValido(q.de, q.ate) && periodoValido(q.compararDe, q.compararAte))
   .refine((q) => (q.compararDe === undefined) === (q.compararAte === undefined));
 
-type LinhaDetalhe = {
-  id: number;
-  data: string;
-  horario: string | null;
-  intensidade_humor: number | null;
-  intensidade_ansiedade: number | null;
-  horas_sono: string | null; // numeric chega como string do pg
-  qualidade_sono: number | null;
-  emocao_predominante: string | null;
-  contexto_gatilho: string | null;
-  diario_livre: string | null;
-  diario_compartilhado: boolean;
-  exercicio: boolean | null; // null quando não há registro em `habito`
-  meditacao: boolean | null;
-  medicacao: boolean | null;
-};
-
 type LinhaPeriodo = Pick<LinhaDetalhe, 'intensidade_humor' | 'intensidade_ansiedade' | 'horas_sono'>;
-
-const faixaDoDia = (horario: string) => {
-  const hora = Number(horario.slice(0, 2));
-  if (hora < 6) return 'madrugada';
-  if (hora < 12) return 'manha';
-  if (hora < 18) return 'tarde';
-  return 'noite';
-};
 
 // Detalhe de um paciente: somente as categorias consentidas
 pacientes.get(
@@ -192,23 +162,7 @@ pacientes.get(
       if (!vinculo) return null;
       const consent = consentimentosDe(vinculo);
 
-      const { rows } = await client.query<LinhaDetalhe>(
-        `SELECT c.id,
-                to_char(c.data, 'YYYY-MM-DD') AS data,
-                ${CHECKIN_HORARIO} AS horario,
-                c.intensidade_humor, c.intensidade_ansiedade,
-                c.horas_sono, c.qualidade_sono,
-                c.emocao_predominante, c.contexto_gatilho,
-                c.diario_livre, c.diario_compartilhado,
-                h.exercicio, h.meditacao, h.medicacao
-           FROM checkin_diario c
-           LEFT JOIN habito h ON h.checkin_id = c.id
-          WHERE c.paciente_id = $1
-            AND c.data BETWEEN COALESCE($2::date, COALESCE($3::date, CURRENT_DATE) - $4::int)
-                           AND COALESCE($3::date, CURRENT_DATE)
-          ORDER BY c.data ASC`,
-        [vinculo.paciente_id, q.de ?? null, q.ate ?? null, q.dias],
-      );
+      const rows = await checkinsDoPeriodo(client, vinculo.paciente_id, q.de ?? null, q.ate ?? null, q.dias);
 
       const anterior =
         q.compararDe === undefined
@@ -237,50 +191,7 @@ pacientes.get(
     if (!dados) return;
     const { vinculo, consent, rows, anterior, recentes } = dados;
 
-    // Humor/ansiedade/emoções/gatilhos/horário → consentimento "humor".
-    // Sono e hábitos → consentimento "hábitos".
-    const registros = rows.map((l) => ({
-      id: l.id,
-      data: l.data,
-      horario: consent.humor ? l.horario : null,
-      humor: consent.humor ? l.intensidade_humor : null,
-      ansiedade: consent.humor ? l.intensidade_ansiedade : null,
-      sonoHoras:
-        consent.habitos && l.horas_sono !== null ? Number(l.horas_sono) : null,
-      qualidadeSono:
-        consent.habitos && l.qualidade_sono !== null
-          ? (QUALIDADE_SONO_REVERSO[l.qualidade_sono] ?? null)
-          : null,
-      emocoes: consent.humor ? emocoesDe(l.emocao_predominante) : null,
-      gatilhos: consent.humor ? emocoesDe(l.contexto_gatilho) : null,
-    }));
-
-    const contagem = new Map<string, number>();
-    for (const registro of registros) {
-      for (const emocao of registro.emocoes ?? []) {
-        contagem.set(emocao, (contagem.get(emocao) ?? 0) + 1);
-      }
-    }
-    const frequenciaEmocional = [...contagem.entries()]
-      .map(([emocao, quantidade]) => ({ emocao, quantidade }))
-      .sort((a, b) => b.quantidade - a.quantidade)
-      .slice(0, 5);
-
-    let habitos: null | {
-      diasRegistrados: number;
-      exercicio: number;
-      meditacao: number;
-      medicacao: number;
-    } = null;
-    if (consent.habitos) {
-      const comHabito = rows.filter((l) => l.exercicio !== null);
-      habitos = {
-        diasRegistrados: comHabito.length,
-        exercicio: comHabito.filter((l) => l.exercicio).length,
-        meditacao: comHabito.filter((l) => l.meditacao).length,
-        medicacao: comHabito.filter((l) => l.medicacao).length,
-      };
-    }
+    const { registros, frequenciaEmocional, habitos, distribuicaoHorario } = resumirCheckins(rows, consent);
 
     // Diário livre exige as duas permissões: consentimento geral e marcação no check-in.
     const diario: Array<{ data: string; texto: string }> = [];
@@ -289,15 +200,6 @@ pacientes.get(
         if (!l.diario_compartilhado || !l.diario_livre) continue;
         const texto = lerSeguro(l.diario_livre);
         if (texto !== null) diario.push({ data: l.data, texto });
-      }
-    }
-
-    const distribuicaoHorario = consent.humor
-      ? { madrugada: 0, manha: 0, tarde: 0, noite: 0 }
-      : null;
-    if (distribuicaoHorario) {
-      for (const { horario } of registros) {
-        if (horario) distribuicaoHorario[faixaDoDia(horario)]++;
       }
     }
 
@@ -351,7 +253,13 @@ const linhaDoTempoSchema = z
   .refine((q) => periodoValido(q.de, q.ate));
 
 type LinhaTempo = {
-  tipo: 'checkin' | 'vinculo_criado' | 'vinculo_encerrado';
+  tipo:
+    | 'checkin'
+    | 'vinculo_criado'
+    | 'vinculo_encerrado'
+    | 'escala_solicitada'
+    | 'escala_respondida'
+    | 'consulta';
   id: number;
   em: Date;
   data: string | null;
@@ -360,9 +268,12 @@ type LinhaTempo = {
   intensidade_ansiedade: number | null;
   horas_sono: string | null;
   emocao_predominante: string | null;
+  sigla: string | null;
+  score_total: number | null;
+  status: string | null;
 };
 
-// Por ora só check-ins e eventos de vínculo; escalas e consultas entram como novos `tipo`.
+// Escalas seguem o consentimento "escalas"; a consulta é agenda do próprio psicólogo e não depende dele.
 pacientes.get(
   '/:pacienteId/linha-do-tempo',
   limite(60),
@@ -380,27 +291,50 @@ pacientes.get(
             SELECT 'checkin' AS tipo, c.id, date_trunc('milliseconds', ${CHECKIN_EM}) AS em,
                    to_char(c.data, 'YYYY-MM-DD') AS data, ${CHECKIN_HORARIO} AS horario,
                    c.intensidade_humor, c.intensidade_ansiedade, c.horas_sono, c.emocao_predominante,
-                   c.data AS dia
+                   c.data AS dia, NULL::text AS sigla, NULL::int AS score_total, NULL::text AS status
               FROM checkin_diario c
              WHERE c.paciente_id = $1 AND $2::boolean
             UNION ALL
             SELECT 'vinculo_criado', v.id, date_trunc('milliseconds', v.criado_em AT TIME ZONE 'UTC'),
                    NULL, NULL, NULL, NULL, NULL, NULL,
-                   ((v.criado_em AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date
+                   ((v.criado_em AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo')::date,
+                   NULL, NULL, NULL
               FROM vinculo v
              WHERE v.paciente_id = $1 AND v.psicologo_id = $3
             UNION ALL
             SELECT 'vinculo_encerrado', v.id, date_trunc('milliseconds', v.encerrado_em),
                    NULL, NULL, NULL, NULL, NULL, NULL,
-                   (v.encerrado_em AT TIME ZONE 'America/Sao_Paulo')::date
+                   (v.encerrado_em AT TIME ZONE 'America/Sao_Paulo')::date,
+                   NULL, NULL, NULL
               FROM vinculo v
              WHERE v.paciente_id = $1 AND v.psicologo_id = $3 AND v.encerrado_em IS NOT NULL
+            UNION ALL
+            SELECT 'escala_solicitada', a.id, date_trunc('milliseconds', a.solicitado_em),
+                   NULL, NULL, NULL, NULL, NULL, NULL,
+                   (a.solicitado_em AT TIME ZONE 'America/Sao_Paulo')::date,
+                   e.sigla, NULL, NULL
+              FROM aplicacao_escala a JOIN escala e ON e.id = a.escala_id
+             WHERE a.paciente_id = $1 AND a.psicologo_id = $3 AND $9::boolean
+            UNION ALL
+            SELECT 'escala_respondida', a.id, date_trunc('milliseconds', a.respondido_em),
+                   NULL, NULL, NULL, NULL, NULL, NULL,
+                   (a.respondido_em AT TIME ZONE 'America/Sao_Paulo')::date,
+                   e.sigla, a.score_total, NULL
+              FROM aplicacao_escala a JOIN escala e ON e.id = a.escala_id
+             WHERE a.paciente_id = $1 AND a.psicologo_id = $3 AND a.status = 'concluida' AND $9::boolean
+            UNION ALL
+            SELECT 'consulta', c.id, date_trunc('milliseconds', c.inicio),
+                   NULL, NULL, NULL, NULL, NULL, NULL,
+                   (c.inicio AT TIME ZONE 'America/Sao_Paulo')::date,
+                   NULL, NULL, c.status
+              FROM consulta c
+             WHERE c.paciente_id = $1 AND c.psicologo_id = $3
          ) t
           WHERE ($4::date IS NULL OR t.dia >= $4::date)
             AND ($5::date IS NULL OR t.dia <= $5::date)
             AND ($6::timestamptz IS NULL OR (t.em, t.tipo, t.id) < ($6::timestamptz, $7::text, $8::int))
           ORDER BY t.em DESC, t.tipo DESC, t.id DESC
-          LIMIT $9`,
+          LIMIT $10`,
         [
           vinculo.paciente_id,
           vinculo.compartilha_humor,
@@ -410,6 +344,7 @@ pacientes.get(
           q.cursor?.[0] ?? null,
           q.cursor?.[1] ?? null,
           q.cursor?.[2] ?? null,
+          vinculo.compartilha_escalas,
           q.limite + 1,
         ],
       );
@@ -422,9 +357,10 @@ pacientes.get(
     const ultima = pagina.at(-1);
     return res.json({
       consentimentos: consentimentosDe(vinculo),
-      itens: pagina.map((l) =>
-        l.tipo === 'checkin'
-          ? {
+      itens: pagina.map((l) => {
+        switch (l.tipo) {
+          case 'checkin':
+            return {
               tipo: l.tipo,
               em: l.em,
               id: l.id,
@@ -435,9 +371,17 @@ pacientes.get(
               ansiedade: l.intensidade_ansiedade,
               sonoHoras:
                 vinculo.compartilha_habitos && l.horas_sono !== null ? Number(l.horas_sono) : null,
-            }
-          : { tipo: l.tipo, em: l.em },
-      ),
+            };
+          case 'escala_solicitada':
+            return { tipo: l.tipo, em: l.em, id: l.id, sigla: l.sigla };
+          case 'escala_respondida':
+            return { tipo: l.tipo, em: l.em, id: l.id, sigla: l.sigla, scoreTotal: l.score_total };
+          case 'consulta':
+            return { tipo: l.tipo, em: l.em, id: l.id, status: l.status };
+          default:
+            return { tipo: l.tipo, em: l.em };
+        }
+      }),
       proximoCursor:
         rows.length > q.limite && ultima
           ? codificarCursor([ultima.em.toISOString(), ultima.tipo, ultima.id])

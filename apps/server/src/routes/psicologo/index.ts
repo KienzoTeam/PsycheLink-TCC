@@ -6,6 +6,10 @@ import { pacientes } from './pacientes';
 import { vinculo } from './vinculo';
 import { checkins } from './checkins';
 import { dashboard } from './dashboard';
+import { escalas } from './escalas';
+import { consultas } from './consultas';
+import { relatorios } from './relatorios';
+import { auditoria } from './auditoria';
 
 /**
  * Plataforma web do psicólogo. Regras de acesso:
@@ -39,3 +43,7 @@ psicologo.use('/pacientes', pacientes);
 psicologo.use('/vinculo', vinculo);
 psicologo.use('/checkins', checkins);
 psicologo.use('/dashboard', dashboard);
+psicologo.use(escalas);
+psicologo.use('/consultas', consultas);
+psicologo.use('/relatorios', relatorios);
+psicologo.use('/auditoria', auditoria);
