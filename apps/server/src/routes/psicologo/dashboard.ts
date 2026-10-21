@@ -31,6 +31,7 @@ type LinhaEscalaRespondida = {
   sigla: string;
   respondidoEm: Date;
   scoreTotal: number;
+  item9DiferenteDeZero: boolean | null;
 };
 
 // Check-ins dos pacientes vinculados a este psicólogo ($1) que compartilham humor.
@@ -154,7 +155,8 @@ dashboard.get(
       );
       const respondidas = await client.query<LinhaEscalaRespondida>(
         `SELECT a.id AS "aplicacaoId", a.paciente_id AS "pacienteId", u.nome, e.sigla,
-                a.respondido_em AS "respondidoEm", a.score_total AS "scoreTotal"
+                a.respondido_em AS "respondidoEm", a.score_total AS "scoreTotal",
+                a.item9_diferente_de_zero AS "item9DiferenteDeZero"
            ${ESCALAS_COMPARTILHADAS}
             AND a.status = 'concluida'
           ORDER BY a.respondido_em DESC, a.id DESC

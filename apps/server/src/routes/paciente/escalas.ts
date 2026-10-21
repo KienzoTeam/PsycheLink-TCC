@@ -112,9 +112,15 @@ escalas.post(
       await client.query(
         `UPDATE aplicacao_escala
             SET status = 'concluida', respondido_em = now(), iniciado_em = COALESCE(iniciado_em, now()),
-                score_total = $2, subscores = $3, respostas_cifradas = $4
+                score_total = $2, subscores = $3, respostas_cifradas = $4, item9_diferente_de_zero = $5
           WHERE id = $1`,
-        [id, pontos.scoreTotal, pontos.subscores, criptografar(JSON.stringify(corpo.respostas))],
+        [
+          id,
+          pontos.scoreTotal,
+          pontos.subscores,
+          criptografar(JSON.stringify(corpo.respostas)),
+          escala.sigla === 'PHQ-9' ? corpo.respostas[8] !== 0 : null,
+        ],
       );
       return { sigla: escala.sigla, ...pontos };
     });

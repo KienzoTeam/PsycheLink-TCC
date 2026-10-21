@@ -31,10 +31,11 @@ export type LinhaAplicacao = {
   respondido_em: Date | null;
   score_total: number | null;
   subscores: Record<string, number> | null;
+  item9_diferente_de_zero: boolean | null;
 };
 
 export const COLUNAS_APLICACAO = `a.id, e.sigla, e.nome, e.pontuacao_maxima, a.status,
-  a.solicitado_em, a.respondido_em, a.score_total, a.subscores`;
+  a.solicitado_em, a.respondido_em, a.score_total, a.subscores, a.item9_diferente_de_zero`;
 
 export const aplicacaoJson = (l: LinhaAplicacao) => ({
   id: l.id,
@@ -44,6 +45,7 @@ export const aplicacaoJson = (l: LinhaAplicacao) => ({
   respondidoEm: l.respondido_em,
   scoreTotal: l.score_total,
   subscores: l.subscores,
+  item9DiferenteDeZero: l.item9_diferente_de_zero,
 });
 
 /**

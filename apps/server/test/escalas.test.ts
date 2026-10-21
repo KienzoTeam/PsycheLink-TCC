@@ -278,6 +278,8 @@ describe('paciente responde', () => {
     assert.ok(rows[0].respondido_em);
     assert.doesNotMatch(rows[0].respostas_cifradas, /\[/);
     assert.deepEqual(JSON.parse(descriptografar(rows[0].respostas_cifradas)), respostas);
+    const marcador = await dono.query('SELECT item9_diferente_de_zero FROM aplicacao_escala WHERE id = $1', [id]);
+    assert.equal(marcador.rows[0].item9_diferente_de_zero, false);
     const legado = await dono.query('SELECT 1 FROM resposta_escala WHERE aplicacao_id = $1', [id]);
     assert.equal(legado.rowCount, 0);
 
