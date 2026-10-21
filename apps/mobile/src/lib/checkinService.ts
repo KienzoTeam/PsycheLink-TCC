@@ -18,6 +18,8 @@ export async function enviarCheckin(rascunho: RascunhoCheckin): Promise<CheckinS
     contextos: rascunho.contextos,
     habitos: rascunho.habitos,
     notas: rascunho.notas || undefined,
+    // O switch só aparece com texto; sem texto não há o que compartilhar.
+    diarioCompartilhado: rascunho.notas.trim() !== '' && rascunho.diarioCompartilhado,
   };
 
   // Chama o endpoint POST /checkin alinhado com o servidor

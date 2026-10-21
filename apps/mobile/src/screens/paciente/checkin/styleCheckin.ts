@@ -227,6 +227,28 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 16,
   },
+  diarioLinha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    padding: 14,
+    marginBottom: 16,
+  },
+  diarioTextos: {
+    flex: 1,
+    gap: 2,
+  },
+  diarioRotulo: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: '600',
+  },
+  diarioDescricao: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
   privacidadeBox: {
     borderRadius: 12,
     padding: 14,
