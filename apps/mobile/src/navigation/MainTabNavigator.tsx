@@ -56,7 +56,7 @@ export default function MainTabNavigator() {
           <Chat />
         </View>
         <View key="escalas" style={{ flex: 1 }}>
-          <Escalas />
+          <Escalas ativa={ABAS[ativo].nome === 'Escalas'} />
         </View>
         <View key="bem-estar" style={{ flex: 1 }}>
           <BemEstar onVoltar={() => pager.current?.setPage(0)} />
