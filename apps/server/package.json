@@ -28,7 +28,8 @@
     "start": "node dist/index.js",
     "migrar": "tsx --env-file=.env scripts/migrar.ts",
     "migrar:test": "tsx --env-file=.env.test scripts/migrar.ts",
-    "test": "tsx --env-file=.env.test --network-family-autoselection-attempt-timeout=3000 --test \"test/**/*.test.ts\""
+    "test": "tsx --env-file=.env.test --network-family-autoselection-attempt-timeout=3000 --test \"test/**/*.test.ts\"",
+    "dev:test": "tsx watch --env-file=.env.test src/index.ts"
   },
   "private": true,
   "allowScripts": {
