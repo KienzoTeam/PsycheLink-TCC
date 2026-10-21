@@ -20,7 +20,8 @@ async function renovar(): Promise<void> {
   } catch (erro) {
     // 409: outra aba já rotacionou o cookie, então o repetir da original já usa o novo.
     if (isAxiosError(erro) && erro.response?.status === 409 && codigoDeErro(erro) === 'REFRESH_CONCORRENTE') return;
-    if (isAxiosError(erro) && erro.response?.status === 401) {
+    // Em "/" (tela de entrada) não há para onde voltar: recarregar a mesma página giraria em laço.
+    if (isAxiosError(erro) && erro.response?.status === 401 && window.location.pathname !== '/') {
       queryClient.clear();
       window.location.assign('/');
     }

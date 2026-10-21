@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 import {
   FieldError,
   Input,
@@ -14,14 +14,15 @@ export type CampoProps = Omit<TextFieldProps, 'className' | 'style' | 'children'
   rotulo: string;
   descricao?: string;
   erro?: string;
+  inputRef?: Ref<HTMLInputElement>;
 };
 
-export function TextField({ rotulo, descricao, erro, sufixo, ...resto }: CampoProps & { sufixo?: ReactNode }) {
+export function TextField({ rotulo, descricao, erro, inputRef, sufixo, ...resto }: CampoProps & { sufixo?: ReactNode }) {
   return (
     <CampoAria {...resto} isInvalid={erro !== undefined} className={css.campo}>
       <Label className={css.rotulo}>{rotulo}</Label>
       <div className={css.caixa}>
-        <Input className={css.entrada} />
+        <Input ref={inputRef} className={css.entrada} />
         {sufixo}
       </div>
       {descricao && (

@@ -3,7 +3,7 @@ import { Navigate, Route, Routes, useHref, useNavigate } from 'react-router';
 import { I18nProvider, RouterProvider } from 'react-aria-components';
 import { RegiaoToast } from './components/ui/Toast';
 import { AreaProtegida } from './rotas/AreaProtegida';
-import { AuthProvisoria } from './rotas/AuthProvisoria';
+import { Auth } from './rotas/Auth';
 import { TelaProvisoria } from './rotas/TelaProvisoria';
 
 // Só existe em dev: em produção o ramo é removido e a tela de componentes sai do bundle.
@@ -29,7 +29,7 @@ export default function App() {
     <I18nProvider locale="pt-BR">
       <RouterProvider navigate={navigate} useHref={useHref}>
         <Routes>
-          <Route index element={<AuthProvisoria />} />
+          <Route index element={<Auth />} />
           <Route element={<AreaProtegida />}>
             {TELAS.map(({ caminho, titulo }) => (
               <Route key={caminho} path={caminho} element={<TelaProvisoria titulo={titulo} />} />

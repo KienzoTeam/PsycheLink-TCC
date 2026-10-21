@@ -73,6 +73,8 @@
   --cor-container-maximo: light-dark(var(--paleta-surface0), var(--paleta-surface1));
   /* Card elevado: o container mais claro que o fundo nos dois temas (mobile: surfaceContainer). */
   --cor-cartao: light-dark(#ffffff, var(--paleta-surface0));
+  /* O logo tem traço escuro: o tile fica claro nos dois temas, como o ícone do app. */
+  --cor-fundo-logo: #ffffff;
 
   --cor-inversa: light-dark(var(--paleta-text), var(--paleta-text));
   --cor-sobre-inversa: light-dark(var(--paleta-base), var(--paleta-base));
@@ -175,6 +177,10 @@
   --largura-dialogo: 28rem;
   --largura-menu: 14rem;
   --largura-conteudo: 75rem;
+  --largura-formulario: 26rem;
+  --largura-marca: 28rem;
+  --tamanho-logo: 8rem;
+  --tamanho-logo-faixa: 3.5rem;
   --largura-borda: 1px;
   --largura-borda-forte: 2px;
   --altura-scrollfade: 4rem;
@@ -211,6 +217,7 @@
   --escala-pressionado: 0.97;
   --escala-entrada: 0.92;
   --deslocamento-entrada: 1rem;
+  --deslocamento-marca: 6rem;
   --desfoque-entrada: 0.5rem;
 }
 

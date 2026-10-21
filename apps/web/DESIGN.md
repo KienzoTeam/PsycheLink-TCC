@@ -231,7 +231,7 @@ Métricas usam `font-variant-numeric: tabular-nums` (`--numeros-tabulares`).
 
 - **Espaço:** grade de 4, tokens `--espaco-4/8/12/16/24/32/48`.
 - **Shell:** barra lateral sticky + conteúdo (`--largura-conteudo` de 75rem, centralizado). Abaixo de 820px a barra vira gaveta modal e entra uma barra do topo com o botão "Menu" rotulado.
-- **Breakpoint:** `819.98px` vive em um único lugar, `useCompacto()` em `Shell.tsx`; o CSS lê o resultado por `data-compacto`. É a única exceção a "número só em token", porque media query não lê custom property.
+- **Breakpoint:** `819.98px` vive em um único lugar, `useCompacto()` em `src/lib/useCompacto.ts` (usado pelo Shell e pela tela de entrada); o CSS lê o resultado por `data-compacto`. É a única exceção a "número só em token", porque media query não lê custom property.
 - **Alvos:** 44px mínimo (`--alvo-minimo`). Sem rolagem horizontal em 375px; listas largas (abas) rolam dentro do próprio contêiner.
 - **FAB:** fixo no canto inferior direito com `env(safe-area-inset-*)`; o conteúdo reserva espaço no fim para ele nunca cobrir o último item.
 - **Landmarks:** link "Ir para o conteúdo", `<nav aria-label="Principal">`, `<main id="conteudo">`.
@@ -266,6 +266,7 @@ Em `src/components/ui/`, com react-aria-components por baixo onde há primitivo 
 - **TextField / PasswordField**: rótulo acima, borda `contorno` de 1px e `md`, 56px. Foco: borda e anel de 2px em primária com offset 2. Erro: borda `erro` mais ícone mais texto. Senha tem botão Mostrar/Ocultar.
 - **OtpField**: 6 caixas, `autocomplete="one-time-code"` na primeira, colar distribui os dígitos, digitar avança, Backspace volta, setas movem.
 - **Select**: gatilho igual ao campo, lista em popover com o item selecionado em container secundário.
+- **Colapsavel**: cresce e encolhe a altura (`grid-template-rows` 0fr a 1fr) com desfoque que entra e sai, sem fade. Fechado, o conteúdo fica `inert` (sem foco, fora da árvore de acessibilidade). O respiro interno de 4px mantém o anel de foco dentro do corte.
 - **SegmentedControl**: trilho `container-alto`, indicador primário que desliza (`SelectionIndicator` do RAC anima o `translate` com a mola).
 
 ### Superfícies e listas
@@ -279,6 +280,13 @@ Em `src/components/ui/`, com react-aria-components por baixo onde há primitivo 
 ### Sobreposições
 - **Dialog** (modal, Esc e fundo fecham, foco preso e devolvido), **Menu** (variantes `lista` e `pilulas`), **Toast** (região `aria-label="Notificações"`, 6s, pausa em hover e foco, ícone distingue erro), **Tabs** (indicador deslizante, lista rola no próprio contêiner).
 - **DateRangePicker** (presets de 7, 30 e 90 dias sempre visíveis, mais campo com calendário, pt-BR via `I18nProvider`) e **Calendar** (célula de 44px, hoje com contorno, intervalo em faixa).
+
+### Entrada (`src/rotas/Auth.tsx`)
+Tela dividida em tela cheia, do wireframe. Painel de marca à esquerda em `container-alto` (logo em um quadrado `container-minimo`, nome em `display-medio-enfatico`, slogan em `titulo-grande`) e formulário à direita, centrado em `--largura-formulario`. O conteúdo da marca entra deslizando da esquerda com desfoque, sem fade (a opacidade fica em 1); com `prefers-reduced-motion` a entrada é instantânea. Abaixo de 820px a marca vira faixa no topo (logo de `--tamanho-logo-faixa`, nome e slogan ao lado) e o formulário ocupa o resto.
+- **Login/Cadastro**: o `SegmentedControl` troca o modo; nome, data de nascimento, CRP, especialidade e confirmação de senha vivem em `Colapsavel`. Campos ocultos não validam (o schema do modo ativo é o único usado). Erros por campo ligados por `aria-describedby`, foco no primeiro inválido ao enviar. Erro de servidor aparece em um aviso `role="alert"` acima do botão.
+- **Verificação de código** (`rotas/auth/VerificacaoCodigo.tsx`): um só `Dialog` para a verificação em 2 etapas, a confirmação de e-mail do cadastro e o código de recuperação de senha. Envia sozinho ao completar 6 dígitos; erro limpa as caixas e devolve o foco à primeira; contagem "Reenviar em m:ss" até liberar o botão.
+- **Recuperar senha**: mesmo painel, com "Voltar ao login"; e-mail, diálogo do código e nova senha. O aviso de sucesso volta ao login pelo `Toast`.
+- Slogan provisório, registrado em `PRODUCT.md`.
 
 ### Navegação (Shell)
 - **Sidebar** colapsável (toggle com `PanelLeftClose`/`PanelLeftOpen` no lugar de `<|` e `|>`). Recolhida: só os itens fixados (padrão Início, Pacientes, Escalas, Calendário), ícone sobre rótulo. Expandida: Início, Pacientes, Check-ins, Chats (desabilitado, "em breve"), Relatórios, Escalas, Calendário, Vínculo, Auditoria.

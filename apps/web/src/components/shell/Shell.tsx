@@ -1,24 +1,11 @@
-import { useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Menu } from 'lucide-react';
+import { useCompacto } from '../../lib/useCompacto';
 import { Button } from '../ui/Button';
 import { FabPerfil } from './FabPerfil';
 import { Gaveta, Sidebar } from './Sidebar';
 import { usePins } from './usePins';
 import css from './Shell.module.css';
-
-// Único lugar do breakpoint: o CSS lê o resultado por data-compacto.
-const COMPACTO = '(max-width: 819.98px)';
-
-function useCompacto() {
-  return useSyncExternalStore(
-    (aviso) => {
-      const consulta = window.matchMedia(COMPACTO);
-      consulta.addEventListener('change', aviso);
-      return () => consulta.removeEventListener('change', aviso);
-    },
-    () => window.matchMedia(COMPACTO).matches,
-  );
-}
 
 type Props = { psicologo: { nome: string }; children: ReactNode };
 

@@ -11,9 +11,10 @@ type Props = {
   onChange: (valor: string) => void;
   erro?: string;
   isDisabled?: boolean;
+  autoFocus?: boolean;
 };
 
-export function OtpField({ rotulo, valor, onChange, erro, isDisabled }: Props) {
+export function OtpField({ rotulo, valor, onChange, erro, isDisabled, autoFocus }: Props) {
   const idRotulo = useId();
   const idErro = useId();
   const caixas = useRef<Array<HTMLInputElement | null>>([]);
@@ -82,6 +83,7 @@ export function OtpField({ rotulo, valor, onChange, erro, isDisabled }: Props) {
             aria-invalid={erro !== undefined || undefined}
             aria-describedby={erro !== undefined ? idErro : undefined}
             disabled={isDisabled}
+            autoFocus={autoFocus && posicao === 0}
           />
         ))}
       </div>

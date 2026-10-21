@@ -5,10 +5,6 @@
   padding: var(--espaco-16);
 }
 
-.cartaoAuth {
-  width: min(var(--largura-dialogo), 100%);
-}
-
 .tela {
   display: grid;
   gap: var(--espaco-24);
