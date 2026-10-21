@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -10,6 +10,8 @@ import { vibrarLeve } from '../../../lib/hapticos';
 import { Aplicacao, buscarAplicacao, enviarRespostas, mensagemDeErro } from '../../../lib/escalasService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ResponderEscala'>;
+
+const ITEM_9_PHQ_9 = 8;
 
 export default function ResponderEscala({ navigation, route }: Props) {
   const { aplicacaoId } = route.params;
@@ -69,6 +71,14 @@ export default function ResponderEscala({ navigation, route }: Props) {
       setErroEnvio(mensagemDeErro(e, 'Não foi possível enviar agora. Verifique sua conexão e tente de novo.'));
     } finally {
       setEnviando(false);
+    }
+  };
+
+  const ligar = async (numero: string) => {
+    try {
+      await Linking.openURL(`tel:${numero}`);
+    } catch {
+      Alert.alert('Não foi possível ligar', `Disque ${numero} no seu telefone.`);
     }
   };
 
@@ -214,17 +224,64 @@ export default function ResponderEscala({ navigation, route }: Props) {
     </>
   );
 
-  const renderConclusao = () => (
-    <View style={styles.conclusao}>
-      <View style={[styles.conclusaoIcone, { backgroundColor: theme.colors.primaryContainer }]}>
-        <Feather name="check" size={36} color={theme.colors.onPrimaryContainer} />
+  const renderConclusao = () => {
+    const precisaApoio = aplicacao?.sigla === 'PHQ-9' && respostas[ITEM_9_PHQ_9] !== 0;
+    const acoes = [
+      { titulo: 'Ligar para o CVV, 188', detalhe: 'Apoio emocional, 24 horas, gratuito.', icone: 'phone', aoTocar: () => void ligar('188') },
+      { titulo: 'Ligar para o SAMU, 192', detalhe: 'Em caso de emergência.', icone: 'phone', aoTocar: () => void ligar('192') },
+      {
+        titulo: 'Abrir a tela SOS',
+        detalhe: 'Respiração guiada e contatos de confiança.',
+        icone: 'life-buoy',
+        aoTocar: () => navigation.popTo('Main', { aba: 'SOS' }),
+      },
+    ] as const;
+
+    return (
+      <View style={styles.conclusao}>
+        <View style={[styles.conclusaoIcone, { backgroundColor: theme.colors.primaryContainer }]}>
+          <Feather name="check" size={36} color={theme.colors.onPrimaryContainer} />
+        </View>
+        <Text style={[styles.conclusaoTitulo, { color: theme.colors.onBackground }]} accessibilityRole="header">
+          Respostas enviadas ao seu psicólogo.
+        </Text>
+
+        {precisaApoio ? (
+          <>
+            <Text style={[styles.conclusaoTexto, { color: theme.colors.onBackground }]}>
+              Pelo que você respondeu, parece que está sendo um período difícil. Obrigado por contar como você está. Seu
+              psicólogo vai ver suas respostas.
+            </Text>
+            <Text style={[styles.conclusaoTexto, { color: theme.colors.onBackground }]}>
+              Se quiser conversar com alguém agora:
+            </Text>
+            <View style={styles.acoes}>
+              {acoes.map((acao) => (
+                <TouchableOpacity
+                  key={acao.titulo}
+                  style={[styles.acao, cartao]}
+                  onPress={acao.aoTocar}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${acao.titulo}. ${acao.detalhe}`}
+                >
+                  <View style={[styles.acaoIcone, { backgroundColor: theme.colors.primaryContainer }]}>
+                    <Feather name={acao.icone} size={20} color={theme.colors.onPrimaryContainer} />
+                  </View>
+                  <View style={styles.acaoTextos}>
+                    <Text style={[styles.acaoTitulo, { color: theme.colors.onSurface }]}>{acao.titulo}</Text>
+                    <Text style={[styles.acaoDetalhe, { color: theme.colors.onSurfaceVariant }]}>{acao.detalhe}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <CustomButton title="Voltar ao início" variant="outline" onPress={() => navigation.popTo('Main', { aba: 'Home' })} />
+          </>
+        ) : (
+          <CustomButton title="Voltar às escalas" onPress={() => navigation.goBack()} />
+        )}
       </View>
-      <Text style={[styles.conclusaoTitulo, { color: theme.colors.onBackground }]} accessibilityRole="header">
-        Respostas enviadas ao seu psicólogo.
-      </Text>
-      <CustomButton title="Voltar às escalas" onPress={() => navigation.goBack()} />
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.tela, { backgroundColor: theme.colors.background }]}>
@@ -448,5 +505,44 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  conclusaoTexto: {
+    alignSelf: 'stretch',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  acoes: {
+    alignSelf: 'stretch',
+    gap: 10,
+  },
+  acao: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    minHeight: 68,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  acaoIcone: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  acaoTextos: {
+    flex: 1,
+    gap: 2,
+  },
+  acaoTitulo: {
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '700',
+  },
+  acaoDetalhe: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

@@ -17,7 +17,7 @@ export type RootStackParamList = {
   Login: undefined;
   Registro: undefined;
   Vinculacao: undefined;
-  Main: undefined;
+  Main: { aba?: 'Home' | 'SOS' } | undefined;
   EsqueciSenha: undefined;
   VerificarCodigo: { email: string; modo: 'cadastro' | 'recuperacao' };
   NovaSenha: { token: string };
