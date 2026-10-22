@@ -183,6 +183,7 @@ export default function Consentimento({ navigation }: Props) {
   };
 
   // O Switch é o controle; os textos ficam fora da árvore de acessibilidade porque rótulo e dica já vão nele.
+  // Travado durante o salvamento: a resposta substitui as escolhas e apagaria um toque feito no meio.
   const renderLinha = ({ chave, rotulo, descricao }: Categoria) => (
     <View style={styles.linha}>
       <View style={styles.linhaTextos} aria-hidden>
@@ -196,12 +197,13 @@ export default function Consentimento({ navigation }: Props) {
       <Switch
         value={escolhas[chave]}
         onValueChange={() => alternar(chave)}
+        disabled={salvando}
         trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
         ios_backgroundColor={theme.colors.surfaceVariant}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         accessibilityLabel={rotulo}
         accessibilityHint={descricao}
-        accessibilityState={{ checked: escolhas[chave] }}
+        accessibilityState={{ checked: escolhas[chave], disabled: salvando }}
       />
     </View>
   );
