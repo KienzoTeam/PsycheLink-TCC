@@ -221,7 +221,11 @@ export default function VisaoGeral({ resumo, de, ate, comparar, onComparar }: Pr
 
         <Comparacao resumo={resumo} periodo={periodo} comparar={comparar} onComparar={onComparar} />
 
-        <Bloco titulo="Diário compartilhado" apoio="Texto que o paciente escolheu compartilhar." consentido={c.diario} largo>
+        <Bloco
+          titulo="Diário compartilhado"
+          apoio="O paciente escolhe, a cada check-in, se o texto daquele dia é compartilhado."
+          largo
+        >
           {resumo.diario.length === 0 ? (
             <p className={pagina.apoio}>Nenhum texto compartilhado neste período.</p>
           ) : (

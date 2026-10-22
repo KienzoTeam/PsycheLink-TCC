@@ -194,13 +194,13 @@ pacientes.get(
     const { registros, frequenciaEmocional, habitos, distribuicaoHorario } = resumirCheckins(rows, consent);
 
     // Diário livre exige as duas permissões: consentimento geral e marcação no check-in.
+    // O consentimento do diário é por texto (marcado no check-in); compartilha_diario é só o
+    // valor inicial do interruptor no app. Revogar tudo desmarca os textos (ver paciente/consentimento).
     const diario: Array<{ data: string; texto: string }> = [];
-    if (consent.diario) {
-      for (const l of rows) {
-        if (!l.diario_compartilhado || !l.diario_livre) continue;
-        const texto = lerSeguro(l.diario_livre);
-        if (texto !== null) diario.push({ data: l.data, texto });
-      }
+    for (const l of rows) {
+      if (!l.diario_compartilhado || !l.diario_livre) continue;
+      const texto = lerSeguro(l.diario_livre);
+      if (texto !== null) diario.push({ data: l.data, texto });
     }
 
     const resumirPeriodo = (linhas: LinhaPeriodo[]) => ({

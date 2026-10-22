@@ -101,9 +101,7 @@ export function DetalheCheckin({ id }: { id: number }) {
 
       <section className={css.bloco}>
         <h3 className={css.titulo}>Diário</h3>
-        {!consentimentos.diario ? (
-          <ConsentimentoAusente />
-        ) : c.diario ? (
+        {c.diario ? (
           <figure className={css.diario}>
             <figcaption>Texto escrito pelo paciente</figcaption>
             <blockquote>{c.diario}</blockquote>

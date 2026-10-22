@@ -209,7 +209,7 @@ checkins.get(
             ? { exercicio: l.exercicio, meditacao: l.meditacao, medicacao: l.medicacao }
             : null,
         diario:
-          l.compartilha_diario && l.diario_compartilhado ? lerSeguro(l.diario_livre) : null,
+          l.diario_compartilhado ? lerSeguro(l.diario_livre) : null,
       },
       consentimentos: {
         humor: true,

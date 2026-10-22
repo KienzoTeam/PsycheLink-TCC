@@ -26,6 +26,7 @@ const ROTULOS = {
   vinculo_criado: 'Vínculo criado',
   vinculo_encerrado: 'Vínculo encerrado',
   consentimento_alterado: 'Consentimento alterado',
+  diario_compartilhamento_revogado: 'Compartilhamento do diário revogado',
   escala_solicitada: 'Escala solicitada',
   escala_cancelada: 'Escala cancelada',
   escala_visualizada: 'Escala visualizada',

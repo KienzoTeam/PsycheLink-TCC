@@ -32,7 +32,6 @@ const CATEGORIAS: ReadonlyArray<{ id: keyof Consentimentos; rotulo: string }> = 
   { id: 'humor', rotulo: 'Humor' },
   { id: 'habitos', rotulo: 'Hábitos' },
   { id: 'escalas', rotulo: 'Escalas' },
-  { id: 'diario', rotulo: 'Diário' },
 ];
 
 function EsqueletoAba() {

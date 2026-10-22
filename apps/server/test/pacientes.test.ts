@@ -484,9 +484,9 @@ describe('GET /psicologo/checkins/:id', () => {
     assert.ok(!JSON.stringify(corpo).includes('texto reservado'));
   });
 
-  it('sem consentimento de diário o texto fica de fora, mesmo marcado como compartilhado', async () => {
+  it('texto marcado no check-in aparece mesmo com o diário desligado por padrão', async () => {
     const corpo = await obter(A, `/psicologo/checkins/${checkinBruno}`);
-    assert.equal(corpo.checkin.diario, null);
+    assert.equal(corpo.checkin.diario, 'diário do Bruno');
     assert.equal(corpo.checkin.sonoHoras, null);
     assert.equal(corpo.checkin.habitos, null);
   });
