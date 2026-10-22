@@ -28,6 +28,12 @@ export async function enviarCheckin(rascunho: RascunhoCheckin): Promise<CheckinS
   return response.data.checkin;
 }
 
+/** Preferência `diario` do paciente: valor inicial do interruptor "Compartilhar este texto". */
+export async function buscarDiarioPadrao(): Promise<boolean> {
+  const { data } = await api.get<{ diario: boolean }>('/paciente/consentimento');
+  return data.diario;
+}
+
 export type PontoSerieTemporal = {
   data: string; // 'YYYY-MM-DD'
   humor: number | null;
