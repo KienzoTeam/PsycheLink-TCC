@@ -203,12 +203,16 @@ export default function Checkin({ navigation }: Props) {
   const [notas, setNotas] = useState(lerRascunho()?.notas ?? '');
   const [diarioCompartilhado, setDiarioCompartilhado] = useState(lerRascunho()?.diarioCompartilhado ?? false);
   const [rascunhoTemDiario] = useState(lerRascunho()?.diarioCompartilhado !== undefined);
+  const diarioTocado = useRef(false);
 
   // O valor do rascunho manda; sem ele, o interruptor começa pela preferência do paciente.
-  // Se a busca falhar, continua desmarcado.
+  // Se a busca falhar, continua desmarcado. Se ela chegar depois de o paciente mexer no
+  // interruptor, a escolha dele vale.
   useEffect(() => {
     if (rascunhoTemDiario) return;
-    buscarDiarioPadrao().then(setDiarioCompartilhado, () => {});
+    buscarDiarioPadrao().then((padrao) => {
+      if (!diarioTocado.current) setDiarioCompartilhado(padrao);
+    }, () => {});
   }, [rascunhoTemDiario]);
 
   // Espelha o rascunho nos estados que o compõem: interrupção (background/kill)
@@ -603,7 +607,10 @@ export default function Checkin({ navigation }: Props) {
         </View>
         <Switch
           value={diarioCompartilhado}
-          onValueChange={setDiarioCompartilhado}
+          onValueChange={(valor) => {
+            diarioTocado.current = true;
+            setDiarioCompartilhado(valor);
+          }}
           trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
           ios_backgroundColor={theme.colors.surfaceVariant}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
