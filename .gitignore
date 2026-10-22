@@ -27,3 +27,6 @@ android/
 
 # Skill files
 .impeccable/
+
+# worktrees dos subagentes do Claude Code
+.claude/worktrees/
