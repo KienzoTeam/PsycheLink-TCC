@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -26,6 +26,7 @@ export default function ResponderEscala({ navigation, route }: Props) {
   const [erroEnvio, setErroEnvio] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
   const [compartilha, setCompartilha] = useState(false);
+  const rolagem = useRef<ScrollView>(null);
 
   const carregar = useCallback(async () => {
     setErro(null);
@@ -41,6 +42,11 @@ export default function ResponderEscala({ navigation, route }: Props) {
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  // Pergunta, revisão e conclusão dividem a mesma rolagem: cada troca começa do topo.
+  useEffect(() => {
+    rolagem.current?.scrollTo({ y: 0, animated: false });
+  }, [indice, revisando, enviado]);
 
   const sair = () => {
     if (enviado || respostas.every((r) => r === null)) {
@@ -67,8 +73,9 @@ export default function ResponderEscala({ navigation, route }: Props) {
         aplicacao.aplicacaoId,
         respostas.filter((r): r is number => r !== null),
       );
-      setCompartilha(await escalasCompartilhadas());
       setEnviado(true);
+      // A conclusão (e o apoio do PHQ-9) aparece já com o aviso conservador; a preferência só ajusta o texto.
+      void escalasCompartilhadas().then(setCompartilha);
     } catch (e) {
       setErroEnvio(mensagemDeErro(e, 'Não foi possível enviar agora. Verifique sua conexão e tente de novo.'));
     } finally {
@@ -187,7 +194,9 @@ export default function ResponderEscala({ navigation, route }: Props) {
                 setEditando(true);
                 setRevisando(false);
               }}
+              disabled={enviando}
               accessibilityRole="button"
+              accessibilityState={{ disabled: enviando }}
               accessibilityLabel={`Item ${i + 1}: ${item}. Resposta: ${rotulo}.`}
               accessibilityHint="Muda a resposta"
             >
@@ -307,7 +316,7 @@ export default function ResponderEscala({ navigation, route }: Props) {
         <Text style={[styles.tituloCabecalho, { color: theme.colors.onBackground }]}>{aplicacao?.sigla ?? 'Escala'}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView ref={rolagem} contentContainerStyle={styles.conteudo} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {erro ? (
           <View style={styles.centralizado}>
             <Text style={[styles.textoCentral, { color: theme.colors.onBackground }]}>{erro}</Text>
