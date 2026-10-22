@@ -13,7 +13,7 @@ import { styles } from './styleCheckin';
 import { salvarRascunho, lerRascunho, resetarRascunho } from '../../../lib/rascunhoCheckin';
 import { vibrarLeve } from '../../../lib/hapticos';
 import SeloDemonstracao from '../../../components/ui/SeloDemonstracao';
-import { enviarCheckin } from '../../../lib/checkinService';
+import { buscarDiarioPadrao, enviarCheckin } from '../../../lib/checkinService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Checkin'>;
 
@@ -202,6 +202,14 @@ export default function Checkin({ navigation }: Props) {
   // Etapa 6 - Diário Emocional
   const [notas, setNotas] = useState(lerRascunho()?.notas ?? '');
   const [diarioCompartilhado, setDiarioCompartilhado] = useState(lerRascunho()?.diarioCompartilhado ?? false);
+  const [rascunhoTemDiario] = useState(lerRascunho()?.diarioCompartilhado !== undefined);
+
+  // O valor do rascunho manda; sem ele, o interruptor começa pela preferência do paciente.
+  // Se a busca falhar, continua desmarcado.
+  useEffect(() => {
+    if (rascunhoTemDiario) return;
+    buscarDiarioPadrao().then(setDiarioCompartilhado, () => {});
+  }, [rascunhoTemDiario]);
 
   // Espelha o rascunho nos estados que o compõem: interrupção (background/kill)
   // retoma de onde parou. Com deps, não roda em renders alheios (ex.: erro de etapa).
@@ -590,7 +598,7 @@ export default function Checkin({ navigation }: Props) {
             Compartilhar este texto com meu psicólogo
           </Text>
           <Text style={[styles.diarioDescricao, { color: theme.colors.subtext1 }]}>
-            Só vale se o diário estiver liberado em Psicólogo e privacidade. Desligado, o texto fica só com você.
+            Se você tiver um psicólogo vinculado, ele vê só este texto. Você pode parar de compartilhar em Psicólogo e privacidade.
           </Text>
         </View>
         <Switch
@@ -600,7 +608,7 @@ export default function Checkin({ navigation }: Props) {
           ios_backgroundColor={theme.colors.surfaceVariant}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityLabel="Compartilhar este texto com meu psicólogo"
-          accessibilityHint="Só vale se o diário estiver liberado em Psicólogo e privacidade"
+          accessibilityHint="Se você tiver um psicólogo vinculado, ele vê só este texto"
           accessibilityState={{ checked: diarioCompartilhado }}
         />
       </View>
