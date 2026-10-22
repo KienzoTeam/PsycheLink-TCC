@@ -1,0 +1,17 @@
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--largura-minima-coluna)), 1fr));
+  gap: var(--espaco-16) var(--espaco-24);
+  align-items: start;
+}
+
+.colunas {
+  --colunas: minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1.6fr) minmax(0, 0.7fr) minmax(0, 0.8fr) minmax(0, 0.8fr);
+}
+
+.continuar {
+  display: grid;
+  gap: var(--espaco-16);
+  justify-items: center;
+  text-align: center;
+}

@@ -288,6 +288,13 @@ Tela dividida em tela cheia, do wireframe. Painel de marca à esquerda em `conta
 - **Recuperar senha**: mesmo painel, com "Voltar ao login"; e-mail, diálogo do código e nova senha. O aviso de sucesso volta ao login pelo `Toast`.
 - Slogan provisório, registrado em `PRODUCT.md`.
 
+### Telas do psicólogo (`src/rotas/`)
+Todas carregam sob demanda (`React.lazy` + `Suspense` em `AreaProtegida`), e o recharts só entra com a aba Visão geral do perfil. Título de tela em `headline-medio`, estados de carregando (esqueleto com a forma do conteúdo), vazio e erro (`EstadoErro`, com "Tentar de novo") em todas.
+- **Início**: filtro de período (7, 30 e 90 dias), "Pacientes vinculados" com número grande e linha de vínculos por dia, "Resumo de check-ins", "Atividades recentes" em `ScrollFade`, "Dados insuficientes" e médias do grupo com n. Duas colunas de cartões empilhados: o espaço para consultas de hoje e escalas é o fim de cada coluna. Cada linha leva ao paciente.
+- **Pacientes e Check-ins**: `<table>` de verdade no desktop (`Linhas.module.css` põe o layout em grade e mantém a semântica no HTML) e cartões empilhados no compacto, com o rótulo de cada célula visível. Filtros na URL (`?busca`, `?status`, `?pacienteId`, `?de`, `?ate`, `?emocao`), paginação por cursor com "Carregar mais".
+- **Perfil**: cabeçalho com consentimentos como chips, período com atalhos e abas Visão geral, Linha do tempo e Anotações privadas (aba na URL). Gráficos: humor e ansiedade são dois tons da mesma rampa (a ansiedade tracejada), emoções usam a cor fixa da emoção com o rótulo no eixo, nada é verde ou vermelho por valor. Comparação entre períodos mostra a diferença como número neutro (`+0,8`). Cada bloco sem consentimento mostra `ConsentimentoAusente`.
+- **Vínculo**: código em `display-medio-enfatico` com algarismos tabulares, agrupado 3+3, só na memória do componente (a mutação usa `gcTime: 0`; nada em storage).
+
 ### Navegação (Shell)
 - **Sidebar** colapsável (toggle com `PanelLeftClose`/`PanelLeftOpen` no lugar de `<|` e `|>`). Recolhida: só os itens fixados (padrão Início, Pacientes, Escalas, Calendário), ícone sobre rótulo. Expandida: Início, Pacientes, Check-ins, Chats (desabilitado, "em breve"), Relatórios, Escalas, Calendário, Vínculo, Auditoria.
 - **FAB de perfil**: iniciais do nome; abre o FAB menu vertical de pílulas (alternativa 1 do wireframe) com Configurações (escolher itens fixados), Meu perfil, Tema (Sistema, Claro, Escuro) e Sair. Pins ficam em `localStorage` (`psychelink_web_pins`) e o tema em `psychelink_web_tema`; nada mais.
@@ -350,4 +357,6 @@ Verificado com `vite preview` e esse header em `/inicio`: menu, diálogos, gavet
 | Elevação tonal | Dado clínico pede tela calma; sombra só onde algo flutua. |
 | `light-dark()` | Um valor por papel e tema, sem blocos duplicados. |
 | FAB menu de pílulas (alternativa 1) | Mais acessível que o radial e é o "FAB menu" do M3 Expressive. |
+| Tabelas como `<table>` com CSS em grade | Leitor de tela navega por linha e coluna no desktop; o compacto vira cartão sem perder o dado. |
+| Humor e ansiedade em dois tons da mesma rampa | Sem valência: a série se distingue por luminosidade e traço, nunca por verde e vermelho. |
 | Pins em localStorage | Preferência de interface, não dado sensível. |

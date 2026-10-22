@@ -83,3 +83,14 @@
 .campo[data-disabled] .caixa {
   border-style: dashed;
 }
+
+/* Área de texto: cresce na vertical e o conteúdo começa no topo. */
+.multilinha {
+  align-items: stretch;
+  padding-block: var(--espaco-16);
+  padding-inline-end: var(--espaco-16);
+}
+
+.multilinha .entrada {
+  resize: vertical;
+}

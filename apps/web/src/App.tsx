@@ -6,18 +6,19 @@ import { AreaProtegida } from './rotas/AreaProtegida';
 import { Auth } from './rotas/Auth';
 import { TelaProvisoria } from './rotas/TelaProvisoria';
 
+const Inicio = lazy(() => import('./rotas/inicio/Inicio'));
+const Pacientes = lazy(() => import('./rotas/pacientes/Pacientes'));
+const Perfil = lazy(() => import('./rotas/pacientes/Perfil'));
+const Checkins = lazy(() => import('./rotas/checkins/Checkins'));
+const Vinculo = lazy(() => import('./rotas/vinculo/Vinculo'));
+
 // Só existe em dev: em produção o ramo é removido e a tela de componentes sai do bundle.
 const Componentes = import.meta.env.DEV ? lazy(() => import('./rotas/Componentes')) : null;
 
 const TELAS = [
-  { caminho: 'inicio', titulo: 'Início' },
-  { caminho: 'pacientes', titulo: 'Pacientes' },
-  { caminho: 'pacientes/:id', titulo: 'Paciente' },
-  { caminho: 'checkins', titulo: 'Check-ins' },
   { caminho: 'relatorios', titulo: 'Relatórios' },
   { caminho: 'escalas', titulo: 'Escalas' },
   { caminho: 'calendario', titulo: 'Calendário' },
-  { caminho: 'vinculo', titulo: 'Vínculo' },
   { caminho: 'auditoria', titulo: 'Auditoria' },
   { caminho: 'minha-area', titulo: 'Minha área' },
 ];
@@ -31,6 +32,11 @@ export default function App() {
         <Routes>
           <Route index element={<Auth />} />
           <Route element={<AreaProtegida />}>
+            <Route path="inicio" element={<Inicio />} />
+            <Route path="pacientes" element={<Pacientes />} />
+            <Route path="pacientes/:id" element={<Perfil />} />
+            <Route path="checkins" element={<Checkins />} />
+            <Route path="vinculo" element={<Vinculo />} />
             {TELAS.map(({ caminho, titulo }) => (
               <Route key={caminho} path={caminho} element={<TelaProvisoria titulo={titulo} />} />
             ))}

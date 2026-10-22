@@ -187,6 +187,18 @@
   --altura-rolagem: 20rem;
   --altura-bloco-esqueleto: 6rem;
   --altura-indicador-aba: 0.1875rem;
+  --largura-minima-coluna: 22rem;
+  --largura-select-periodo: 14rem;
+  --largura-minima-serie: 12rem;
+  --espacamento-letras-codigo: 0.08em;
+
+  /* Gráficos: linha de 2px, marcador de 8px com anel de superfície de 2px, grade e eixos de 1px. */
+  --altura-grafico: 16rem;
+  --altura-sparkline: 3.5rem;
+  --largura-linha-dados: 2px;
+  --diametro-ponto-dados: 0.5rem;
+  --diametro-anel-dados: 0.75rem;
+  --tracejado-serie: 0.5rem 0.375rem;
 
   /* Elevação é tonal (containers). Sombra só no FAB e em overlays. */
   --sombra-fab: 0 0.25rem 0.75rem light-dark(rgb(76 79 105 / 28%), rgb(0 0 0 / 55%)),

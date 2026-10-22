@@ -30,3 +30,29 @@ export function iniciais(nome: string): string {
   const ultima = partes.length > 1 ? (partes[partes.length - 1]?.[0] ?? '') : '';
   return (primeira + ultima).toUpperCase();
 }
+
+const FUSO = 'America/Sao_Paulo';
+const formatoDataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: FUSO });
+const formatoData = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeZone: FUSO });
+const formatoNumero = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
+const formatoVariacao = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1, signDisplay: 'exceptZero' });
+
+/** Instante ISO → 'DD/MM/AAAA HH:mm' em America/Sao_Paulo. */
+export const formatarDataHora = (iso: string) => formatoDataHora.format(new Date(iso));
+
+/** Instante ISO → 'DD/MM/AAAA' em America/Sao_Paulo. */
+export const formatarData = (iso: string) => formatoData.format(new Date(iso));
+
+/** Dia civil 'YYYY-MM-DD' → 'DD/MM/AAAA'. O meio-dia UTC cai no mesmo dia em São Paulo. */
+export const formatarDia = (dia: string) => formatoData.format(new Date(`${dia}T12:00:00Z`));
+
+/** Data e horário de um check-in (dia civil + 'HH:mm' de São Paulo, quando existir). */
+export const formatarCheckin = (dia: string, horario: string | null) =>
+  horario ? `${formatarDia(dia)} às ${horario}` : formatarDia(dia);
+
+export const formatarNumero = (valor: number) => formatoNumero.format(valor);
+
+/** Diferença entre períodos como número neutro: '+0,8', '-1,2'. */
+export const formatarVariacao = (valor: number) => formatoVariacao.format(valor);
+
+export const plural = (n: number, singular: string, pluralizado: string) => `${n} ${n === 1 ? singular : pluralizado}`;

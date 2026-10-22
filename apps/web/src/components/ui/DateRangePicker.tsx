@@ -24,7 +24,7 @@ export type Periodo = RangeValue<DateValue>;
 const PRESETS = [7, 30, 90] as const;
 
 // Os últimos N dias contam o dia de hoje.
-function ultimosDias(dias: number): Periodo {
+export function ultimosDias(dias: number): Periodo {
   const hoje = today(getLocalTimeZone());
   return { start: hoje.subtract({ days: dias - 1 }), end: hoje };
 }
@@ -37,20 +37,25 @@ function coincide(periodo: Periodo | null, dias: number) {
 type Props = {
   valor: Periodo | null;
   onChange: (periodo: Periodo | null) => void;
+  rotulo?: string;
+  // Os atalhos contam a partir de hoje: não servem a um período que não termina hoje.
+  semAtalhos?: boolean;
 };
 
-export function DateRangePicker({ valor, onChange }: Props) {
+export function DateRangePicker({ valor, onChange, rotulo = 'Período', semAtalhos }: Props) {
   return (
     <div className={css.raiz}>
-      <div role="group" aria-label="Períodos rápidos" className={css.presets}>
-        {PRESETS.map((dias) => (
-          <ChipFiltro key={dias} isSelected={coincide(valor, dias)} onChange={() => onChange(ultimosDias(dias))}>
-            {`${dias} dias`}
-          </ChipFiltro>
-        ))}
-      </div>
+      {!semAtalhos && (
+        <div role="group" aria-label="Períodos rápidos" className={css.presets}>
+          {PRESETS.map((dias) => (
+            <ChipFiltro key={dias} isSelected={coincide(valor, dias)} onChange={() => onChange(ultimosDias(dias))}>
+              {`${dias} dias`}
+            </ChipFiltro>
+          ))}
+        </div>
+      )}
       <PeriodoAria value={valor} onChange={onChange} maxValue={today(getLocalTimeZone())} className={css.campo}>
-        <Label className={css.rotulo}>Período</Label>
+        <Label className={css.rotulo}>{rotulo}</Label>
         <Group className={css.grupo}>
           <DateInput slot="start" className={css.data}>
             {(segmento) => <DateSegment segment={segmento} className={css.segmento} />}
