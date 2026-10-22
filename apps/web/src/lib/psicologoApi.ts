@@ -72,7 +72,8 @@ export type RegistroResumo = {
 export type FaixaHorario = 'madrugada' | 'manha' | 'tarde' | 'noite';
 
 export type ResumoPeriodo = {
-  registros: number;
+  // null sem consentimento de humor nem de hábitos.
+  registros: number | null;
   humorMedio: number | null;
   ansiedadeMedia: number | null;
   sonoMedioHoras: number | null;

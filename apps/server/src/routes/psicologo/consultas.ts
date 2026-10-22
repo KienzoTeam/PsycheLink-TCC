@@ -7,7 +7,7 @@ import { comContextoPsicologo } from '../../lib/contextoseguro';
 import { criptografarOuNulo } from '../../lib/criptografia';
 import { dia, diasEntre } from '../../lib/periodo';
 import { idDe, lerOuNegar, limite, rota } from '../../lib/rota';
-import { PACIENTE_NAO_ENCONTRADO } from '../../lib/vinculo';
+import { PACIENTE_NAO_ENCONTRADO, vinculoAtivoDe } from '../../lib/vinculo';
 
 export const consultas = Router();
 
@@ -86,7 +86,7 @@ consultas.get(
     const { rows } = await comContextoPsicologo(res.locals.psicologoId, (client) =>
       client.query<LinhaConsulta>(
         `${comPaciente(`SELECT * FROM consulta
-                         WHERE psicologo_id = $1
+                         WHERE psicologo_id = $1 AND ${vinculoAtivoDe('consulta')}
                            AND (inicio AT TIME ZONE 'America/Sao_Paulo')::date BETWEEN $2::date AND $3::date`)}
          ORDER BY c.inicio, c.id`,
         [res.locals.psicologoId, q.de, q.ate],
@@ -153,7 +153,8 @@ consultas.patch(
                         SET status = COALESCE($3, status),
                             observacao = CASE WHEN $4::boolean THEN $5 ELSE observacao END,
                             atualizado_em = now()
-                      WHERE id = $1 AND psicologo_id = $2 AND ($3::text IS NULL OR status = 'agendada')
+                      WHERE id = $1 AND psicologo_id = $2 AND ${vinculoAtivoDe('consulta')}
+                        AND ($3::text IS NULL OR status = 'agendada')
                   RETURNING *`),
         [
           id,
@@ -195,7 +196,7 @@ consultas.post(
       nova = await comContextoPsicologo(res.locals.psicologoId, async (client) => {
         const original = await client.query<{ paciente_id: number }>(
           `UPDATE consulta SET status = 'remarcada', atualizado_em = now()
-            WHERE id = $1 AND psicologo_id = $2 AND status = 'agendada'
+            WHERE id = $1 AND psicologo_id = $2 AND status = 'agendada' AND ${vinculoAtivoDe('consulta')}
         RETURNING paciente_id`,
           [id, res.locals.psicologoId],
         );

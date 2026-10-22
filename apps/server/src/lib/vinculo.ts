@@ -16,6 +16,16 @@ export type Consentimentos = { humor: boolean; habitos: boolean; escalas: boolea
 export const PACIENTE_NAO_ENCONTRADO = 'Paciente não encontrado.';
 
 /**
+ * Condição SQL: a linha (de uma tabela com paciente_id e psicologo_id) pertence a um vínculo ativo.
+ * A aplicação confere sozinha, sem depender só do RLS (que o papel dono do banco ignora).
+ * `tabela` é sempre um alias fixo do código, nunca entrada do usuário.
+ */
+export const vinculoAtivoDe = (tabela: string) => `EXISTS (
+  SELECT 1 FROM vinculo v
+   WHERE v.paciente_id = ${tabela}.paciente_id AND v.psicologo_id = ${tabela}.psicologo_id
+     AND v.status = 'ativo')`;
+
+/**
  * Garante vínculo ativo com o paciente da URL; senão responde 404 genérico.
  * Roda dentro de comContextoPsicologo: o consentimento só é legível com vínculo ativo.
  */

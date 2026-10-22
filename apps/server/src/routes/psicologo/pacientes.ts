@@ -204,7 +204,7 @@ pacientes.get(
     }
 
     const resumirPeriodo = (linhas: LinhaPeriodo[]) => ({
-      registros: linhas.length,
+      registros: consent.humor || consent.habitos ? linhas.length : null,
       humorMedio: consent.humor ? arredondar(media(linhas.map((l) => l.intensidade_humor))) : null,
       ansiedadeMedia: consent.humor
         ? arredondar(media(linhas.map((l) => l.intensidade_ansiedade)))
