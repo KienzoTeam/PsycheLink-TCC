@@ -16,6 +16,8 @@ import { formatarData } from '../../lib/formatar';
 import { diaIso, diasDoPeriodo, MAX_DIAS_PERIODO } from '../../lib/periodo';
 import { buscarResumo, listarHistoricoVinculos, type Consentimentos } from '../../lib/psicologoApi';
 import pagina from '../Pagina.module.css';
+import { AbaConsultas } from './AbaConsultas';
+import { AbaEscalas } from './AbaEscalas';
 import { Anotacoes } from './Anotacoes';
 import { EncerrarVinculo } from './EncerrarVinculo';
 import { LinhaDoTempo } from './LinhaDoTempo';
@@ -25,7 +27,7 @@ import css from './Perfil.module.css';
 const VisaoGeral = lazy(() => import('./VisaoGeral'));
 
 const PERIODO_PADRAO_DIAS = 30;
-const ABAS = ['visao-geral', 'linha-do-tempo', 'anotacoes'] as const;
+const ABAS = ['visao-geral', 'linha-do-tempo', 'escalas', 'consultas', 'anotacoes'] as const;
 const CATEGORIAS: ReadonlyArray<{ id: keyof Consentimentos; rotulo: string }> = [
   { id: 'humor', rotulo: 'Humor' },
   { id: 'habitos', rotulo: 'Hábitos' },
@@ -187,6 +189,8 @@ export default function Perfil() {
             ),
           },
           { id: 'linha-do-tempo', rotulo: 'Linha do tempo', painel: periodoOk ? <LinhaDoTempo id={id} de={de} ate={ate} /> : null },
+          { id: 'escalas', rotulo: 'Escalas', painel: paciente ? <AbaEscalas id={id} nome={paciente.nome} /> : <EsqueletoAba /> },
+          { id: 'consultas', rotulo: 'Consultas', painel: paciente ? <AbaConsultas id={id} nome={paciente.nome} /> : <EsqueletoAba /> },
           { id: 'anotacoes', rotulo: 'Anotações privadas', painel: <Anotacoes id={id} /> },
         ]}
       />

@@ -31,9 +31,11 @@ export function iniciais(nome: string): string {
   return (primeira + ultima).toUpperCase();
 }
 
-const FUSO = 'America/Sao_Paulo';
+export const FUSO = 'America/Sao_Paulo';
 const formatoDataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: FUSO });
 const formatoData = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeZone: FUSO });
+const formatoDiaIso = new Intl.DateTimeFormat('en-CA', { timeZone: FUSO });
+const formatoHora = new Intl.DateTimeFormat('pt-BR', { timeStyle: 'short', timeZone: FUSO });
 const formatoNumero = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
 const formatoVariacao = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1, signDisplay: 'exceptZero' });
 
@@ -42,6 +44,12 @@ export const formatarDataHora = (iso: string) => formatoDataHora.format(new Date
 
 /** Instante ISO → 'DD/MM/AAAA' em America/Sao_Paulo. */
 export const formatarData = (iso: string) => formatoData.format(new Date(iso));
+
+/** Instante ISO → dia civil 'YYYY-MM-DD' em America/Sao_Paulo. */
+export const diaDe = (iso: string) => formatoDiaIso.format(new Date(iso));
+
+/** Instante ISO → 'HH:mm' em America/Sao_Paulo. */
+export const formatarHora = (iso: string) => formatoHora.format(new Date(iso));
 
 /** Dia civil 'YYYY-MM-DD' → 'DD/MM/AAAA'. O meio-dia UTC cai no mesmo dia em São Paulo. */
 export const formatarDia = (dia: string) => formatoData.format(new Date(`${dia}T12:00:00Z`));

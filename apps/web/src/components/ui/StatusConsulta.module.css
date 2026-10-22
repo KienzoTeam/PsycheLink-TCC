@@ -1,0 +1,12 @@
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-4);
+  font: var(--tipo-rotulo-medio);
+}
+
+.status svg {
+  flex-shrink: 0;
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+}

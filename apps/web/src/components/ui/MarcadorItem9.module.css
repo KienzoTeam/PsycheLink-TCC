@@ -1,0 +1,19 @@
+.marcador {
+  display: flex;
+  align-items: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  gap: var(--espaco-8);
+  padding: var(--espaco-4) var(--espaco-12);
+  border-radius: var(--forma-sm);
+  background: var(--cor-container-terciaria);
+  color: var(--cor-sobre-container-terciaria);
+  font: var(--tipo-rotulo-grande);
+}
+
+.marcador svg {
+  flex-shrink: 0;
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+  margin-block-start: var(--espaco-4);
+}

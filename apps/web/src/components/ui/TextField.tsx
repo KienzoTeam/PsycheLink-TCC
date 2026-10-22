@@ -26,13 +26,16 @@ export function TextField({
   inputRef,
   sufixo,
   multilinha,
+  min,
+  max,
+  step,
   ...resto
-}: CampoProps & { sufixo?: ReactNode; multilinha?: boolean }) {
+}: CampoProps & { sufixo?: ReactNode; multilinha?: boolean; min?: number; max?: number; step?: number }) {
   return (
     <CampoAria {...resto} isInvalid={erro !== undefined} className={css.campo}>
       <Label className={css.rotulo}>{rotulo}</Label>
       <div className={cx(css.caixa, multilinha && css.multilinha)}>
-        {multilinha ? <TextArea rows={5} className={css.entrada} /> : <Input ref={inputRef} className={css.entrada} />}
+        {multilinha ? <TextArea rows={5} className={css.entrada} /> : <Input ref={inputRef} min={min} max={max} step={step} className={css.entrada} />}
         {sufixo}
       </div>
       {descricao && (

@@ -1,0 +1,293 @@
+.form {
+  display: grid;
+  gap: var(--espaco-16);
+}
+
+.campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--largura-minima-serie)), 1fr));
+  gap: var(--espaco-16);
+}
+
+.dados {
+  display: grid;
+  gap: var(--espaco-12);
+}
+
+.dados dt {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.dados dd {
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-corpo-grande);
+}
+
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-16);
+}
+
+.navegacao {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+}
+
+.titulo {
+  flex: 1 1 var(--largura-minima-serie);
+  min-width: 0;
+  font: var(--tipo-titulo-grande);
+  text-wrap: balance;
+}
+
+.titulo::first-letter {
+  text-transform: uppercase;
+}
+
+.agenda {
+  min-width: 0;
+}
+
+.vazio {
+  margin-block-start: var(--espaco-16);
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-grande);
+}
+
+/* Dia e semana: a grade rola dentro do contêiner, na vertical (horas) e na horizontal (dias), sem alargar a página. */
+.rolagem {
+  max-height: var(--altura-rolagem-agenda);
+  overflow: auto;
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-xl);
+  background: var(--cor-cartao);
+  color: var(--cor-sobre-superficie);
+}
+
+.grade {
+  --dias: 1;
+  display: grid;
+  grid-template-columns: var(--largura-hora-agenda) repeat(var(--dias), minmax(var(--largura-minima-dia), 1fr));
+  min-width: min-content;
+}
+
+.grade[data-dias='7'] {
+  --dias: 7;
+}
+
+.canto,
+.cabecalhoDia {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  background: var(--cor-cartao);
+  border-block-end: var(--largura-borda) solid var(--cor-contorno-variante);
+}
+
+.canto {
+  inset-inline-start: 0;
+  z-index: 3;
+}
+
+.cabecalhoDia {
+  display: grid;
+  justify-items: center;
+  min-height: var(--alvo-minimo);
+  padding: var(--espaco-8);
+  border-inline-start: var(--largura-borda) solid var(--cor-contorno-variante);
+}
+
+.diaBotao {
+  display: grid;
+  justify-items: center;
+  min-width: var(--alvo-minimo);
+  min-height: var(--alvo-minimo);
+  border: 0;
+  border-radius: var(--forma-md);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.diaBotao[data-hovered] {
+  background: color-mix(in srgb, currentcolor var(--camada-hover), transparent);
+}
+
+.semana {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+  text-transform: uppercase;
+}
+
+.numeroDia {
+  font: var(--tipo-titulo-grande);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+/* Hoje: o número ganha um círculo cheio, além do aria-current. */
+[aria-current='date'] .numeroDia {
+  display: grid;
+  place-items: center;
+  min-width: var(--alvo-minimo);
+  border-radius: var(--forma-total);
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
+}
+
+.horas {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  background: var(--cor-cartao);
+}
+
+.hora {
+  display: block;
+  height: var(--altura-hora-agenda);
+  padding: var(--espaco-4) var(--espaco-8) 0 0;
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-pequeno);
+  font-variant-numeric: var(--numeros-tabulares);
+  text-align: end;
+}
+
+.dia {
+  position: relative;
+  height: calc(var(--horas) * var(--altura-hora-agenda));
+  border-inline-start: var(--largura-borda) solid var(--cor-contorno-variante);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 calc(var(--altura-hora-agenda) - var(--largura-borda)),
+    var(--cor-contorno-variante) 0 var(--altura-hora-agenda)
+  );
+}
+
+.bloco {
+  position: absolute;
+  inset-block-start: calc(var(--inicio) * var(--altura-hora-agenda) / 60);
+  inset-inline-start: calc(var(--faixa) * 100% / var(--faixas));
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-4);
+  width: calc(100% / var(--faixas));
+  height: calc(var(--duracao) * var(--altura-hora-agenda) / 60);
+  min-height: var(--espaco-24);
+  padding: var(--espaco-4) var(--espaco-8);
+  border: var(--largura-borda) solid transparent;
+  border-radius: var(--forma-sm);
+  font: var(--tipo-corpo-pequeno);
+  text-align: start;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.bloco[data-hovered] {
+  filter: brightness(0.96);
+}
+
+.horario {
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.paciente {
+  font: var(--tipo-rotulo-grande);
+  overflow-wrap: anywhere;
+}
+
+.agendada {
+  background: var(--cor-container-primaria);
+  color: var(--cor-sobre-container-primaria);
+}
+
+.concluida {
+  background: var(--cor-container-secundaria);
+  color: var(--cor-sobre-container-secundaria);
+}
+
+/* Canceladas e remarcadas ficam esmaecidas sem perder contraste: sem preenchimento, contorno tracejado e texto secundário. */
+.cancelada,
+.remarcada {
+  border-color: var(--cor-contorno);
+  border-style: dashed;
+  background: var(--cor-cartao);
+  color: var(--cor-sobre-superficie-variante);
+}
+
+.cancelada .paciente {
+  text-decoration: line-through;
+}
+
+/* Mês */
+.mes {
+  width: 100%;
+}
+
+.gradeMes {
+  width: 100%;
+  table-layout: fixed;
+  border-spacing: var(--espaco-4);
+}
+
+.diaSemanaMes {
+  height: var(--alvo-minimo);
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+  text-transform: uppercase;
+}
+
+.gradeMes td {
+  padding: 0;
+}
+
+.celulaMes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-4);
+  width: 100%;
+  height: var(--altura-celula-mes);
+  padding: var(--espaco-8);
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-md);
+  background: var(--cor-cartao);
+  color: var(--cor-sobre-superficie);
+  cursor: pointer;
+  overflow: hidden;
+  outline-offset: calc(var(--foco-largura) * -1);
+}
+
+.celulaMes[data-hovered] {
+  background: color-mix(in srgb, var(--cor-cartao), currentcolor var(--camada-hover));
+}
+
+.celulaMes[data-outside-month] {
+  color: var(--cor-sobre-superficie-variante);
+  background: transparent;
+}
+
+.numeroMes {
+  font: var(--tipo-titulo-pequeno);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.celulaMes[data-today] .numeroMes {
+  display: grid;
+  place-items: center;
+  min-width: var(--espaco-24);
+  border-radius: var(--forma-total);
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
+}
+
+.contagem {
+  padding-inline: var(--espaco-8);
+  border-radius: var(--forma-sm);
+  background: var(--cor-container-primaria);
+  color: var(--cor-sobre-container-primaria);
+  font: var(--tipo-rotulo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+}

@@ -10,10 +10,12 @@ import { Emocoes } from '../../components/ui/Emocoes';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { EstadoErro } from '../../components/ui/EstadoErro';
 import { ListItem } from '../../components/ui/ListItem';
+import { MarcadorItem9 } from '../../components/ui/MarcadorItem9';
 import { ScrollFade } from '../../components/ui/ScrollFade';
 import { Select } from '../../components/ui/Select';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { formatarDataHora, formatarDia, formatarNumero, plural } from '../../lib/formatar';
+import { StatusConsulta } from '../../components/ui/StatusConsulta';
+import { formatarDataHora, formatarDia, formatarHora, formatarNumero, plural } from '../../lib/formatar';
 import { buscarDashboard, type Dashboard } from '../../lib/psicologoApi';
 import { rotuloAcao } from '../../lib/rotulos';
 import pagina from '../Pagina.module.css';
@@ -158,6 +160,56 @@ function Medias({ medias, periodo }: { medias: Dashboard['medias']; periodo: num
   );
 }
 
+function ConsultasHoje({ itens }: { itens: Dashboard['consultasHoje'] }) {
+  return (
+    <Card>
+      <h2 className={css.tituloCartao}>Consultas de hoje</h2>
+      {itens.length === 0 ? (
+        <p className={css.vazio}>Nenhuma consulta hoje. A agenda do dia aparece aqui quando houver consultas marcadas.</p>
+      ) : (
+        <ul>
+          {itens.map((item) => (
+            <ListItem
+              key={item.id}
+              href={`${noPaciente(item.pacienteId)}?aba=consultas`}
+              titulo={item.nome}
+              apoio={`${formatarHora(item.inicio)} às ${formatarHora(item.fim)}`}
+              fim={<StatusConsulta status={item.status} />}
+            />
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+function Escalas({ escalas }: { escalas: Dashboard['escalas'] }) {
+  const { pendentes, respondidasRecentes } = escalas;
+  return (
+    <Card>
+      <h2 className={css.tituloCartao}>Escalas</h2>
+      <p className={css.legenda}>
+        {pendentes === 0 ? 'Nenhuma escala aguardando resposta.' : `${plural(pendentes, 'escala aguardando', 'escalas aguardando')} resposta.`}
+      </p>
+      {respondidasRecentes.length === 0 ? (
+        <p className={css.vazio}>Nenhuma escala respondida ainda. O escore bruto aparece aqui quando um paciente responder.</p>
+      ) : (
+        <ul>
+          {respondidasRecentes.map((item) => (
+            <ListItem
+              key={item.aplicacaoId}
+              href={`${noPaciente(item.pacienteId)}?aba=escalas`}
+              titulo={`${item.sigla}, ${item.nome}`}
+              apoio={`Escore bruto ${item.scoreTotal} · ${formatarDataHora(item.respondidoEm)}`}
+              fim={item.item9DiferenteDeZero ? <MarcadorItem9 /> : undefined}
+            />
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
 function Carregando() {
   return (
     <div role="status" className={pagina.grade}>
@@ -227,10 +279,12 @@ export default function Inicio() {
             <Vinculados dados={dados} periodo={periodo} />
             <Atividades itens={dados.atividadeRecente} />
             <DadosInsuficientes itens={dados.dadosInsuficientes} />
+            <Escalas escalas={dados.escalas} />
           </div>
           <div className={css.coluna}>
             <ResumoCheckins itens={dados.checkinsRecentes} />
             <Medias medias={dados.medias} periodo={periodo} />
+            <ConsultasHoje itens={dados.consultasHoje} />
           </div>
         </div>
       )}

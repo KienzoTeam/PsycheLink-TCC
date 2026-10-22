@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { Button as BotaoAria, VisuallyHidden } from 'react-aria-components';
-import { ChevronDown, Info, Link2, MapPinCheck, type LucideIcon } from 'lucide-react';
+import { CalendarClock, ChevronDown, ClipboardList, Info, Link2, MapPinCheck, type LucideIcon } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Colapsavel } from '../../components/ui/Colapsavel';
 import { ConsentimentoAusente } from '../../components/ui/ConsentimentoAusente';
@@ -9,13 +9,34 @@ import { Emocoes } from '../../components/ui/Emocoes';
 import { EstadoErro } from '../../components/ui/EstadoErro';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { formatarCheckin, formatarDataHora, formatarNumero } from '../../lib/formatar';
-import { ehCheckinTempo, listarLinhaDoTempo, type ItemCheckinTempo } from '../../lib/psicologoApi';
-import { rotuloAcao } from '../../lib/rotulos';
+import { ehCheckinTempo, listarLinhaDoTempo, type ItemCheckinTempo, type ItemEventoTempo } from '../../lib/psicologoApi';
+import { rotuloAcao, STATUS_CONSULTA } from '../../lib/rotulos';
 import { DetalheCheckin } from '../checkins/DetalheCheckin';
 import pagina from '../Pagina.module.css';
 import css from './LinhaDoTempo.module.css';
 
-const ICONES: Record<string, LucideIcon> = { vinculo_criado: Link2, vinculo_encerrado: Link2 };
+const ICONES: Record<string, LucideIcon> = {
+  vinculo_criado: Link2,
+  vinculo_encerrado: Link2,
+  escala_solicitada: ClipboardList,
+  escala_respondida: ClipboardList,
+  consulta: CalendarClock,
+};
+
+// Texto próprio de cada evento; o tipo desconhecido cai no rótulo neutro.
+function descrever(item: ItemEventoTempo) {
+  const quando = formatarDataHora(item.em);
+  switch (item.tipo) {
+    case 'escala_solicitada':
+      return { titulo: `Escala ${item.sigla} solicitada`, apoio: quando };
+    case 'escala_respondida':
+      return { titulo: `Escala ${item.sigla} respondida`, apoio: `Escore bruto ${item.scoreTotal} · ${quando}` };
+    case 'consulta':
+      return { titulo: `Consulta ${item.status ? STATUS_CONSULTA[item.status].toLowerCase() : ''}`.trim(), apoio: quando };
+    default:
+      return { titulo: rotuloAcao(item.tipo), apoio: quando };
+  }
+}
 
 function Checkin({ item }: { item: ItemCheckinTempo }) {
   const [aberto, setAberto] = useState(false);
@@ -92,12 +113,13 @@ export function LinhaDoTempo({ id, de, ate }: Props) {
           {itens.map((item) => {
             if (ehCheckinTempo(item)) return <Checkin key={`checkin-${item.id}`} item={item} />;
             const Icone = ICONES[item.tipo] ?? Info;
+            const { titulo, apoio } = descrever(item);
             return (
               <li key={`${item.tipo}-${item.em}`} className={css.item}>
                 <Icone aria-hidden className={css.icone} />
                 <div className={css.corpo}>
-                  <p className={css.evento}>{rotuloAcao(item.tipo)}</p>
-                  <p className={css.resumo}>{formatarDataHora(item.em)}</p>
+                  <p className={css.evento}>{titulo}</p>
+                  <p className={css.resumo}>{apoio}</p>
                 </div>
               </li>
             );

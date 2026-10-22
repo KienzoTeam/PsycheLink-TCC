@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { ITENS_NAV, PINS_PADRAO } from './itensNav';
 
 const CHAVE = 'psychelink_web_pins';
@@ -16,20 +16,24 @@ function lerPins(): string[] {
   return PINS_PADRAO;
 }
 
-export function usePins() {
-  const [fixados, setFixados] = useState(lerPins);
+// Um só estado para a barra lateral e para a Minha área: mudar numa tela vale na outra.
+let atuais = lerPins();
+const ouvintes = new Set<() => void>();
+const assinar = (ouvinte: () => void) => {
+  ouvintes.add(ouvinte);
+  return () => ouvintes.delete(ouvinte);
+};
 
-  function alternar(id: string) {
-    const fixado = fixados.includes(id);
-    if (fixado && fixados.length === 1) return;
-    const novos = fixado ? fixados.filter((atual) => atual !== id) : [...fixados, id];
-    setFixados(novos);
-    try {
-      localStorage.setItem(CHAVE, JSON.stringify(novos));
-    } catch {
-      // Sem persistência: os pins valem para esta sessão.
-    }
+function alternar(id: string) {
+  const fixado = atuais.includes(id);
+  if (fixado && atuais.length === 1) return;
+  atuais = fixado ? atuais.filter((atual) => atual !== id) : [...atuais, id];
+  try {
+    localStorage.setItem(CHAVE, JSON.stringify(atuais));
+  } catch {
+    // Sem persistência: os pins valem para esta sessão.
   }
-
-  return { fixados, alternar };
+  ouvintes.forEach((ouvinte) => ouvinte());
 }
+
+export const usePins = () => ({ fixados: useSyncExternalStore(assinar, () => atuais), alternar });

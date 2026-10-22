@@ -1,5 +1,5 @@
 import type { Emocao } from '../components/ui/Chip';
-import type { FaixaHorario, StatusCodigo, StatusDados } from './psicologoApi';
+import type { FaixaHorario, StatusAplicacao, StatusCodigo, StatusConsulta, StatusDados } from './psicologoApi';
 
 const EMOCOES: readonly Emocao[] = ['feliz', 'triste', 'ansioso', 'calmo', 'irritado', 'cansado'];
 
@@ -43,6 +43,22 @@ export const STATUS_CODIGO: Record<StatusCodigo, string> = {
   revogado: 'Revogado',
 };
 
+export const STATUS_APLICACAO: Record<StatusAplicacao, string> = {
+  pendente: 'Pendente',
+  em_andamento: 'Em andamento',
+  concluida: 'Concluída',
+  cancelada: 'Cancelada',
+};
+
+export const AVISO_ESCALA = 'Instrumento de acompanhamento. O resultado é o escore bruto e não é diagnóstico.';
+
+export const STATUS_CONSULTA: Record<StatusConsulta, string> = {
+  agendada: 'Agendada',
+  concluida: 'Concluída',
+  cancelada: 'Cancelada',
+  remarcada: 'Remarcada',
+};
+
 export const FAIXAS_HORARIO: ReadonlyArray<{ id: FaixaHorario; rotulo: string; faixa: string }> = [
   { id: 'madrugada', rotulo: 'Madrugada', faixa: '0h às 6h' },
   { id: 'manha', rotulo: 'Manhã', faixa: '6h às 12h' },
@@ -58,7 +74,6 @@ const ACOES: Record<string, string> = {
   checkin_registrado: 'Check-in registrado',
   escala_solicitada: 'Escala solicitada',
   escala_respondida: 'Escala respondida',
-  consulta: 'Consulta',
 };
 
 export const rotuloAcao = (acao: string) => ACOES[acao] ?? 'Atividade registrada';

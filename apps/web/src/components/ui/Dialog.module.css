@@ -29,6 +29,10 @@
     translate var(--duracao-espacial-padrao) var(--mola-espacial-padrao);
 }
 
+.larga {
+  width: min(var(--largura-dialogo-larga), 100%);
+}
+
 .painel[data-entering],
 .painel[data-exiting] {
   scale: var(--escala-entrada);

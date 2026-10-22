@@ -42,6 +42,19 @@ export type Dashboard = {
   atividadeRecente: { pacienteId: number; nome: string; acao: string; em: string }[];
   dadosInsuficientes: { pacienteId: number; nome: string; registros7d: number }[];
   medias: { n: number; humor: number | null; ansiedade: number | null; sono: number | null };
+  consultasHoje: { id: number; pacienteId: number; nome: string; inicio: string; fim: string; status: StatusConsulta }[];
+  escalas: {
+    pendentes: number;
+    respondidasRecentes: {
+      aplicacaoId: number;
+      pacienteId: number;
+      nome: string;
+      sigla: string;
+      respondidoEm: string;
+      scoreTotal: number;
+      item9DiferenteDeZero: boolean | null;
+    }[];
+  };
 };
 
 export type RegistroResumo = {
@@ -93,8 +106,9 @@ export type ItemCheckinTempo = {
   sonoHoras: number | null;
 };
 
-// `tipo` é aberto: escalas e consultas chegam como tipos novos e são mostrados de forma neutra.
-export type ItemLinhaDoTempo = ItemCheckinTempo | { tipo: string; em: string };
+// `tipo` é aberto: um tipo novo chega só com `tipo` e `em` e é mostrado de forma neutra.
+export type ItemEventoTempo = { tipo: string; em: string; sigla?: string; scoreTotal?: number | null; status?: StatusConsulta };
+export type ItemLinhaDoTempo = ItemCheckinTempo | ItemEventoTempo;
 
 export const ehCheckinTempo = (item: ItemLinhaDoTempo): item is ItemCheckinTempo => item.tipo === 'checkin';
 
@@ -224,3 +238,168 @@ export const revogarCodigo = (id: number) => api.delete(`/psicologo/vinculo/codi
 
 export const listarHistoricoVinculos = async () =>
   (await api.get<{ vinculos: VinculoHistorico[] }>('/psicologo/vinculo/historico')).data.vinculos;
+
+export type StatusAplicacao = 'pendente' | 'em_andamento' | 'concluida' | 'cancelada';
+
+export type EscalaCatalogo = {
+  id: number;
+  sigla: string;
+  nome: string;
+  totalQuestoes: number;
+  pontuacaoMaxima: number;
+  validacaoRef: string;
+};
+
+export type Aplicacao = {
+  id: number;
+  escala: { sigla: string; nome: string; pontuacaoMaxima: number };
+  status: StatusAplicacao;
+  solicitadoEm: string;
+  respondidoEm: string | null;
+  scoreTotal: number | null;
+  subscores: Record<string, number> | null;
+  item9DiferenteDeZero: boolean | null;
+};
+
+export type AplicacaoListada = Aplicacao & { pacienteId: number; pacienteNome: string };
+
+export type DetalheAplicacao = AplicacaoListada & {
+  instrucao: string;
+  subescalas: Record<string, { rotulo: string; itens: number[] }> | null;
+  itens: { numero: number; enunciado: string; resposta: number | null; rotuloResposta: string | null }[];
+};
+
+export type StatusConsulta = 'agendada' | 'concluida' | 'cancelada' | 'remarcada';
+
+export type Consulta = {
+  id: number;
+  pacienteId: number;
+  pacienteNome: string;
+  inicio: string;
+  fim: string;
+  status: StatusConsulta;
+  remarcadaDe: number | null;
+  observacao: string | null;
+};
+
+export type NovaConsulta = { pacienteId: number; inicio: string; fim: string; observacao?: string };
+
+export type CabecalhoRelatorio = {
+  psicologo: { nome: string; crp: string };
+  periodo: { de: string; ate: string };
+  geradoEm: string;
+};
+
+export type LinhaRelatorioGeral = {
+  pacienteId: number;
+  nome: string;
+  consentimentos: Pick<Consentimentos, 'humor' | 'habitos' | 'escalas'>;
+  registros: number | null;
+  humorMedio: number | null;
+  ansiedadeMedia: number | null;
+  sonoMedioHoras: number | null;
+  escalasConcluidas: number | null;
+  consultas: Record<StatusConsulta, number>;
+};
+
+export type RelatorioGeral = { cabecalho: CabecalhoRelatorio; pacientes: LinhaRelatorioGeral[] };
+
+export type RelatorioPaciente = {
+  cabecalho: CabecalhoRelatorio & { paciente: { id: number; nome: string } };
+  consentimentos: Consentimentos;
+  serieDiaria: RegistroResumo[];
+  frequenciaEmocional: ResumoPaciente['frequenciaEmocional'];
+  habitos: ResumoPaciente['habitos'];
+  distribuicaoHorario: ResumoPaciente['distribuicaoHorario'];
+  escalas: Aplicacao[];
+  consultas: { id: number; inicio: string; fim: string; status: StatusConsulta }[];
+  anotacoes: { id: number; criadoEm: string; conteudo: string }[] | null;
+};
+
+export type PedidoRelatorio = { de: string; ate: string } & (
+  | { tipo: 'geral' }
+  | { tipo: 'paciente'; pacienteId: number; incluirAnotacoes: boolean }
+);
+
+type MetaValor = string | number | boolean;
+
+export type EventoAuditoria = {
+  id: number;
+  acao: string;
+  atorPapel: 'psicologo' | 'paciente' | null;
+  pacienteId: number | null;
+  pacienteNome: string | null;
+  metadados: Record<string, MetaValor>;
+  criadoEm: string;
+  ip: string | null;
+};
+
+export type FiltroAuditoria = { acao?: string; pacienteId?: number; de?: string; ate?: string };
+
+export type Sessao = { id: string; criadoEm: string; ultimoUsoEm: string; ip: string | null; userAgent: string | null; atual: boolean };
+
+export const listarEscalas = async () => (await api.get<{ escalas: EscalaCatalogo[] }>('/psicologo/escalas')).data.escalas;
+
+export const solicitarEscala = (pacienteId: number, escalaId: number) =>
+  api.post(`/psicologo/pacientes/${pacienteId}/escalas`, { escalaId });
+
+export const cancelarAplicacao = (id: number) => api.post(`/psicologo/aplicacoes/${id}/cancelar`);
+
+export const listarAplicacoesDoPaciente = async (id: number) =>
+  (await api.get<{ aplicacoes: Aplicacao[]; consentimentos: Consentimentos }>(`/psicologo/pacientes/${id}/escalas`)).data;
+
+export const listarAplicacoes = async (status: StatusAplicacao | undefined, cursor?: string) =>
+  (
+    await api.get<{ aplicacoes: AplicacaoListada[]; proximoCursor: string | null }>('/psicologo/aplicacoes', {
+      params: { status, cursor },
+    })
+  ).data;
+
+export const buscarAplicacao = async (id: number) =>
+  (await api.get<{ aplicacao: DetalheAplicacao }>(`/psicologo/aplicacoes/${id}`)).data.aplicacao;
+
+export const listarConsultas = async (de: string, ate: string) =>
+  (await api.get<{ consultas: Consulta[] }>('/psicologo/consultas', { params: { de, ate } })).data.consultas;
+
+export const criarConsulta = async (dados: NovaConsulta) =>
+  (await api.post<{ consulta: Consulta }>('/psicologo/consultas', dados)).data.consulta;
+
+export const alterarConsulta = (id: number, dados: { status?: 'concluida' | 'cancelada'; observacao?: string }) =>
+  api.patch(`/psicologo/consultas/${id}`, dados);
+
+export const remarcarConsulta = (id: number, dados: { inicio: string; fim: string }) =>
+  api.post(`/psicologo/consultas/${id}/remarcar`, dados);
+
+export type RelatorioBuscado = { tipo: 'geral'; dados: RelatorioGeral } | { tipo: 'paciente'; dados: RelatorioPaciente };
+
+export async function buscarRelatorio(pedido: PedidoRelatorio): Promise<RelatorioBuscado> {
+  const { de, ate } = pedido;
+  if (pedido.tipo === 'geral') {
+    return { tipo: 'geral', dados: (await api.get<RelatorioGeral>('/psicologo/relatorios/geral', { params: { de, ate } })).data };
+  }
+  const { pacienteId, incluirAnotacoes } = pedido;
+  return {
+    tipo: 'paciente',
+    dados: (await api.get<RelatorioPaciente>(`/psicologo/relatorios/pacientes/${pacienteId}`, { params: { de, ate, incluirAnotacoes } })).data,
+  };
+}
+
+export const registrarExportacao = async (pedido: PedidoRelatorio) =>
+  (await api.post<{ numero: number }>('/psicologo/relatorios/exportacoes', pedido)).data.numero;
+
+export const listarAcoesAuditoria = async () =>
+  (await api.get<{ acoes: { acao: string; rotulo: string }[] }>('/psicologo/auditoria/acoes')).data.acoes;
+
+export const listarAuditoria = async (filtro: FiltroAuditoria, cursor?: string) =>
+  (await api.get<{ eventos: EventoAuditoria[]; proximoCursor: string | null }>('/psicologo/auditoria', { params: { ...filtro, cursor } })).data;
+
+export const atualizarMe = async (dados: { nome: string; especialidade: string }) =>
+  (await api.patch<Psicologo>('/psicologo/me', dados)).data;
+
+export const trocarSenha = (senhaAtual: string, novaSenha: string) =>
+  api.post('/psicologo/me/senha', { senhaAtual, novaSenha });
+
+export const listarSessoes = async () => (await api.get<{ sessoes: Sessao[] }>('/psicologo/me/sessoes')).data.sessoes;
+
+export const encerrarOutrasSessoes = async () =>
+  (await api.post<{ encerradas: number }>('/psicologo/me/sessoes/encerrar-outras')).data.encerradas;

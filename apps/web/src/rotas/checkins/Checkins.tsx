@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { parseDate } from '@internationalized/date';
 import { Button as BotaoAria, VisuallyHidden } from 'react-aria-components';
 import { MapPinCheck, SearchX } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -14,7 +13,7 @@ import { Select } from '../../components/ui/Select';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { cx } from '../../lib/cx';
 import { formatarCheckin, formatarNumero, plural } from '../../lib/formatar';
-import { diaIso } from '../../lib/periodo';
+import { diaIso, lerDia } from '../../lib/periodo';
 import { listarCheckins, listarTodosPacientes, type CheckinListado } from '../../lib/psicologoApi';
 import { rotuloEmocao } from '../../lib/rotulos';
 import { useCompacto } from '../../lib/useCompacto';
@@ -26,15 +25,6 @@ import css from './Checkins.module.css';
 const TODOS = 'todos';
 const EMOCOES = ['feliz', 'triste', 'ansioso', 'calmo', 'irritado', 'cansado'];
 const OPCOES_EMOCAO = [{ id: TODOS, rotulo: 'Todas as emoções' }, ...EMOCOES.map((e) => ({ id: e, rotulo: rotuloEmocao(e) }))];
-
-// Dia vindo da URL: texto inválido vale como filtro ausente.
-function lerDia(texto: string | null) {
-  try {
-    return texto ? parseDate(texto) : null;
-  } catch {
-    return null;
-  }
-}
 
 const valor = (numero: number | null) => (numero === null ? 'Sem dado' : String(numero));
 

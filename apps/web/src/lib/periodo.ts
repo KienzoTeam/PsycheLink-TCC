@@ -1,4 +1,4 @@
-import { toCalendarDate } from '@internationalized/date';
+import { parseDate, toCalendarDate } from '@internationalized/date';
 import type { DateValue } from 'react-aria-components';
 import type { Periodo } from '../components/ui/DateRangePicker';
 
@@ -14,4 +14,13 @@ export const diasDoPeriodo = (periodo: Periodo) =>
 export function periodoAnterior(periodo: Periodo): Periodo {
   const fim = toCalendarDate(periodo.start).subtract({ days: 1 });
   return { start: fim.subtract({ days: diasDoPeriodo(periodo) - 1 }), end: fim };
+}
+
+/** Dia vindo da URL ou de um campo: texto inválido vale como ausente. */
+export function lerDia(texto: string | null) {
+  try {
+    return texto ? parseDate(texto) : null;
+  } catch {
+    return null;
+  }
 }
