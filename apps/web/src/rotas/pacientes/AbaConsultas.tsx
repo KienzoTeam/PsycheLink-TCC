@@ -60,7 +60,9 @@ export function AbaConsultas({ id, nome }: { id: number; nome: string }) {
   });
 
   const erro = consultas.find((c) => c.isError);
-  const doPaciente = consultas.flatMap((c) => c.data ?? []).filter((c) => c.pacienteId === id);
+  // A consulta que vira a meia-noite de hoje vem nas duas janelas: o Map por id deixa uma só.
+  const unicas = new Map(consultas.flatMap((c) => c.data ?? []).map((c) => [c.id, c]));
+  const doPaciente = [...unicas.values()].filter((c) => c.pacienteId === id);
   const agora = Date.now();
   const proximas = doPaciente.filter((c) => c.status === 'agendada' && Date.parse(c.fim) > agora);
   const anteriores = doPaciente.filter((c) => !proximas.includes(c)).sort((a, b) => b.inicio.localeCompare(a.inicio));
