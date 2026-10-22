@@ -84,7 +84,7 @@ export default function Vinculacao({ navigation }: Props) {
       <Text style={[styles.title, { color: theme.colors.onBackground }]}>Conecte-se ao seu psicólogo</Text>
 
       <Text style={[styles.subtitle, { color: theme.colors.subtext1 }]}>
-        Digite o código de 6 números que seu psicólogo te passou. Ao vincular, ele passa a ver seu humor, hábitos e escalas, mas não o diário. Você muda isso quando quiser.
+        Digite o código de 6 números que seu psicólogo te passou. Ao vincular, ele passa a ver seu humor, hábitos e escalas. Os textos do diário ficam só com você, a menos que você escolha compartilhar um deles no check-in. Você muda isso quando quiser.
       </Text>
 
       <View style={[styles.infoBox, { backgroundColor: theme.colors.primaryContainer }]}>
