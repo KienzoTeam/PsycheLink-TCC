@@ -130,10 +130,13 @@ authPsicologo.post('/psicologo/2fa', limite(20), async (req, res) => {
   const { desafioId, codigo } = parsed.data;
 
   // A tentativa é consumida antes da conferência: requisições paralelas não furam o limite de 5.
+  // Desafio criado antes de uma troca ou redefinição de senha não vale mais.
   const { rows } = await pool.query<{ user_id: number; codigo_hash: string }>(
-    `UPDATE desafio_2fa SET tentativas = tentativas + 1
-      WHERE id = $1 AND usado_em IS NULL AND expira_em > now() AND tentativas < 5
-      RETURNING user_id, codigo_hash`,
+    `UPDATE desafio_2fa d SET tentativas = tentativas + 1
+       FROM users u
+      WHERE d.id = $1 AND u.id = d.user_id AND d.usado_em IS NULL AND d.expira_em > now() AND d.tentativas < 5
+        AND (u.sessao_invalidada_em IS NULL OR d.criado_em > u.sessao_invalidada_em)
+      RETURNING d.user_id, d.codigo_hash`,
     [desafioId],
   );
   const desafio = rows[0];

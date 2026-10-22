@@ -15,20 +15,19 @@ const HORA_FINAL = 21;
 const MINUTOS_POR_HORA = 60;
 const MINUTOS_POR_DIA = 24 * MINUTOS_POR_HORA;
 
-type Posicionada = { consulta: Consulta; inicio: number; fim: number; faixa: number; faixas: number };
+type Trecho = { consulta: Consulta; inicio: number; fim: number };
+type Posicionada = Trecho & { faixa: number; faixas: number };
 
 // Consultas que se sobrepõem (uma cancelada e a nova, por exemplo) dividem a largura da coluna em faixas.
-function posicionar(doDia: Consulta[]): Posicionada[] {
+function posicionar(doDia: Trecho[]): Posicionada[] {
   const fimDaFaixa: number[] = [];
   const itens = [...doDia]
-    .sort((a, b) => a.inicio.localeCompare(b.inicio))
-    .map((consulta) => {
-      const inicio = minutosDoDia(consulta.inicio);
-      const fim = Math.min(inicio + (Date.parse(consulta.fim) - Date.parse(consulta.inicio)) / 60_000, MINUTOS_POR_DIA);
-      const livre = fimDaFaixa.findIndex((ocupadaAte) => ocupadaAte <= inicio);
+    .sort((a, b) => a.inicio - b.inicio)
+    .map((trecho) => {
+      const livre = fimDaFaixa.findIndex((ocupadaAte) => ocupadaAte <= trecho.inicio);
       const faixa = livre < 0 ? fimDaFaixa.length : livre;
-      fimDaFaixa[faixa] = fim;
-      return { consulta, inicio, fim, faixa };
+      fimDaFaixa[faixa] = trecho.fim;
+      return { ...trecho, faixa };
     });
   return itens.map((item) => ({ ...item, faixas: fimDaFaixa.length }));
 }
@@ -36,8 +35,15 @@ function posicionar(doDia: Consulta[]): Posicionada[] {
 type Props = { dias: CalendarDate[]; consultas: Consulta[]; onAbrir: (consulta: Consulta) => void; onDia: (dia: CalendarDate) => void };
 
 export function GradeHoras({ dias, consultas, onAbrir, onDia }: Props) {
-  const porDia = new Map(dias.map((d) => [d.toString(), [] as Consulta[]]));
-  for (const c of consultas) porDia.get(diaDoInstante(c.inicio).toString())?.push(c);
+  // A consulta que vira a meia-noite (no máximo 4 h) aparece nos dois dias, cada um com a sua parte.
+  const porDia = new Map(dias.map((d) => [d.toString(), [] as Trecho[]]));
+  for (const consulta of consultas) {
+    const dia = diaDoInstante(consulta.inicio);
+    const inicio = minutosDoDia(consulta.inicio);
+    const fim = inicio + (Date.parse(consulta.fim) - Date.parse(consulta.inicio)) / 60_000;
+    porDia.get(dia.toString())?.push({ consulta, inicio, fim: Math.min(fim, MINUTOS_POR_DIA) });
+    if (fim > MINUTOS_POR_DIA) porDia.get(dia.add({ days: 1 }).toString())?.push({ consulta, inicio: 0, fim: fim - MINUTOS_POR_DIA });
+  }
   const posicionadas = new Map([...porDia].map(([dia, doDia]) => [dia, posicionar(doDia)]));
   const todas = [...posicionadas.values()].flat();
 

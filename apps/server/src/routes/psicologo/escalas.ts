@@ -60,7 +60,7 @@ escalas.post(
     let criada: LinhaAplicacao | null;
     try {
       criada = await comContextoPsicologo(res.locals.psicologoId, async (client) => {
-        const vinculo = await vinculoOuNegar(client, req, res);
+        const vinculo = await vinculoOuNegar(client, req, res, true);
         if (!vinculo) return null;
         if (!vinculo.compartilha_escalas) {
           res.status(403).json({ error: MSG_SEM_CONSENTIMENTO });

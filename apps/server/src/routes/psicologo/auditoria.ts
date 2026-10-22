@@ -33,6 +33,7 @@ const ROTULOS = {
   escala_respondida: 'Escala respondida',
   consulta_criada: 'Consulta criada',
   consulta_alterada: 'Consulta alterada',
+  relatorio_visualizado: 'Relatório do paciente visualizado',
   relatorio_exportado: 'Relatório exportado',
 } as const;
 

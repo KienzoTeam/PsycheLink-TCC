@@ -75,7 +75,8 @@ const consultaJson = (l: LinhaConsulta) => ({ ...l, observacao: lerSeguro(l.obse
 
 const emConflito = (erro: unknown) => erro instanceof DatabaseError && erro.code === '23P01';
 
-// Dias do calendário de São Paulo; remarcadas e canceladas vêm com o status.
+// Consultas que tocam os dias pedidos (calendário de São Paulo), inclusive a que vira a meia-noite;
+// remarcadas e canceladas vêm com o status.
 consultas.get(
   '/',
   limite(60),
@@ -87,7 +88,8 @@ consultas.get(
       client.query<LinhaConsulta>(
         `${comPaciente(`SELECT * FROM consulta
                          WHERE psicologo_id = $1 AND ${vinculoAtivoDe('consulta')}
-                           AND (inicio AT TIME ZONE 'America/Sao_Paulo')::date BETWEEN $2::date AND $3::date`)}
+                           AND inicio < (($3::date + 1)::timestamp AT TIME ZONE 'America/Sao_Paulo')
+                           AND fim > ($2::date::timestamp AT TIME ZONE 'America/Sao_Paulo')`)}
          ORDER BY c.inicio, c.id`,
         [res.locals.psicologoId, q.de, q.ate],
       ),
@@ -111,6 +113,7 @@ consultas.post(
             comPaciente(`INSERT INTO consulta (psicologo_id, paciente_id, inicio, fim, observacao)
                          SELECT $1::int, v.paciente_id, $3::timestamptz, $4::timestamptz, $5::text FROM vinculo v
                           WHERE v.psicologo_id = $1 AND v.paciente_id = $2 AND v.status = 'ativo'
+                            FOR SHARE OF v
                       RETURNING *`),
             [
               res.locals.psicologoId,
@@ -194,6 +197,16 @@ consultas.post(
     let nova: LinhaConsulta | null;
     try {
       nova = await comContextoPsicologo(res.locals.psicologoId, async (client) => {
+        // Vínculo antes da consulta, na mesma ordem do encerramento (que trava o vínculo e depois
+        // cancela as consultas): sem isso a nova escaparia do cancelamento ou as duas se travariam.
+        const ativo = await client.query(
+          `SELECT 1 FROM vinculo v JOIN consulta c USING (paciente_id, psicologo_id)
+            WHERE c.id = $1 AND c.psicologo_id = $2 AND v.status = 'ativo'
+              FOR SHARE OF v`,
+          [id, res.locals.psicologoId],
+        );
+        if (!ativo.rowCount) return null;
+
         const original = await client.query<{ paciente_id: number }>(
           `UPDATE consulta SET status = 'remarcada', atualizado_em = now()
             WHERE id = $1 AND psicologo_id = $2 AND status = 'agendada' AND ${vinculoAtivoDe('consulta')}

@@ -28,11 +28,14 @@ export const vinculoAtivoDe = (tabela: string) => `EXISTS (
 /**
  * Garante vínculo ativo com o paciente da URL; senão responde 404 genérico.
  * Roda dentro de comContextoPsicologo: o consentimento só é legível com vínculo ativo.
+ * `travar` segura o vínculo até o fim da transação, para quem vai gravar algo que o encerramento
+ * precisa cancelar: o encerramento espera a gravação terminar e então a enxerga.
  */
 export async function vinculoOuNegar(
   client: PoolClient,
   req: Request<{ pacienteId: string }>,
   res: Response,
+  travar = false,
 ): Promise<VinculoAtivo | null> {
   const pacienteId = idDe(req.params.pacienteId);
   if (pacienteId !== null) {
@@ -47,7 +50,8 @@ export async function vinculoOuNegar(
          JOIN paciente p ON p.id = v.paciente_id
          JOIN users u ON u.id = p.user_id
          LEFT JOIN consentimento c ON c.paciente_id = v.paciente_id
-        WHERE v.psicologo_id = $1 AND v.paciente_id = $2 AND v.status = 'ativo'`,
+        WHERE v.psicologo_id = $1 AND v.paciente_id = $2 AND v.status = 'ativo'
+        ${travar ? 'FOR SHARE OF v' : ''}`,
       [res.locals.psicologoId, pacienteId],
     );
     if (rows[0]) return rows[0];
