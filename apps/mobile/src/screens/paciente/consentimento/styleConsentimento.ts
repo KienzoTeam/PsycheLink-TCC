@@ -105,6 +105,16 @@ export const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     marginHorizontal: 16,
   },
+  tituloDiario: {
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '700',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+  },
+  compartilhados: {
+    gap: 12,
+  },
   estadoDiario: {
     fontSize: 14,
     lineHeight: 20,
@@ -128,7 +138,7 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  encerrar: {
+  botaoPerigo: {
     minHeight: 52,
     paddingHorizontal: 16,
     borderRadius: 16,
@@ -138,8 +148,10 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  encerrarTexto: {
+  botaoPerigoTexto: {
     fontSize: 15,
     fontWeight: '700',
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

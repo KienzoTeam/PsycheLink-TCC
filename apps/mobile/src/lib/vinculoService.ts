@@ -13,7 +13,8 @@ export type Escolhas = {
   diario: boolean;
 };
 
-export type Consentimento = Escolhas & { atualizadoEm: string | null };
+/** `diarioCompartilhados` é quantos textos do diário estão liberados agora. */
+export type Consentimento = Escolhas & { atualizadoEm: string | null; diarioCompartilhados: number };
 
 export async function buscarVinculo(): Promise<Vinculo | null> {
   const { data } = await api.get<{ vinculo: Vinculo | null }>('/paciente/vinculo');
@@ -47,6 +48,11 @@ export async function salvarConsentimento({
     diario,
   });
   return data;
+}
+
+export async function pararDeCompartilharDiario(): Promise<number> {
+  const { data } = await api.post<{ revogados: number }>('/paciente/consentimento/diario/parar');
+  return data.revogados;
 }
 
 /** Mensagem do servidor (400, 409, 429...) quando houver; senão o texto padrão. */

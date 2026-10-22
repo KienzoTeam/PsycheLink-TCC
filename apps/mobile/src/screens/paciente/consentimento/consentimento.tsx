@@ -12,6 +12,7 @@ import {
   buscarVinculo,
   encerrarVinculo,
   mensagemDeErro,
+  pararDeCompartilharDiario,
   salvarConsentimento,
   type Consentimento as ConsentimentoSalvo,
   type Escolhas,
@@ -43,11 +44,16 @@ const CATEGORIAS: Categoria[] = [
 
 const DIARIO: Categoria = {
   chave: 'diario',
-  rotulo: 'Diário (texto livre)',
-  descricao: 'Notas em texto livre que você escreve nos check-ins. Por padrão fica desligado.',
+  rotulo: "Deixar 'Compartilhar este texto' marcado no check-in",
+  descricao: 'Vale para os próximos check-ins. Desligado por padrão.',
 };
 
 const SEM_ESCOLHAS: Escolhas = { humor: false, habitos: false, escalas: false, diario: false };
+
+const textosCompartilhados = (n: number) =>
+  n === 0
+    ? 'Nenhum texto compartilhado com seu psicólogo.'
+    : `${n} ${n === 1 ? 'texto compartilhado' : 'textos compartilhados'} com seu psicólogo.`;
 
 const formatarData = (iso: string) => new Date(iso).toLocaleDateString('pt-BR');
 
@@ -66,6 +72,7 @@ export default function Consentimento({ navigation }: Props) {
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [encerrando, setEncerrando] = useState(false);
+  const [parando, setParando] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; texto: string } | null>(null);
 
   const carregar = useCallback(async () => {
@@ -104,12 +111,40 @@ export default function Consentimento({ navigation }: Props) {
       const gravado = await salvarConsentimento(escolhas);
       setConsentimento(gravado);
       setEscolhas(gravado);
-      setFeedback({ ok: true, texto: 'Escolhas salvas. Seu psicólogo já vê só o que está ligado.' });
+      setFeedback({ ok: true, texto: 'Escolhas salvas. Humor, hábitos e escalas ligados já aparecem para seu psicólogo.' });
     } catch (e) {
       setFeedback({ ok: false, texto: mensagemDeErro(e, 'Não foi possível salvar agora. Tente de novo.') });
     } finally {
       setSalvando(false);
     }
+  };
+
+  const parar = async () => {
+    setParando(true);
+    setFeedback(null);
+
+    try {
+      await pararDeCompartilharDiario();
+      setConsentimento((atual) => atual && { ...atual, diarioCompartilhados: 0 });
+      setFeedback({ ok: true, texto: 'Seu psicólogo não vê mais nenhum texto do seu diário.' });
+    } catch (e) {
+      setFeedback({ ok: false, texto: mensagemDeErro(e, 'Não foi possível parar de compartilhar agora. Tente de novo.') });
+    } finally {
+      setParando(false);
+    }
+  };
+
+  const confirmarParada = () => {
+    if (!vinculo) return;
+
+    Alert.alert(
+      'Parar de compartilhar todos os textos?',
+      `${vinculo.psicologo.nome} deixa de ver esses textos imediatamente. Os textos continuam salvos, só para você.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Parar de compartilhar', style: 'destructive', onPress: () => void parar() },
+      ],
+    );
   };
 
   const encerrar = async () => {
@@ -248,12 +283,41 @@ export default function Consentimento({ navigation }: Props) {
             </View>
 
             <View style={[styles.cartao, estiloCartao, { borderColor: theme.colors.primary, borderWidth: 1.5 }]}>
+              <Text
+                style={[styles.tituloDiario, { color: theme.colors.onSurface }]}
+                accessibilityRole="header"
+                maxFontSizeMultiplier={1.4}
+              >
+                Diário (texto livre)
+              </Text>
               {renderLinha(DIARIO)}
               <Text style={[styles.estadoDiario, { color: theme.colors.onSurface }]} maxFontSizeMultiplier={1.4}>
                 {escolhas.diario
-                  ? 'Ligado: seu psicólogo lê as notas dos seus check-ins.'
-                  : 'Desligado: seu psicólogo não vê o que você escreve.'}
+                  ? 'Ligado: o interruptor do check-in já começa marcado. Você ainda decide a cada texto.'
+                  : 'Desligado: o interruptor começa desmarcado. Você liga só nos textos que quiser compartilhar.'}
               </Text>
+            </View>
+
+            <View style={styles.compartilhados}>
+              <Text style={[styles.descricao, { color: theme.colors.onBackground }]} maxFontSizeMultiplier={1.4}>
+                {textosCompartilhados(consentimento.diarioCompartilhados)}
+              </Text>
+              {consentimento.diarioCompartilhados > 0 && (
+                <TouchableOpacity
+                  style={[styles.botaoPerigo, { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.error }]}
+                  onPress={confirmarParada}
+                  disabled={parando}
+                  accessibilityRole="button"
+                  accessibilityLabel="Parar de compartilhar todos os textos"
+                  accessibilityHint="Seu psicólogo deixa de ver esses textos imediatamente"
+                  accessibilityState={{ disabled: parando }}
+                >
+                  <Feather name="eye-off" size={18} color={theme.colors.error} />
+                  <Text style={[styles.botaoPerigoTexto, { color: theme.colors.error }]} maxFontSizeMultiplier={1.4}>
+                    Parar de compartilhar todos os textos
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {consentimento.atualizadoEm && (
@@ -286,7 +350,7 @@ export default function Consentimento({ navigation }: Props) {
             )}
 
             <ToqueAnimado
-              style={[styles.encerrar, { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.error }]}
+              style={[styles.botaoPerigo, { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.error }]}
               onPress={confirmarEncerramento}
               disabled={encerrando}
               accessibilityRole="button"
@@ -294,7 +358,7 @@ export default function Consentimento({ navigation }: Props) {
               accessibilityState={{ disabled: encerrando }}
             >
               <Feather name="user-x" size={18} color={theme.colors.error} />
-              <Text style={[styles.encerrarTexto, { color: theme.colors.error }]} maxFontSizeMultiplier={1.4}>
+              <Text style={[styles.botaoPerigoTexto, { color: theme.colors.error }]} maxFontSizeMultiplier={1.4}>
                 Encerrar vínculo
               </Text>
             </ToqueAnimado>
