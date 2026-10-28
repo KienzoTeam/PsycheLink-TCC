@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {View, Text, ScrollView, TouchableOpacity, TextInput, Alert, PanResponder, KeyboardAvoidingView, Platform} from 'react-native';
+import {View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Alert, PanResponder, KeyboardAvoidingView, Platform} from 'react-native';
 import Animated, { SlideInLeft, SlideInRight, SlideOutLeft, SlideOutRight, FadeInDown, FadeInUp, ZoomIn, useAnimatedStyle, useSharedValue, withSpring, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Feather } from '@expo/vector-icons';
@@ -13,7 +13,7 @@ import { styles } from './styleCheckin';
 import { salvarRascunho, lerRascunho, resetarRascunho } from '../../../lib/rascunhoCheckin';
 import { vibrarLeve } from '../../../lib/hapticos';
 import SeloDemonstracao from '../../../components/ui/SeloDemonstracao';
-import { enviarCheckin } from '../../../lib/checkinService';
+import { buscarDiarioPadrao, enviarCheckin } from '../../../lib/checkinService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Checkin'>;
 
@@ -201,12 +201,25 @@ export default function Checkin({ navigation }: Props) {
 
   // Etapa 6 - Diário Emocional
   const [notas, setNotas] = useState(lerRascunho()?.notas ?? '');
+  const [diarioCompartilhado, setDiarioCompartilhado] = useState(lerRascunho()?.diarioCompartilhado ?? false);
+  const [rascunhoTemDiario] = useState(lerRascunho()?.diarioCompartilhado !== undefined);
+  const diarioTocado = useRef(false);
+
+  // O valor do rascunho manda; sem ele, o interruptor começa pela preferência do paciente.
+  // Se a busca falhar, continua desmarcado. Se ela chegar depois de o paciente mexer no
+  // interruptor, a escolha dele vale.
+  useEffect(() => {
+    if (rascunhoTemDiario) return;
+    buscarDiarioPadrao().then((padrao) => {
+      if (!diarioTocado.current) setDiarioCompartilhado(padrao);
+    }, () => {});
+  }, [rascunhoTemDiario]);
 
   // Espelha o rascunho nos estados que o compõem: interrupção (background/kill)
   // retoma de onde parou. Com deps, não roda em renders alheios (ex.: erro de etapa).
   useEffect(() => {
-    salvarRascunho({ etapa, emocoes: emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextos: contextosSelecionados, habitos: habitosSelecionados, notas });
-  }, [etapa, emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextosSelecionados, habitosSelecionados, notas]);
+    salvarRascunho({ etapa, emocoes: emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextos: contextosSelecionados, habitos: habitosSelecionados, notas, diarioCompartilhado });
+  }, [etapa, emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextosSelecionados, habitosSelecionados, notas, diarioCompartilhado]);
 
   const progresso = (etapa / total_etapas) * 100;
 
@@ -266,6 +279,7 @@ export default function Checkin({ navigation }: Props) {
         contextos: contextosSelecionados,
         habitos: habitosSelecionados,
         notas,
+        diarioCompartilhado,
       });
 
       resetarRascunho();
@@ -581,19 +595,37 @@ export default function Checkin({ navigation }: Props) {
       value={notas}
       onChangeText={setNotas}
     />
+    {notas.trim() !== '' && (
+      <View style={[styles.diarioLinha, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}>
+        <View style={styles.diarioTextos} aria-hidden>
+          <Text style={[styles.diarioRotulo, { color: theme.colors.onSurface }]}>
+            Compartilhar este texto com meu psicólogo
+          </Text>
+          <Text style={[styles.diarioDescricao, { color: theme.colors.subtext1 }]}>
+            Se você tiver um psicólogo vinculado, ele vê só este texto. Você pode parar de compartilhar em Psicólogo e privacidade.
+          </Text>
+        </View>
+        <Switch
+          value={diarioCompartilhado}
+          onValueChange={(valor) => {
+            diarioTocado.current = true;
+            setDiarioCompartilhado(valor);
+          }}
+          trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
+          ios_backgroundColor={theme.colors.surfaceVariant}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Compartilhar este texto com meu psicólogo"
+          accessibilityHint="Se você tiver um psicólogo vinculado, ele vê só este texto"
+          accessibilityState={{ checked: diarioCompartilhado }}
+        />
+      </View>
+    )}
     <View style={[styles.privacidadeBox, { backgroundColor: theme.colors.primaryContainer }]}>
       <Feather name="lock" size={16} color={theme.colors.onPrimaryContainer} />
       <Text style={[styles.privacidadeTexto, { color: theme.colors.onPrimaryContainer }]}>
         Seus registros são privados e compartilhados apenas com seu psicólogo vinculado.
       </Text>
     </View>
-    {/*
-      TODO (futuro — sistema web da psicóloga): o texto acima já promete
-      esse compartilhamento, mas ele ainda NÃO está implementado — hoje o
-      check-in fica só no banco, visível apenas pro próprio paciente via
-      GET /checkins/resumo. Quando a tabela de vínculo e o endpoint da
-      psicóloga existirem, é aqui que esse texto passa a ser verdade.
-    */}
     <View style={styles.footer}>
       <TouchableOpacity style={[styles.btnVoltar, { borderColor: theme.colors.outline }]} onPress={etapaAnterior}>
         <Text style={[styles.btnVoltarTexto, { color: theme.colors.onBackground }]}>Voltar</Text>
@@ -645,7 +677,7 @@ export default function Checkin({ navigation }: Props) {
             Continue acompanhando sua jornada e lembre-se: você não está sozinho.
           </Text>
           <Text style={[styles.sucessoCardSubTexto, { color: theme.colors.onSurfaceVariant, marginTop: 8 }]}>
-            Na versão completa, este registro será sincronizado com seu psicólogo.
+            Seu registro de hoje foi salvo.
           </Text>
         </Animated.View>
         <Animated.View style={{ width: '100%' }} entering={FadeInDown.delay(440)}>
@@ -653,7 +685,7 @@ export default function Checkin({ navigation }: Props) {
             title="Voltar para Home"
             onPress={() => {
               resetarRascunho();
-              navigation.navigate('Main');
+              navigation.popTo('Main');
             }}
           />
         </Animated.View>

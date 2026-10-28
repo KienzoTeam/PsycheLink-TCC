@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,6 +18,7 @@ import { buscarPainelCheckin, PainelCheckin } from '../../../lib/checkinService'
 import { formatarConsulta } from '../../../lib/consultasService';
 import { rotularEmocao } from '../../../lib/emocoes';
 import { useConsultas } from '../../../hooks/useConsultas';
+import { buscarVinculo, type Vinculo } from '../../../lib/vinculoService';
 import { styles } from './styleHome';
 
 const getGreeting = () => {
@@ -49,6 +50,7 @@ export default function Home() {
   const { usuario, logout } = useAuth();
   const [sheetContaAberta, setSheetContaAberta] = useState(false);
   const [respirandoAberta, setRespirandoAberta] = useState(false);
+  const [psicologo, setPsicologo] = useState<Vinculo['psicologo'] | null>(null);
   const [painel, setPainel] = useState<PainelCheckin | null>(null);
   const [carregandoPainel, setCarregandoPainel] = useState(true);
   const [erroPainel, setErroPainel] = useState(false);
@@ -101,6 +103,14 @@ export default function Home() {
   const estiloHeader = useAnimatedStyle(() => ({
     transform: [{ translateY: scrollY.value * 0.35 }],
   }));
+
+  // Só atualiza o cartão de vínculo do sheet; se falhar, mantém o último valor conhecido.
+  useEffect(() => {
+    if (!sheetContaAberta) return;
+    buscarVinculo()
+      .then((vinculo) => setPsicologo(vinculo?.psicologo ?? null))
+      .catch((erro) => console.warn('Não foi possível carregar o vínculo:', erro));
+  }, [sheetContaAberta]);
 
   const sairDaConta = async () => {
     setSheetContaAberta(false);
@@ -358,6 +368,11 @@ export default function Home() {
         mode={mode}
         setMode={setMode}
         onSair={sairDaConta}
+        psicologoVinculado={psicologo}
+        onPsicologoPrivacidade={() => {
+          setSheetContaAberta(false);
+          navigation.navigate('Consentimento');
+        }}
       />
 
       <ExercicioRespiracao visivel={respirandoAberta} aoFechar={() => setRespirandoAberta(false)} />

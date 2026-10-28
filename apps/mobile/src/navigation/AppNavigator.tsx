@@ -12,12 +12,14 @@ import Checkin from '../screens/paciente/checkin/checkin';
 import BemEstar from '../screens/paciente/BemEstar/BemEstar';
 import Dados from '../screens/paciente/dashboard/dados';
 import Consultas from '../screens/paciente/consultas/consultas';
+import ResponderEscala from '../screens/paciente/escalas/responderEscala';
+import Consentimento from '../screens/paciente/consentimento/consentimento';
 
 export type RootStackParamList = {
   Login: undefined;
   Registro: undefined;
   Vinculacao: undefined;
-  Main: undefined;
+  Main: { aba?: 'Home' | 'SOS' } | undefined;
   EsqueciSenha: undefined;
   VerificarCodigo: { email: string; modo: 'cadastro' | 'recuperacao' };
   NovaSenha: { token: string };
@@ -25,6 +27,8 @@ export type RootStackParamList = {
   BemEstar: undefined;
   Dados: undefined;
   Consultas: undefined;
+  ResponderEscala: { aplicacaoId: number };
+  Consentimento: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -67,6 +71,8 @@ export default function AppNavigator() {
         <Stack.Screen name="Checkin" component={Checkin} />
          <Stack.Screen name="Dados" component={Dados} />
         <Stack.Screen name="Consultas" component={Consultas} />
+        <Stack.Screen name="ResponderEscala" component={ResponderEscala} />
+        <Stack.Screen name="Consentimento" component={Consentimento} />
       </Stack.Navigator>
     </NavigationContainer>
   );

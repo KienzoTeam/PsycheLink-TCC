@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import rateLimit from 'express-rate-limit';
 import { pool } from '../db';
+import { emTransacao } from '../lib/contextoseguro';
+import { derrubarAcessosWeb } from '../lib/sessaoWeb';
 import { registroSchema, senhaSchema } from '../schemas';
 import { normalizarEmail } from '../lib/validarEmail';
 import { gerarCodigo, hashCodigo, codigoConfere } from '../lib/codigo';
@@ -337,21 +339,19 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(senha.data, 10);
-    // Troca a senha e revoga as sessões web na mesma instrução: ou acontecem as duas, ou nenhuma.
-    const atualizado = await pool.query(
-      `WITH conta AS (
-         UPDATE users
-            SET password_hash = $1, sessao_invalidada_em = now()
+    // Troca a senha e derruba sessões web e desafios 2FA na mesma transação: ou tudo, ou nada.
+    const trocou = await emTransacao(async (client) => {
+      const { rows } = await client.query<{ id: number }>(
+        `UPDATE users SET password_hash = $1, sessao_invalidada_em = now()
           WHERE email = $2 AND email_verificado
-          RETURNING id
-       ), revogadas AS (
-         UPDATE sessao SET revogada_em = now()
-          WHERE revogada_em IS NULL AND user_id IN (SELECT id FROM conta)
-       )
-       SELECT id FROM conta`,
-      [hashedPassword, email],
-    );
-    if (atualizado.rows.length === 0) {
+          RETURNING id`,
+        [hashedPassword, email],
+      );
+      if (!rows[0]) return false;
+      await derrubarAcessosWeb(client, rows[0].id);
+      return true;
+    });
+    if (!trocou) {
       return res.status(400).json({ error: 'Conta não encontrada.' });
     }
     await pool.query('DELETE FROM verificacoes_email WHERE email = $1', [email]);

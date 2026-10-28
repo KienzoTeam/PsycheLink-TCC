@@ -9,6 +9,7 @@ import { normalizarEmail } from '../lib/validarEmail';
 import { codigoConfere, gerarCodigo, hashCodigo } from '../lib/codigo';
 import { enviarCodigo } from '../lib/mailer';
 import { registrarAuditoria } from '../lib/auditoria';
+import { emTransacao } from '../lib/contextoseguro';
 import {
   abrirSessao,
   COOKIE_REFRESH,
@@ -151,14 +152,22 @@ authPsicologo.post('/psicologo/2fa', limite(20), async (req, res) => {
     return res.status(400).json({ error: 'Código incorreto.' });
   }
 
-  // Requisições paralelas com o código certo: só a primeira a marcar o uso abre sessão.
-  const usado = await pool.query(
-    'UPDATE desafio_2fa SET usado_em = now() WHERE id = $1 AND usado_em IS NULL',
-    [desafioId],
-  );
-  if (!usado.rowCount) return res.status(400).json({ error: MSG_CODIGO_INVALIDO });
-
-  const sid = await abrirSessao(req, res, desafio.user_id);
+  // Marcar o uso e abrir a sessão acontecem com a linha do usuário travada. Uma troca de senha em
+  // andamento termina antes, e o desafio criado antes dela já não vale; ou espera esta transação,
+  // e a revogação dela alcança a sessão aberta aqui.
+  const sid = await emTransacao(async (client) => {
+    await client.query('SELECT 1 FROM users WHERE id = $1 FOR SHARE', [desafio.user_id]);
+    // Requisições paralelas com o código certo: só a primeira a marcar o uso abre sessão.
+    const usado = await client.query(
+      `UPDATE desafio_2fa d SET usado_em = now()
+         FROM users u
+        WHERE d.id = $1 AND d.usado_em IS NULL AND u.id = d.user_id
+          AND (u.sessao_invalidada_em IS NULL OR d.criado_em > u.sessao_invalidada_em)`,
+      [desafioId],
+    );
+    return usado.rowCount ? abrirSessao(req, res, desafio.user_id, client) : null;
+  });
+  if (!sid) return res.status(400).json({ error: MSG_CODIGO_INVALIDO });
   await registrarAuditoria(req, '2fa_ok', { ator, alvoTipo: 'sessao', alvoId: sid });
   return res.json({ ok: true });
 });

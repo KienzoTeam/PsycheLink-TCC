@@ -22,6 +22,7 @@ interface Props {
   onGerenciarVinculo?: () => void;
 
   /** Callbacks para o menu de configurações */
+  onPsicologoPrivacidade?: () => void;
   onConfiguracoesConta?: () => void;
   onNotificacoes?: () => void;
   onPrivacidade?: () => void;
@@ -50,7 +51,7 @@ function obterIniciais(nome: string): string {
  * Bottom sheet de conta, perfil, aparências e opções de configurações.
  */
 export default function SheetConta({
- visivel,aoFechar, nome = '', mode, setMode, onSair, psicologoVinculado = null, onGerenciarVinculo, onConfiguracoesConta,onNotificacoes,onPrivacidade,onAjudaSuporte,}: Props) {
+ visivel,aoFechar, nome = '', mode, setMode, onSair, psicologoVinculado = null, onGerenciarVinculo, onPsicologoPrivacidade, onConfiguracoesConta,onNotificacoes,onPrivacidade,onAjudaSuporte,}: Props) {
   const { theme } = useTheme();
   const { usuario } = useAuth();
   const [hapticosAtivos, setHapticosAtivos] = useState(true);
@@ -90,6 +91,12 @@ export default function SheetConta({
   if (!visivel) return null;
 
   const opcoesMenu = [
+    {
+      id: 'psicologo_privacidade',
+      rotulo: 'Psicólogo e privacidade',
+      icone: 'lock' as const,
+      acao: onPsicologoPrivacidade,
+    },
     {
       id: 'config_conta',
       rotulo: 'Configurações da Conta',

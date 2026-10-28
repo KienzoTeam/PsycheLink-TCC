@@ -46,13 +46,3 @@
 .fab[data-pressed]::before {
   opacity: var(--camada-pressionado);
 }
-
-.texto {
-  margin-block-end: var(--espaco-16);
-}
-
-.pins {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--espaco-8);
-}

@@ -1,0 +1,19 @@
+.form {
+  display: grid;
+  gap: var(--espaco-16);
+}
+
+.erro {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-8);
+  color: var(--cor-erro);
+  font: var(--tipo-corpo-medio);
+}
+
+.erro svg {
+  flex-shrink: 0;
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+  margin-block-start: var(--espaco-4);
+}

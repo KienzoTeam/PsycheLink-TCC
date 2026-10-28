@@ -151,6 +151,13 @@ describe('POST /auth/psicologo/2fa', () => {
     assert.equal(cliente.cookies.size, 0);
   });
 
+  it('desafio criado antes de uma troca de senha não abre sessão', async () => {
+    const { psicologo, cliente, desafioId, codigo } = await novoDesafio();
+    await pool.query('UPDATE users SET sessao_invalidada_em = now() WHERE id = $1', [psicologo.id]);
+    assert.equal((await enviar(cliente, desafioId, codigo)).status, 400);
+    assert.equal(cliente.cookies.size, 0);
+  });
+
   it('desafio já usado não serve de novo', async () => {
     const { cliente, desafioId, codigo } = await novoDesafio();
     assert.equal((await enviar(cliente, desafioId, codigo)).status, 200);

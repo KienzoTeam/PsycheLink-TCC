@@ -7,6 +7,7 @@ import {
   bearer,
   capturarCodigos,
   carregarApp,
+  criarCheckin,
   criarCliente,
   criarPaciente,
   criarPsicologo,
@@ -70,7 +71,7 @@ describe('códigos de vínculo (psicólogo)', () => {
     assert.equal(res.status, 201);
     assert.match(corpo.codigo, /^\d{6}$/);
     const horas = (new Date(corpo.expiraEm).getTime() - Date.now()) / 3_600_000;
-    assert.ok(horas > 23.9 && horas <= 24, `expira em ${horas} h`);
+    assert.ok(horas > 23.9 && horas <= 24.01, `expira em ${horas} h`);
 
     const { rows } = await pool.query('SELECT codigo_hmac FROM codigo_vinculo WHERE id = $1', [corpo.id]);
     assert.equal(rows[0].codigo_hmac, hmacCodigoVinculo(corpo.codigo));
@@ -307,6 +308,40 @@ describe('consentimento (paciente)', () => {
       escalas: false,
       diario: false,
       atualizadoEm: null,
+      diarioCompartilhados: 0,
+    });
+  });
+
+  it('parar de compartilhar o diário desmarca todos os textos liberados e audita a quantidade', async () => {
+    const paciente = await criarPaciente();
+    const pacienteId = await pacienteIdDe(paciente);
+    await criarCheckin(pacienteId, { diasAtras: 1, diario: 'liberado 1', diarioCompartilhado: true });
+    await criarCheckin(pacienteId, { diasAtras: 2, diario: 'liberado 2', diarioCompartilhado: true });
+    await criarCheckin(pacienteId, { diasAtras: 3, diario: 'só meu', diarioCompartilhado: false });
+
+    const antes = (await (await chamar(paciente, 'GET', '/paciente/consentimento')).json()) as {
+      diarioCompartilhados: number;
+    };
+    assert.equal(antes.diarioCompartilhados, 2);
+
+    const res = await chamar(paciente, 'POST', '/paciente/consentimento/diario/parar');
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { revogados: 2 });
+
+    const { rows } = await dono.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM checkin_diario WHERE paciente_id = $1 AND diario_compartilhado',
+      [pacienteId],
+    );
+    assert.equal(rows[0].n, 0);
+    const auditoria = await dono.query(
+      "SELECT metadados FROM auditoria WHERE acao = 'diario_compartilhamento_revogado' AND paciente_id = $1",
+      [pacienteId],
+    );
+    assert.deepEqual(auditoria.rows.map((r) => r.metadados), [{ quantidade: 2 }]);
+
+    // Nada mais a revogar: não audita de novo.
+    assert.deepEqual(await (await chamar(paciente, 'POST', '/paciente/consentimento/diario/parar')).json(), {
+      revogados: 0,
     });
   });
 

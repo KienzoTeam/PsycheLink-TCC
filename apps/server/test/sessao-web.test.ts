@@ -8,10 +8,12 @@ import {
   carregarApp,
   criarCliente,
   criarPsicologo,
+  dono,
   entrar,
   iniciar,
   limpar,
   login,
+  ultimoCodigo,
   type Cliente,
 } from './ajuda';
 
@@ -244,18 +246,31 @@ describe('Origin (CSRF)', () => {
   });
 });
 
-describe('redefinição de senha', () => {
-  it('revoga todas as sessões web da conta', async () => {
-    const psicologo = await criarPsicologo();
-    const [a, b] = [await entrar(servidor.url, psicologo), await entrar(servidor.url, psicologo)];
-    const tokenReset = jwt.sign({ email: psicologo.email, tipo: 'redefinicao' }, process.env.JWT_SECRET!, {
-      expiresIn: '10m',
-    });
+// Login só com a senha: devolve o cliente com o desafio 2FA ainda pendente e o código enviado.
+async function desafioPendente(psicologo: { email: string; senha: string }) {
+  const cliente = criarCliente(servidor.url);
+  const { desafioId } = (await login(cliente, psicologo.email, psicologo.senha)).corpo;
+  const codigo = String(ultimoCodigo(psicologo.email));
+  return {
+    cliente,
+    concluir: () => cliente.requisitar('POST', '/auth/psicologo/2fa', { corpo: { desafioId, codigo } }),
+  };
+}
 
-    const res = await criarCliente(servidor.url).requisitar('POST', '/auth/redefinir-senha', {
+describe('redefinição de senha', () => {
+  const redefinir = (email: string) => {
+    const tokenReset = jwt.sign({ email, tipo: 'redefinicao' }, process.env.JWT_SECRET!, { expiresIn: '10m' });
+    return criarCliente(servidor.url).requisitar('POST', '/auth/redefinir-senha', {
       corpo: { token: tokenReset, password: 'NovaSenha!12345' },
       origem: null,
     });
+  };
+
+  it('revoga todas as sessões web da conta', async () => {
+    const psicologo = await criarPsicologo();
+    const [a, b] = [await entrar(servidor.url, psicologo), await entrar(servidor.url, psicologo)];
+
+    const res = await redefinir(psicologo.email);
     assert.equal(res.status, 200);
 
     for (const cliente of [a, b]) {
@@ -266,6 +281,42 @@ describe('redefinição de senha', () => {
       psicologo.id,
     ]);
     assert.equal(Number(rows[0].vivas), 0);
+  });
+
+  it('o desafio 2FA pedido antes da redefinição não abre sessão depois dela', async () => {
+    const psicologo = await criarPsicologo();
+    const pendente = await desafioPendente(psicologo);
+    assert.equal((await redefinir(psicologo.email)).status, 200);
+    assert.equal((await pendente.concluir()).status, 400);
+    assert.equal(pendente.cliente.cookies.size, 0);
+  });
+
+  it('com a troca de senha ainda em andamento, o 2FA espera por ela e não abre sessão', async () => {
+    const psicologo = await criarPsicologo();
+    const pendente = await desafioPendente(psicologo);
+
+    // A transação da troca, parada logo depois do UPDATE em users (que trava a linha).
+    const troca = await dono.connect();
+    try {
+      await troca.query('BEGIN');
+      await troca.query('UPDATE users SET sessao_invalidada_em = now() WHERE id = $1', [psicologo.id]);
+      const pedido = pendente.concluir();
+      // Sem a trava no 2FA, a sessão abriria aqui, antes de a troca revogar qualquer coisa.
+      const terminouAntes = await Promise.race([
+        pedido.then(() => true),
+        new Promise<boolean>((resolver) => setTimeout(() => resolver(false), 1000)),
+      ]);
+      assert.equal(terminouAntes, false);
+      await troca.query('UPDATE desafio_2fa SET usado_em = now() WHERE user_id = $1 AND usado_em IS NULL', [
+        psicologo.id,
+      ]);
+      await troca.query('COMMIT');
+      assert.equal((await pedido).status, 400);
+      assert.equal(pendente.cliente.cookies.size, 0);
+    } finally {
+      // Descarta a conexão: se uma asserção falhou no meio, a transação morre com ela.
+      troca.release(true);
+    }
   });
 });
 
@@ -298,7 +349,9 @@ describe('conta do psicólogo', () => {
     assert.equal((await troca(psicologo.senha, 'curta')).status, 400);
     assert.equal((await outra.requisitar('GET', '/psicologo/me')).status, 200);
 
+    const pendente = await desafioPendente(psicologo);
     assert.equal((await troca(psicologo.senha, 'NovaSenha!12345')).status, 200);
+    assert.equal((await pendente.concluir()).status, 400);
     assert.equal((await atual.requisitar('GET', '/psicologo/me')).status, 200);
     assert.equal((await outra.requisitar('GET', '/psicologo/me')).status, 401);
     assert.ok((await acoesDe(psicologo.id)).includes('senha_alterada'));

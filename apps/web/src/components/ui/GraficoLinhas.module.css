@@ -1,0 +1,78 @@
+.raiz {
+  width: 100%;
+  break-inside: avoid;
+  height: var(--altura-grafico);
+}
+
+.svg {
+  display: block;
+  overflow: visible;
+}
+
+.grade {
+  stroke: var(--cor-contorno-variante);
+  stroke-width: var(--largura-borda);
+}
+
+.eixo {
+  fill: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-pequeno);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.eixoY {
+  text-anchor: end;
+  dominant-baseline: middle;
+}
+
+.eixoX {
+  text-anchor: middle;
+}
+
+.serie0 {
+  --cor-serie: var(--dados-5);
+}
+
+.serie1 {
+  --cor-serie: var(--dados-2);
+}
+
+.linha {
+  fill: none;
+  stroke: var(--cor-serie);
+  stroke-width: var(--largura-linha-dados);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tracejada {
+  stroke-dasharray: var(--tracejado-serie);
+}
+
+/* Marcador com anel da cor da superfície, para não se confundir onde as linhas se cruzam. */
+.marcador {
+  fill: var(--cor-serie);
+  stroke: var(--cor-cartao);
+  stroke-width: var(--largura-borda-forte);
+}
+
+.valor {
+  fill: var(--cor-sobre-superficie);
+  font: var(--tipo-rotulo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+  text-anchor: middle;
+}
+
+.nome {
+  fill: var(--cor-sobre-superficie);
+  font: var(--tipo-rotulo-grande);
+  dominant-baseline: middle;
+}
+
+/* Em preto e branco as séries se distinguem pelo traço, pelo marcador e pelo nome direto. */
+@media print {
+  .serie0,
+  .serie1 {
+    --cor-serie: var(--cor-sobre-superficie);
+  }
+}

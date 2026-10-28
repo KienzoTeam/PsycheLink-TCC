@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { registrarAuditoria } from '../../lib/auditoria';
 import { comContextoPaciente } from '../../lib/contextoseguro';
+import { lerSeguro } from '../../lib/checkins';
 import { criptografar } from '../../lib/criptografia';
 import { type Opcao, pontuar, type Subescalas } from '../../lib/escalas';
 import { obterPacienteId } from '../../lib/paciente';
@@ -95,6 +96,15 @@ escalas.post(
       );
       const escala = rows[0];
       if (!escala) {
+        // A resposta do envio se perdeu e o app repetiu: as mesmas respostas recebem o mesmo sucesso.
+        const { rows: feita } = await client.query<{ respostas: string; scoreTotal: number; subscores: Record<string, number> | null }>(
+          `SELECT respostas_cifradas AS respostas, score_total AS "scoreTotal", subscores
+             FROM aplicacao_escala WHERE id = $1 AND paciente_id = $2 AND status = 'concluida'`,
+          [id, pacienteId],
+        );
+        if (feita[0] && lerSeguro(feita[0].respostas) === JSON.stringify(corpo.respostas)) {
+          return { repetida: true as const, scoreTotal: feita[0].scoreTotal, subscores: feita[0].subscores };
+        }
         res.status(404).json({ error: MSG_NAO_ENCONTRADA });
         return null;
       }
@@ -122,9 +132,10 @@ escalas.post(
           escala.sigla === 'PHQ-9' ? corpo.respostas[8] !== 0 : null,
         ],
       );
-      return { sigla: escala.sigla, ...pontos };
+      return { repetida: false as const, sigla: escala.sigla, ...pontos };
     });
     if (!resultado) return;
+    if (resultado.repetida) return res.json({ scoreTotal: resultado.scoreTotal, subscores: resultado.subscores });
 
     await registrarAuditoria(req, 'escala_respondida', {
       ator: { id: req.user!.id, papel: 'paciente' },

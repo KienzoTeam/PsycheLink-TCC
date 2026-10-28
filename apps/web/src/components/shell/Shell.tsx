@@ -13,7 +13,7 @@ export function Shell({ psicologo, children }: Props) {
   const compacto = useCompacto();
   const [colapsada, setColapsada] = useState(false);
   const [gavetaAberta, setGavetaAberta] = useState(false);
-  const { fixados, alternar } = usePins();
+  const { fixados } = usePins();
 
   return (
     <div className={css.shell} data-compacto={compacto}>
@@ -36,7 +36,7 @@ export function Shell({ psicologo, children }: Props) {
       <main id="conteudo" tabIndex={-1} className={css.conteudo}>
         {children}
       </main>
-      <FabPerfil nome={psicologo.nome} fixados={fixados} onAlternarFixado={alternar} />
+      <FabPerfil nome={psicologo.nome} />
     </div>
   );
 }

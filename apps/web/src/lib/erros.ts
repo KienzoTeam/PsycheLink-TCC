@@ -20,3 +20,8 @@ export function codigoDeErro(erro: unknown): string | null {
   }
   return null;
 }
+
+export const naoEncontrado = (erro: unknown): boolean => isAxiosError(erro) && erro.response?.status === 404;
+
+export const semSessao = (erro: unknown): boolean =>
+  isAxiosError(erro) && (erro.response?.status === 401 || erro.response?.status === 403);

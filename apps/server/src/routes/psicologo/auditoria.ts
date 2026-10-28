@@ -26,12 +26,14 @@ const ROTULOS = {
   vinculo_criado: 'Vínculo criado',
   vinculo_encerrado: 'Vínculo encerrado',
   consentimento_alterado: 'Consentimento alterado',
+  diario_compartilhamento_revogado: 'Compartilhamento do diário revogado',
   escala_solicitada: 'Escala solicitada',
   escala_cancelada: 'Escala cancelada',
   escala_visualizada: 'Escala visualizada',
   escala_respondida: 'Escala respondida',
   consulta_criada: 'Consulta criada',
   consulta_alterada: 'Consulta alterada',
+  relatorio_visualizado: 'Relatório do paciente visualizado',
   relatorio_exportado: 'Relatório exportado',
 } as const;
 

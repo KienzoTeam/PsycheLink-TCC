@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { CHECKIN_EM, emocoesDe } from '../../lib/checkins';
 import { comContextoPsicologo } from '../../lib/contextoseguro';
 import { lerOuNegar, limite, rota } from '../../lib/rota';
+import { vinculoAtivoDe } from '../../lib/vinculo';
 
 export const dashboard = Router();
 
@@ -49,7 +50,7 @@ const ESCALAS_COMPARTILHADAS = `
   JOIN consentimento co ON co.paciente_id = a.paciente_id AND co.compartilha_escalas
   JOIN paciente p ON p.id = a.paciente_id
   JOIN users u ON u.id = p.user_id
- WHERE a.psicologo_id = $1`;
+ WHERE a.psicologo_id = $1 AND ${vinculoAtivoDe('a')}`;
 
 // O período vale para a série de vínculos e para as médias. Check-ins recentes, atividade e
 // dados insuficientes olham sempre para os registros mais novos, qualquer que seja o período.
@@ -140,7 +141,7 @@ dashboard.get(
            FROM consulta c
            JOIN paciente p ON p.id = c.paciente_id
            JOIN users u ON u.id = p.user_id
-          WHERE c.psicologo_id = $1
+          WHERE c.psicologo_id = $1 AND ${vinculoAtivoDe('c')}
             AND (c.inicio AT TIME ZONE 'America/Sao_Paulo')::date
                 = (now() AT TIME ZONE 'America/Sao_Paulo')::date
           ORDER BY c.inicio, c.id`,

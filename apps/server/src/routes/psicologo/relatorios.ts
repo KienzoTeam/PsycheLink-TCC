@@ -192,6 +192,11 @@ relatorios.get(
     if (!dados) return;
     const { vinculo, consentimentos } = dados;
 
+    // A prévia mostra os mesmos dados do painel do paciente: a leitura fica registrada como lá.
+    await registrarAuditoria(req, 'relatorio_visualizado', {
+      pacienteId: vinculo.paciente_id,
+      metadados: { de: q.de, ate: q.ate },
+    });
     if (dados.anotacoes) {
       await registrarAuditoria(req, 'anotacoes_lidas', {
         pacienteId: vinculo.paciente_id,

@@ -1,0 +1,61 @@
+/* Estrutura comum das telas do psicólogo. */
+.tela {
+  display: grid;
+  gap: var(--espaco-24);
+}
+
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--espaco-16);
+}
+
+.titulo {
+  font: var(--tipo-headline-medio);
+  text-wrap: balance;
+}
+
+.apoio {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-grande);
+  text-wrap: pretty;
+}
+
+.secao {
+  display: grid;
+  align-content: start;
+  gap: var(--espaco-16);
+  min-width: 0;
+}
+
+.tituloSecao {
+  font: var(--tipo-titulo-grande);
+}
+
+.subtituloSecao {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--largura-minima-coluna)), 1fr));
+  gap: var(--espaco-24);
+  align-items: start;
+}
+
+.largura {
+  grid-column: 1 / -1;
+}
+
+.esqueleto {
+  display: grid;
+  gap: var(--espaco-16);
+}
+
+.mais {
+  display: flex;
+  justify-content: center;
+}

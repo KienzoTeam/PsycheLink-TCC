@@ -209,6 +209,8 @@ describe('relatório individual', () => {
     const sem = await obter(A, `/psicologo/relatorios/pacientes/${ana.id}?${periodo}&incluirAnotacoes=false`);
     assert.equal(sem.anotacoes, null);
     assert.equal((await auditoriaDe('anotacoes_lidas', ana.id)).length, 0);
+    const [leitura] = await auditoriaDe('relatorio_visualizado', ana.id);
+    assert.deepEqual(Object.keys(leitura.metadados).sort(), ['ate', 'de']);
 
     const com = await obter(A, `/psicologo/relatorios/pacientes/${ana.id}?${periodo}&incluirAnotacoes=true`);
     assert.deepEqual(com.anotacoes.map((a: Json) => a.conteudo), [NOTA]);

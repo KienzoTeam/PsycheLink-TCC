@@ -1,0 +1,22 @@
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--largura-minima-coluna)), 1fr));
+  gap: var(--espaco-16) var(--espaco-24);
+  align-items: start;
+}
+
+.colunas {
+  --colunas: minmax(0, 1.2fr) minmax(0, 1.6fr) minmax(0, 1.2fr) minmax(0, 0.8fr) minmax(0, 2fr);
+}
+
+.principalTexto {
+  font: var(--tipo-titulo-pequeno);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.continuar {
+  display: grid;
+  gap: var(--espaco-16);
+  justify-items: center;
+  text-align: center;
+}

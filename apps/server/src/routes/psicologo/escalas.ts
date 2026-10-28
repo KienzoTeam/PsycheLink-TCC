@@ -15,7 +15,7 @@ import {
   type Subescalas,
 } from '../../lib/escalas';
 import { idDe, lerOuNegar, limite, rota } from '../../lib/rota';
-import { consentimentosDe, vinculoOuNegar } from '../../lib/vinculo';
+import { consentimentosDe, vinculoAtivoDe, vinculoOuNegar } from '../../lib/vinculo';
 
 export const escalas = Router();
 
@@ -60,7 +60,7 @@ escalas.post(
     let criada: LinhaAplicacao | null;
     try {
       criada = await comContextoPsicologo(res.locals.psicologoId, async (client) => {
-        const vinculo = await vinculoOuNegar(client, req, res);
+        const vinculo = await vinculoOuNegar(client, req, res, true);
         if (!vinculo) return null;
         if (!vinculo.compartilha_escalas) {
           res.status(403).json({ error: MSG_SEM_CONSENTIMENTO });
@@ -113,6 +113,7 @@ escalas.post(
         `WITH a AS (
            UPDATE aplicacao_escala SET status = 'cancelada', cancelado_em = now()
             WHERE id = $1 AND psicologo_id = $2 AND status IN ('pendente', 'em_andamento')
+              AND ${vinculoAtivoDe('aplicacao_escala')}
         RETURNING paciente_id, escala_id)
          SELECT a.paciente_id, e.sigla FROM a JOIN escala e ON e.id = a.escala_id`,
         [id, res.locals.psicologoId],
@@ -172,7 +173,7 @@ escalas.get(
            JOIN consentimento co ON co.paciente_id = a.paciente_id AND co.compartilha_escalas
            JOIN paciente p ON p.id = a.paciente_id
            JOIN users u ON u.id = p.user_id
-          WHERE a.psicologo_id = $1
+          WHERE a.psicologo_id = $1 AND ${vinculoAtivoDe('a')}
             AND ($2::text IS NULL OR a.status = $2)
             AND ($3::int IS NULL OR a.id < $3)
           ORDER BY a.id DESC
@@ -222,7 +223,7 @@ escalas.get(
            JOIN paciente p ON p.id = a.paciente_id
            JOIN users u ON u.id = p.user_id
            LEFT JOIN consentimento co ON co.paciente_id = a.paciente_id
-          WHERE a.id = $1 AND a.psicologo_id = $2`,
+          WHERE a.id = $1 AND a.psicologo_id = $2 AND ${vinculoAtivoDe('a')}`,
         [id, res.locals.psicologoId],
       ),
     );

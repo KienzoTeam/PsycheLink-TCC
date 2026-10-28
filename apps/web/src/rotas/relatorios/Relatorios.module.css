@@ -1,0 +1,8 @@
+.erro {
+  color: var(--cor-erro);
+  font: var(--tipo-corpo-medio);
+}
+
+.tipo {
+  width: min(100%, var(--largura-formulario));
+}

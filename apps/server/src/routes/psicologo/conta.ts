@@ -2,8 +2,9 @@ import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import { pool } from '../../db';
 import { registrarAuditoria } from '../../lib/auditoria';
+import { emTransacao } from '../../lib/contextoseguro';
 import { limite, rota } from '../../lib/rota';
-import { revogarSessoes, SESSAO_VIVA } from '../../lib/sessaoWeb';
+import { derrubarAcessosWeb, revogarSessoes, SESSAO_VIVA } from '../../lib/sessaoWeb';
 import { contaSchema, trocaSenhaSchema } from '../../schemas';
 
 export const conta = Router();
@@ -69,12 +70,14 @@ conta.post(
       return res.status(400).json({ error: 'Senha atual incorreta.' });
     }
 
-    // Revoga antes de trocar: se a troca falhar, o pior caso é perder sessões à toa.
-    await revogarSessoes(req.user!.id, res.locals.sessaoId);
-    await pool.query(
-      'UPDATE users SET password_hash = $1, sessao_invalidada_em = now() WHERE id = $2',
-      [await bcrypt.hash(parsed.data.novaSenha, 10), req.user!.id],
-    );
+    const hash = await bcrypt.hash(parsed.data.novaSenha, 10);
+    await emTransacao(async (client) => {
+      await client.query('UPDATE users SET password_hash = $1, sessao_invalidada_em = now() WHERE id = $2', [
+        hash,
+        req.user!.id,
+      ]);
+      await derrubarAcessosWeb(client, req.user!.id, res.locals.sessaoId);
+    });
     await registrarAuditoria(req, 'senha_alterada');
     return res.json({ ok: true });
   }),
