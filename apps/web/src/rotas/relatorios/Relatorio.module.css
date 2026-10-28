@@ -1,0 +1,281 @@
+/*
+ * Folha do relatório: cartão na prévia, página A4 na impressão. Na rota de impressão a folha tem a largura
+ * do papel menos as margens também na tela, então os gráficos medem a mesma largura que terão no PDF.
+ */
+
+/* @page não lê custom properties: a margem repete --margem-pagina. */
+@page {
+  size: A4;
+  margin: 15mm;
+}
+
+.folha {
+  padding: var(--espaco-24);
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-xl);
+  background: var(--cor-cartao);
+  color: var(--cor-sobre-superficie);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.impressao {
+  width: var(--largura-pagina);
+  margin-inline: auto;
+  padding: var(--margem-pagina);
+  border-radius: var(--forma-nenhuma);
+}
+
+.estrutura {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.estrutura > * > tr > td {
+  padding: 0;
+}
+
+/* O cabeçalho corrido só existe na impressão: na tela o cabeçalho completo já está no topo. */
+.corrido {
+  display: none;
+}
+
+.linhaCorrida {
+  padding-block-end: var(--espaco-8);
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.cabecalho {
+  display: grid;
+  gap: var(--espaco-8);
+  margin-block-end: var(--espaco-24);
+  padding-block-end: var(--espaco-16);
+  border-block-end: var(--largura-borda-forte) solid var(--cor-sobre-superficie);
+}
+
+.marca {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-grande);
+}
+
+.titulo {
+  font: var(--tipo-headline-pequeno-enfatico);
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--largura-minima-serie)), 1fr));
+  gap: var(--espaco-8) var(--espaco-24);
+}
+
+.meta dt {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.meta dd {
+  font: var(--tipo-corpo-medio);
+  overflow-wrap: anywhere;
+}
+
+.corpo {
+  display: grid;
+  gap: var(--espaco-24);
+  min-width: 0;
+}
+
+.secao {
+  display: grid;
+  align-content: start;
+  gap: var(--espaco-12);
+  min-width: 0;
+}
+
+.tituloSecao {
+  font: var(--tipo-titulo-grande);
+  break-after: avoid;
+}
+
+.apoio {
+  break-after: avoid;
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+  text-wrap: pretty;
+}
+
+.nota {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-pequeno);
+}
+
+.resumo {
+  break-inside: avoid;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-16) var(--espaco-32);
+}
+
+.resumo dt {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-grande);
+}
+
+.resumo dd {
+  font: var(--tipo-titulo-grande);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.barras {
+  display: grid;
+  gap: var(--espaco-12);
+  break-inside: avoid;
+}
+
+.barra {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto;
+  align-items: center;
+  gap: var(--espaco-12);
+  font: var(--tipo-corpo-medio);
+}
+
+.trilho {
+  display: block;
+  height: var(--espaco-12);
+  border: var(--largura-borda) solid var(--cor-contorno);
+  border-radius: var(--forma-total);
+  overflow: hidden;
+}
+
+.preenchido {
+  display: block;
+  width: calc(var(--proporcao) * 100%);
+  height: 100%;
+  background: var(--dados-3);
+}
+
+.valorBarra {
+  font-variant-numeric: var(--numeros-tabulares);
+  text-align: end;
+}
+
+.rolagem {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--tipo-corpo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.tabela th,
+.tabela td {
+  padding: var(--espaco-8) var(--espaco-12);
+  border-block-end: var(--largura-borda) solid var(--cor-contorno-variante);
+  text-align: start;
+  vertical-align: top;
+}
+
+.tabela thead th {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.tabela tbody th {
+  font: var(--tipo-corpo-medio);
+}
+
+.tabela tr {
+  break-inside: avoid;
+}
+
+.legendaTabela {
+  position: absolute;
+  width: var(--largura-borda);
+  height: var(--largura-borda);
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.anotacoes {
+  display: grid;
+  gap: var(--espaco-12);
+}
+
+.anotacoes li {
+  padding: var(--espaco-12);
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-md);
+  break-inside: avoid;
+}
+
+.dataAnotacao {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.textoAnotacao {
+  margin-block-start: var(--espaco-4);
+  font: var(--tipo-corpo-medio);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.rodape {
+  display: grid;
+  gap: var(--espaco-4);
+  margin-block-start: var(--espaco-24);
+  padding-block-start: var(--espaco-16);
+  border-block-start: var(--largura-borda) solid var(--cor-contorno-variante);
+}
+
+.confidencial {
+  font: var(--tipo-rotulo-grande);
+}
+
+@media print {
+  /* O papel já descontou as margens: a folha ocupa a largura da página, sem o 210mm da tela (senão o navegador encolhe tudo). */
+  .folha,
+  .impressao {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--forma-nenhuma);
+    background: transparent;
+  }
+
+  .corrido {
+    display: table-header-group;
+  }
+
+  /* O título de uma seção não fica sozinho no fim da página: a seção inteira passa para a próxima. */
+  .secao {
+    break-inside: avoid;
+  }
+
+  .rolagem {
+    overflow: visible;
+  }
+
+  .tabela {
+    font: var(--tipo-corpo-pequeno);
+  }
+
+  .tabela th,
+  .tabela td {
+    padding: var(--espaco-4) var(--espaco-8);
+  }
+
+  /* Seções longas (tabela diária, anotações) começam em página nova e podem atravessar páginas. */
+  .novaPagina {
+    break-before: page;
+    break-inside: auto;
+  }
+}

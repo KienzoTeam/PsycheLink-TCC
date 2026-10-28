@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,7 +15,10 @@ import ExercicioRespiracao from '../../../components/ui/ExercicioRespiracao';
 import type { MainTabParamList } from '../../../navigation/MainTabNavigator';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import { buscarPainelCheckin, PainelCheckin } from '../../../lib/checkinService';
+import { formatarConsulta } from '../../../lib/consultasService';
 import { rotularEmocao } from '../../../lib/emocoes';
+import { useConsultas } from '../../../hooks/useConsultas';
+import { buscarVinculo, type Vinculo } from '../../../lib/vinculoService';
 import { styles } from './styleHome';
 
 const getGreeting = () => {
@@ -47,6 +50,7 @@ export default function Home() {
   const { usuario, logout } = useAuth();
   const [sheetContaAberta, setSheetContaAberta] = useState(false);
   const [respirandoAberta, setRespirandoAberta] = useState(false);
+  const [psicologo, setPsicologo] = useState<Vinculo['psicologo'] | null>(null);
   const [painel, setPainel] = useState<PainelCheckin | null>(null);
   const [carregandoPainel, setCarregandoPainel] = useState(true);
   const [erroPainel, setErroPainel] = useState(false);
@@ -79,6 +83,13 @@ export default function Home() {
     }, [tentativaPainel]),
   );
 
+  const { dados: consultas, erro: erroConsultas } = useConsultas();
+  // Cancelada ainda futura vem em `proximas`, mas não é a próxima consulta.
+  const proxima = consultas?.proximas.find((c) => c.status === 'agendada');
+  const proximaConsulta = proxima
+    ? { ...formatarConsulta(proxima), nome: proxima.psicologo.nome }
+    : null;
+
   const temDados = painel !== null && !painel.semDados;
   // Exemplo só após carregar, com sucesso e sem dados reais — nunca durante
   // o carregamento inicial nem após falha de rede.
@@ -92,6 +103,14 @@ export default function Home() {
   const estiloHeader = useAnimatedStyle(() => ({
     transform: [{ translateY: scrollY.value * 0.35 }],
   }));
+
+  // Só atualiza o cartão de vínculo do sheet; se falhar, mantém o último valor conhecido.
+  useEffect(() => {
+    if (!sheetContaAberta) return;
+    buscarVinculo()
+      .then((vinculo) => setPsicologo(vinculo?.psicologo ?? null))
+      .catch((erro) => console.warn('Não foi possível carregar o vínculo:', erro));
+  }, [sheetContaAberta]);
 
   const sairDaConta = async () => {
     setSheetContaAberta(false);
@@ -177,6 +196,38 @@ export default function Home() {
         </Animated.View>
 
         <View style={styles.content}>
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}
+            onPress={() => navigation.navigate('Consultas')}
+            accessibilityRole="button"
+            accessibilityHint="Abre a lista de consultas"
+          >
+            <View style={styles.cardHeader}>
+              <Feather name="calendar" size={18} color={theme.colors.primary} />
+              <Text style={[styles.cardTitle, styles.consultaTitulo, { color: theme.colors.onSurface }]}>
+                Próxima consulta
+              </Text>
+              <Feather name="chevron-right" size={18} color={theme.colors.subtext1} />
+            </View>
+            {erroConsultas ? (
+              <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>
+                Não foi possível carregar suas consultas.
+              </Text>
+            ) : !consultas ? (
+              <ActivityIndicator color={theme.colors.primary} accessibilityLabel="Carregando consultas" style={styles.consultaCarregando} />
+            ) : proximaConsulta ? (
+              <>
+                <Text style={[styles.consultaData, { color: theme.colors.onSurface }]}>{proximaConsulta.data}</Text>
+                <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>{proximaConsulta.horario}</Text>
+                <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>com {proximaConsulta.nome}</Text>
+              </>
+            ) : (
+              <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>
+                Nenhuma consulta agendada.
+              </Text>
+            )}
+          </TouchableOpacity>
+
           {/* Só exibe o selo de demonstração APÓS carregar, sem erro e sem dados reais */}
           {mostrarExemplo && (
             <>
@@ -317,6 +368,11 @@ export default function Home() {
         mode={mode}
         setMode={setMode}
         onSair={sairDaConta}
+        psicologoVinculado={psicologo}
+        onPsicologoPrivacidade={() => {
+          setSheetContaAberta(false);
+          navigation.navigate('Consentimento');
+        }}
       />
 
       <ExercicioRespiracao visivel={respirandoAberta} aoFechar={() => setRespirandoAberta(false)} />

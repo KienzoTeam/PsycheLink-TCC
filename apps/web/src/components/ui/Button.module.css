@@ -1,0 +1,126 @@
+.botao {
+  --raio-repouso: calc(var(--altura-botao) / 2);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-8);
+  min-height: var(--altura-botao);
+  padding-inline: var(--espaco-24);
+  border: var(--largura-borda) solid transparent;
+  border-radius: var(--raio-repouso);
+  background: transparent;
+  font: var(--tipo-rotulo-grande);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    border-radius var(--duracao-espacial-rapida) var(--mola-espacial-rapida),
+    scale var(--duracao-espacial-rapida) var(--mola-espacial-rapida),
+    background-color var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+/* State layer: a cor do conteúdo por cima, com a opacidade do estado. */
+.botao::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentcolor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+.botao[data-hovered]::before {
+  opacity: var(--camada-hover);
+}
+
+.botao[data-focus-visible]::before {
+  opacity: var(--camada-foco);
+}
+
+/* Shape morph: a pílula vira retângulo arredondado sob o dedo. */
+.botao[data-pressed] {
+  --raio-repouso: var(--forma-md);
+  scale: var(--escala-pressionado);
+}
+
+.botao[data-pressed]::before {
+  opacity: var(--camada-pressionado);
+}
+
+.botao[data-pending] {
+  cursor: progress;
+}
+
+.botao[data-disabled] {
+  cursor: not-allowed;
+  color: color-mix(in srgb, var(--cor-sobre-superficie) var(--opacidade-desabilitado-conteudo), transparent);
+}
+
+.botao[data-disabled]::before {
+  opacity: 0;
+}
+
+.filled {
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
+}
+
+.filled[data-disabled] {
+  background: color-mix(in srgb, var(--cor-sobre-superficie) var(--opacidade-desabilitado-container), transparent);
+}
+
+.tonal {
+  background: var(--cor-container-secundaria);
+  color: var(--cor-sobre-container-secundaria);
+}
+
+.tonal[data-disabled] {
+  background: color-mix(in srgb, var(--cor-sobre-superficie) var(--opacidade-desabilitado-container), transparent);
+}
+
+.outlined {
+  border-color: var(--cor-contorno);
+  color: var(--cor-primaria);
+}
+
+.outlined[data-disabled] {
+  border-color: color-mix(in srgb, var(--cor-sobre-superficie) var(--opacidade-desabilitado-container), transparent);
+}
+
+.text {
+  padding-inline: var(--espaco-12);
+  color: var(--cor-primaria);
+}
+
+.botao svg {
+  flex-shrink: 0;
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+}
+
+.giro {
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+  animation: gira var(--duracao-carregando) linear infinite;
+}
+
+@keyframes gira {
+  to {
+    rotate: 1turn;
+  }
+}
+
+/* IconButton compartilha o botão: círculo de alvo mínimo, sem rótulo. */
+.icone {
+  width: var(--alvo-minimo);
+  padding: 0;
+  color: var(--cor-sobre-superficie-variante);
+}
+
+.icone svg {
+  width: var(--tamanho-icone);
+  height: var(--tamanho-icone);
+}

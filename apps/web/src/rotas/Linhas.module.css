@@ -1,0 +1,143 @@
+/*
+ * Tabela de dados: colunas no desktop, cartões empilhados no compacto (`data-compacto`).
+ * Cada tela define `--colunas`. O rótulo de cada célula só aparece nos cartões; no desktop o cabeçalho da tabela o dá.
+ */
+.raiz {
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-xl);
+  background: var(--cor-cartao);
+  color: var(--cor-sobre-superficie);
+  overflow: hidden;
+}
+
+/* Os elementos de tabela viram blocos e grades: a semântica fica no HTML e o layout no CSS. */
+.tabela,
+.cabecalho {
+  display: block;
+}
+
+.lista {
+  display: grid;
+}
+
+.cabecalho {
+  border-block-end: var(--largura-borda) solid var(--cor-contorno-variante);
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: var(--colunas);
+  align-items: center;
+  gap: var(--espaco-16);
+  padding: var(--espaco-12) var(--espaco-24);
+}
+
+.grade > th {
+  padding: 0;
+  font: inherit;
+  text-align: start;
+}
+
+.linha {
+  position: relative;
+  min-height: var(--alvo-minimo);
+}
+
+.linha + .linha {
+  border-block-start: var(--largura-borda) solid var(--cor-contorno-variante);
+}
+
+/* O alvo principal da linha estica até as bordas: a linha inteira é clicável sem aninhar controles. */
+.principal {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-titulo-medio);
+  text-align: start;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  outline: none;
+  cursor: pointer;
+}
+
+.principal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.linha::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentcolor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+.linha:has(.principal[data-hovered])::before {
+  opacity: var(--camada-hover);
+}
+
+.linha:has(.principal[data-focus-visible])::before {
+  opacity: var(--camada-foco);
+}
+
+.linha:has(.principal[data-focus-visible]) {
+  outline: var(--foco-largura) solid var(--foco-cor);
+  outline-offset: calc(var(--foco-largura) * -1);
+}
+
+.celula {
+  display: grid;
+  gap: var(--espaco-4);
+  justify-items: start;
+  min-width: 0;
+  font: var(--tipo-corpo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+/* Ocupa as colunas depois da principal (linha de paciente sem dados para mostrar). */
+.resto {
+  grid-column: 2 / -1;
+}
+
+.rotulo {
+  display: none;
+}
+
+.raiz[data-compacto='true'] {
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.raiz[data-compacto='true'] .lista {
+  gap: var(--espaco-8);
+}
+
+.raiz[data-compacto='true'] .cabecalho {
+  display: none;
+}
+
+.raiz[data-compacto='true'] .resto {
+  grid-column: auto;
+}
+
+.raiz[data-compacto='true'] .grade {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espaco-8);
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-lg);
+  background: var(--cor-cartao);
+}
+
+.raiz[data-compacto='true'] .rotulo {
+  display: block;
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}

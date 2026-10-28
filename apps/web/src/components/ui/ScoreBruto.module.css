@@ -1,0 +1,15 @@
+.score {
+  display: flex;
+  align-items: baseline;
+  gap: var(--espaco-8);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.valor {
+  font: var(--tipo-display-pequeno-enfatico);
+}
+
+.de {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-titulo-medio);
+}

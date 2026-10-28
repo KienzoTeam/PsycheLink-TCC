@@ -1,0 +1,69 @@
+.detalhe {
+  display: grid;
+  gap: var(--espaco-24);
+  color: var(--cor-sobre-superficie);
+}
+
+.bloco {
+  display: grid;
+  align-content: start;
+  gap: var(--espaco-12);
+}
+
+.titulo {
+  font: var(--tipo-titulo-medio);
+}
+
+.subtitulo {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-grande);
+}
+
+.pares {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-8) var(--espaco-32);
+}
+
+.pares dt {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.pares dd {
+  font: var(--tipo-titulo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-8);
+}
+
+.nota {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+}
+
+/* Texto livre do paciente: separado e rotulado, e nunca interpretado como marcação. */
+.diario {
+  display: grid;
+  gap: var(--espaco-8);
+  margin: 0;
+  padding: var(--espaco-16);
+  border-radius: var(--forma-md);
+  background: var(--cor-container);
+}
+
+.diario figcaption {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.diario blockquote {
+  margin: 0;
+  font: var(--tipo-corpo-grande);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}

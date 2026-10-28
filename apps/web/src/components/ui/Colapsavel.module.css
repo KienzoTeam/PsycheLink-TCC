@@ -1,0 +1,27 @@
+.trilho {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-block-end: 0;
+  transition:
+    grid-template-rows var(--duracao-espacial-padrao) var(--mola-espacial-padrao),
+    margin-block-end var(--duracao-espacial-padrao) var(--mola-espacial-padrao);
+}
+
+.trilho[data-aberto='true'] {
+  grid-template-rows: 1fr;
+  margin-block-end: var(--espaco-16);
+}
+
+/* O respiro de 4px deixa o anel de foco (offset 2 + 2px) fora do corte do overflow; a margem negativa o devolve ao fluxo. */
+.interno {
+  min-height: 0;
+  margin: calc(var(--espaco-4) * -1);
+  padding: var(--espaco-4);
+  overflow: hidden;
+  filter: blur(var(--desfoque-entrada));
+  transition: filter var(--duracao-espacial-padrao) var(--mola-espacial-padrao);
+}
+
+.trilho[data-aberto='true'] .interno {
+  filter: blur(0);
+}

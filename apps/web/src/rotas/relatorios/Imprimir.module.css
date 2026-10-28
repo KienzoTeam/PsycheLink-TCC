@@ -1,0 +1,34 @@
+.pagina {
+  display: grid;
+  justify-items: center;
+  gap: var(--espaco-16);
+  padding: var(--espaco-24);
+  background: var(--cor-container-alto);
+  min-height: 100dvh;
+}
+
+.estado {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--espaco-16);
+}
+
+.carregando {
+  display: grid;
+  gap: var(--espaco-16);
+  width: min(100%, var(--largura-pagina));
+}
+
+@media print {
+  .pagina {
+    display: block;
+    min-height: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  .acoes {
+    display: none;
+  }
+}

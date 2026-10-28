@@ -1,0 +1,15 @@
+.centro {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--espaco-16);
+}
+
+.tela {
+  display: grid;
+  gap: var(--espaco-24);
+}
+
+.titulo {
+  font: var(--tipo-headline-medio);
+}

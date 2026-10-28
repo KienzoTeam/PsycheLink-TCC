@@ -1,0 +1,68 @@
+.filtro {
+  width: min(100%, var(--largura-select-periodo));
+}
+
+/* Cada coluna empilha seus cartões; os cartões de consultas e escalas entram numa delas. */
+.coluna {
+  display: grid;
+  gap: var(--espaco-24);
+  align-content: start;
+  min-width: 0;
+}
+
+.tituloCartao {
+  font: var(--tipo-titulo-grande);
+}
+
+.legenda {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+}
+
+.vazio {
+  margin-block-start: var(--espaco-12);
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-grande);
+  text-wrap: pretty;
+}
+
+.vinculados {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-16) var(--espaco-24);
+}
+
+.numero {
+  font: var(--tipo-display-grande-enfatico);
+  font-variant-numeric: normal;
+}
+
+.serie {
+  display: grid;
+  flex: 1 1 var(--largura-minima-serie);
+  gap: var(--espaco-8);
+  min-width: 0;
+}
+
+.medias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-16) var(--espaco-32);
+  margin-block-start: var(--espaco-16);
+}
+
+.medias dt {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-grande);
+}
+
+.medias dd {
+  font: var(--tipo-titulo-grande);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+/* Os cartões com lista pedem um respiro entre o título e as linhas. */
+.coluna ul {
+  margin-block-start: var(--espaco-12);
+}

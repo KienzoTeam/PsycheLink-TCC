@@ -1,0 +1,30 @@
+.sparkline {
+  display: block;
+  width: 100%;
+  height: var(--altura-sparkline);
+  overflow: visible;
+}
+
+.linha,
+.anel,
+.ponto {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.linha {
+  stroke: var(--dados-2);
+  stroke-width: var(--largura-linha-dados);
+}
+
+.anel {
+  stroke: var(--cor-cartao);
+  stroke-width: var(--diametro-anel-dados);
+}
+
+.ponto {
+  stroke: var(--dados-5);
+  stroke-width: var(--diametro-ponto-dados);
+}

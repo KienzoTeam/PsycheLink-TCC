@@ -1,4 +1,4 @@
-import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 
 const PEPPER = process.env.EMAIL_PEPPER || process.env.JWT_SECRET || '';
 
@@ -17,3 +17,10 @@ export function codigoConfere(codigo: number, email: string, hash: string): bool
   }
   return armazenado.length === calculado.length && timingSafeEqual(calculado, armazenado);
 }
+
+/** Código de vínculo: 6 dígitos, com zeros à esquerda, de um CSPRNG. */
+export const gerarCodigoVinculo = (): string => String(randomInt(1_000_000)).padStart(6, '0');
+
+/** Só o HMAC fica no banco; o prefixo separa este uso dos hashes de e-mail. */
+export const hmacCodigoVinculo = (codigo: string): string =>
+  createHmac('sha256', PEPPER).update(`vinculo:${codigo}`).digest('hex');

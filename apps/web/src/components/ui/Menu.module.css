@@ -1,0 +1,96 @@
+.lista,
+.pilulas {
+  min-width: var(--largura-menu);
+  transform-origin: var(--trigger-anchor-point);
+  transition:
+    opacity var(--duracao-efeitos-padrao) var(--mola-efeitos-padrao),
+    scale var(--duracao-espacial-padrao) var(--mola-espacial-padrao);
+}
+
+.lista[data-entering],
+.lista[data-exiting],
+.pilulas[data-entering],
+.pilulas[data-exiting] {
+  opacity: 0;
+  scale: var(--escala-entrada);
+}
+
+.lista {
+  padding: var(--espaco-8);
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-md);
+  background: var(--cor-cartao);
+  box-shadow: var(--sombra-overlay);
+}
+
+.menu {
+  display: grid;
+  outline: none;
+}
+
+.pilulas .menu {
+  justify-items: end;
+  gap: var(--espaco-8);
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+  min-height: var(--alvo-minimo);
+  padding-inline: var(--espaco-12);
+  border-radius: var(--forma-sm);
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-corpo-grande);
+  cursor: pointer;
+  outline: none;
+}
+
+.item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentcolor;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.item[data-hovered]::before {
+  opacity: var(--camada-hover);
+}
+
+.item[data-focused]::before {
+  opacity: var(--camada-foco);
+}
+
+.item[data-pressed]::before {
+  opacity: var(--camada-pressionado);
+}
+
+.item svg {
+  width: var(--tamanho-icone);
+  height: var(--tamanho-icone);
+  color: var(--cor-sobre-superficie-variante);
+}
+
+/* FAB menu expressivo: cada ação é uma pílula, empilhadas acima do botão. */
+.pilulas .item {
+  min-width: var(--largura-menu);
+  padding-inline: var(--espaco-24);
+  border-radius: var(--forma-total);
+  background: var(--cor-container-primaria);
+  color: var(--cor-sobre-container-primaria);
+  font: var(--tipo-rotulo-grande);
+  box-shadow: var(--sombra-fab);
+  transition: border-radius var(--duracao-espacial-rapida) var(--mola-espacial-rapida);
+}
+
+.pilulas .item[data-pressed] {
+  border-radius: var(--forma-md);
+}
+
+.pilulas .item svg {
+  color: inherit;
+}

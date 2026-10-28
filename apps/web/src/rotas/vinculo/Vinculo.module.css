@@ -1,0 +1,59 @@
+.novo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--largura-minima-coluna)), 1fr));
+  gap: var(--espaco-24) var(--espaco-32);
+  align-items: start;
+}
+
+.erro {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-8);
+  color: var(--cor-erro);
+  font: var(--tipo-corpo-medio);
+}
+
+.erro svg {
+  flex-shrink: 0;
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+  margin-block-start: var(--espaco-4);
+}
+
+.gerado {
+  display: grid;
+  justify-items: start;
+  gap: var(--espaco-12);
+  padding: var(--espaco-24);
+  border-radius: var(--forma-lg);
+  background: var(--cor-container);
+}
+
+/* Algarismos de largura fixa: o código não muda de largura nem se confunde ao ser lido em voz alta. */
+.codigo {
+  font: var(--tipo-display-medio-enfatico);
+  font-variant-numeric: var(--numeros-tabulares);
+  letter-spacing: var(--espacamento-letras-codigo);
+}
+
+.restante {
+  font: var(--tipo-titulo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.instrucao {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+  text-wrap: pretty;
+}
+
+.lista {
+  padding: var(--espaco-8);
+}
+
+.fim {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-8);
+}

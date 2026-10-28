@@ -1,0 +1,55 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+}
+
+/* O espaçamento vem de margem (não de gap) para o bloco colapsado não deixar vão. */
+.bloco {
+  margin-block-end: var(--espaco-16);
+}
+
+.duplo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--espaco-16);
+  margin-block-end: var(--espaco-16);
+}
+
+.esqueci {
+  display: grid;
+  justify-items: center;
+}
+
+.erro {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-8);
+  margin-block-end: var(--espaco-16);
+  padding: var(--espaco-12) var(--espaco-16);
+  border-radius: var(--forma-md);
+  background: var(--cor-container-erro);
+  color: var(--cor-sobre-container-erro);
+  font: var(--tipo-corpo-medio);
+}
+
+.erro svg {
+  flex-shrink: 0;
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+}
+
+.cabecalho {
+  display: grid;
+  justify-items: start;
+  gap: var(--espaco-8);
+  margin-block-end: var(--espaco-24);
+}
+
+.titulo {
+  font: var(--tipo-headline-pequeno-enfatico);
+}
+
+.texto {
+  color: var(--cor-sobre-superficie-variante);
+}

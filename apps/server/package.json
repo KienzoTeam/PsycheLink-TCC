@@ -12,7 +12,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.2.0",
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.23.1",
@@ -22,7 +25,12 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "migrar": "tsx --env-file=.env scripts/migrar.ts",
+    "migrar:test": "tsx --env-file=.env.test scripts/migrar.ts",
+    "test": "tsx --env-file=.env.test --network-family-autoselection-attempt-timeout=3000 --test \"test/**/*.test.ts\"",
+    "dev:test": "tsx watch --env-file=.env.test src/index.ts",
+    "seed:dev": "tsx --env-file=.env.test scripts/seed-dev.ts"
   },
   "private": true,
   "allowScripts": {

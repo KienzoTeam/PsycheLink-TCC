@@ -1,0 +1,78 @@
+.pagina {
+  display: grid;
+  gap: var(--espaco-32);
+}
+
+.titulo {
+  font: var(--tipo-headline-medio);
+}
+
+.nota {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+}
+
+.secao {
+  display: grid;
+  gap: var(--espaco-16);
+  min-width: 0;
+}
+
+.tituloSecao {
+  font: var(--tipo-titulo-grande);
+}
+
+.tituloCartao {
+  font: var(--tipo-titulo-medio);
+}
+
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-8) var(--espaco-16);
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--largura-menu)), 1fr));
+  gap: var(--espaco-16);
+  align-items: start;
+}
+
+.gradeLarga {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--largura-dialogo)), 1fr));
+  gap: var(--espaco-16);
+}
+
+.esqueletos {
+  display: grid;
+  gap: var(--espaco-12);
+}
+
+.amostra {
+  width: var(--espaco-48);
+  height: var(--espaco-32);
+  border-radius: var(--forma-sm);
+}
+
+.d1 {
+  background: var(--dados-1);
+}
+
+.d2 {
+  background: var(--dados-2);
+}
+
+.d3 {
+  background: var(--dados-3);
+}
+
+.d4 {
+  background: var(--dados-4);
+}
+
+.d5 {
+  background: var(--dados-5);
+}

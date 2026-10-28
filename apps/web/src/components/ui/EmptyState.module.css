@@ -1,0 +1,39 @@
+.vazio {
+  display: grid;
+  justify-items: center;
+  gap: var(--espaco-8);
+  padding: var(--espaco-32) var(--espaco-16);
+  text-align: center;
+}
+
+.icone {
+  display: grid;
+  place-items: center;
+  width: var(--tamanho-fab);
+  height: var(--tamanho-fab);
+  margin-block-end: var(--espaco-8);
+  border-radius: var(--forma-xl);
+  background: var(--cor-container-secundaria);
+  color: var(--cor-sobre-container-secundaria);
+}
+
+.icone svg {
+  width: var(--tamanho-icone);
+  height: var(--tamanho-icone);
+}
+
+.titulo {
+  font: var(--tipo-titulo-grande);
+  text-wrap: balance;
+}
+
+.descricao {
+  max-width: var(--largura-dialogo);
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-grande);
+  text-wrap: pretty;
+}
+
+.acao {
+  margin-block-start: var(--espaco-16);
+}

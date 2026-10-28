@@ -1,0 +1,33 @@
+.raiz {
+  position: relative;
+  max-height: var(--altura-rolagem);
+  min-height: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.area {
+  max-height: inherit;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Não é uma linha: o véu desfoca e some o conteúdo aos poucos, sinalizando que há mais abaixo. */
+.veu {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  height: var(--altura-scrollfade);
+  background: linear-gradient(to bottom, transparent, var(--cor-cartao));
+  backdrop-filter: blur(var(--desfoque-scrollfade));
+  -webkit-backdrop-filter: blur(var(--desfoque-scrollfade));
+  mask-image: linear-gradient(to bottom, transparent, black);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracao-efeitos-padrao) var(--mola-efeitos-padrao);
+}
+
+.veu[data-visivel='true'] {
+  opacity: 1;
+}

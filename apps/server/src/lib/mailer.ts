@@ -21,9 +21,10 @@ export async function enviarCodigo(
   codigo: number,
   assunto = 'PsycheLink · Confirme seu e-mail'
 ): Promise<void> {
-  // Console sempre: permite testar o fluxo sem abrir o e-mail.
-  // honey: código de OTP em log é conveniência de dev; remover antes de produção.
-  console.log(`[código] ${email} · ${assunto}: ${codigo}`);
+  // Fora de produção o código aparece no console, para testar sem abrir o e-mail.
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[código] ${email} · ${assunto}: ${codigo}`);
+  }
 
   if (!smtpAtivo) return;
   await mailer.sendMail({

@@ -1,0 +1,71 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scrollbar-color: var(--cor-contorno) transparent;
+  scrollbar-width: thin;
+}
+
+body {
+  margin: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-sobre-fundo);
+  font: var(--tipo-corpo-grande);
+  caret-color: var(--cor-primaria);
+  accent-color: var(--cor-primaria);
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+dl,
+dd,
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--cor-primaria);
+  text-underline-offset: var(--espaco-4);
+}
+
+::selection {
+  background: var(--cor-container-primaria);
+  color: var(--cor-sobre-container-primaria);
+}
+
+:focus-visible {
+  outline: var(--foco-largura) solid var(--foco-cor);
+  outline-offset: var(--foco-afastamento);
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+/* O react-aria injeta esta regra em um <style> no runtime; o CSP estrito de produção a bloqueia, então ela vive aqui. */
+[data-react-aria-pressable] {
+  touch-action: pan-x pan-y pinch-zoom;
+}
