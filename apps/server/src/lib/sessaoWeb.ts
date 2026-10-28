@@ -1,6 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
+import type { Pool, PoolClient } from 'pg';
 import { pool } from '../db';
 import { origemDe } from './auditoria';
 
@@ -64,10 +65,15 @@ export function limparCookies(res: Response): void {
 }
 
 /** Grava só o hash do refresh e entrega os dois cookies. Devolve o id da sessão. */
-export async function abrirSessao(req: Request, res: Response, userId: number): Promise<string> {
+export async function abrirSessao(
+  req: Request,
+  res: Response,
+  userId: number,
+  db: Pool | PoolClient = pool,
+): Promise<string> {
   const segredo = novoSegredo();
   const { ip, userAgent } = origemDe(req);
-  const { rows } = await pool.query<{ id: string; expira_absoluto_em: Date }>(
+  const { rows } = await db.query<{ id: string; expira_absoluto_em: Date }>(
     `INSERT INTO sessao (user_id, refresh_hash, expira_absoluto_em, ip, user_agent)
      VALUES ($1, $2, now() + interval '12 hours', $3, $4)
      RETURNING id, expira_absoluto_em`,
@@ -77,13 +83,29 @@ export async function abrirSessao(req: Request, res: Response, userId: number): 
   return rows[0].id;
 }
 
-export async function revogarSessoes(userId: number, exceto?: string): Promise<number> {
-  const { rowCount } = await pool.query(
+export async function revogarSessoes(
+  userId: number,
+  exceto?: string,
+  db: Pool | PoolClient = pool,
+): Promise<number> {
+  const { rowCount } = await db.query(
     `UPDATE sessao SET revogada_em = now()
       WHERE user_id = $1 AND ($2::uuid IS NULL OR id <> $2) AND ${SESSAO_VIVA}`,
     [userId, exceto ?? null],
   );
   return rowCount ?? 0;
+}
+
+/**
+ * Depois de trocar a senha, na mesma transação: revoga as sessões web (menos `manter`) e invalida
+ * os desafios 2FA pendentes. O UPDATE em users vem antes e trava a linha; o 2FA trava a mesma linha
+ * ao abrir sessão (ver /psicologo/2fa), então esta revogação já enxerga a sessão que ele abriu.
+ */
+export async function derrubarAcessosWeb(client: PoolClient, userId: number, manter?: string) {
+  await revogarSessoes(userId, manter, client);
+  await client.query('UPDATE desafio_2fa SET usado_em = now() WHERE user_id = $1 AND usado_em IS NULL', [
+    userId,
+  ]);
 }
 
 // Só o cookie pl_at vale aqui: o Bearer do mobile nunca autentica rotas do psicólogo web.

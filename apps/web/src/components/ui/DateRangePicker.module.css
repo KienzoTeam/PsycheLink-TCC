@@ -50,6 +50,11 @@
   outline: none;
 }
 
+/* Sem o respiro nas barras, o campo vazio (dd/mm/aaaa) cabe nos 343px de uma tela de 375. */
+.segmento[data-type='literal'] {
+  padding-inline: 0;
+}
+
 .segmento[data-placeholder] {
   color: var(--cor-sobre-superficie-variante);
 }

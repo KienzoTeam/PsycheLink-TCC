@@ -1,0 +1,95 @@
+.grafico {
+  width: 100%;
+  height: var(--altura-grafico);
+}
+
+/* Texto, grade e eixos pelos tokens: o recharts só sabe de atributos. */
+.grafico :global(.recharts-text) {
+  fill: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-pequeno);
+}
+
+.grafico :global(.recharts-cartesian-grid line),
+.grafico :global(.recharts-cartesian-axis-line) {
+  stroke: var(--cor-contorno-variante);
+  stroke-width: var(--largura-borda);
+}
+
+.grafico :global(.recharts-tooltip-cursor) {
+  stroke: var(--cor-contorno-variante);
+  stroke-width: var(--largura-borda);
+}
+
+.grafico :global(.recharts-label) {
+  fill: var(--cor-sobre-superficie);
+  font: var(--tipo-rotulo-medio);
+}
+
+.grafico :global(.recharts-wrapper),
+.grafico :global(.recharts-surface) {
+  outline: none;
+}
+
+.grafico :global(.recharts-wrapper:focus-visible .recharts-surface),
+.grafico :global(.recharts-surface:focus-visible) {
+  outline: var(--foco-largura) solid var(--foco-cor);
+  outline-offset: var(--foco-afastamento);
+}
+
+.humor :global(.recharts-line-curve),
+.ansiedade :global(.recharts-line-curve) {
+  stroke-width: var(--largura-linha-dados);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ansiedade :global(.recharts-line-curve) {
+  stroke-dasharray: var(--tracejado-serie);
+}
+
+/* Marcador com anel da cor da superfície, para não se confundir onde as linhas se cruzam. */
+.humor :global(.recharts-line-dot),
+.ansiedade :global(.recharts-line-dot) {
+  stroke: var(--cor-cartao);
+  stroke-width: var(--largura-borda-forte);
+}
+
+.dica {
+  padding: var(--espaco-8) var(--espaco-12);
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-md);
+  background: var(--cor-cartao);
+  box-shadow: var(--sombra-overlay);
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-corpo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.dicaTitulo {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-8) var(--espaco-24);
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-rotulo-grande);
+}
+
+.legenda li {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-8);
+}
+
+.amostraHumor,
+.amostraAnsiedade {
+  width: var(--espaco-24);
+  border-block-start: var(--largura-linha-dados) solid var(--dados-5);
+}
+
+.amostraAnsiedade {
+  border-block-start: var(--largura-linha-dados) dashed var(--dados-2);
+}

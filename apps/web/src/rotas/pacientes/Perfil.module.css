@@ -1,0 +1,10 @@
+.consentimentos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-8);
+}
+
+.erro {
+  color: var(--cor-erro);
+  font: var(--tipo-corpo-medio);
+}

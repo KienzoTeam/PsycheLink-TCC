@@ -57,10 +57,12 @@ export async function checkinsDoPeriodo(
 
 /**
  * Humor/ansiedade/emoções/gatilhos/horário seguem o consentimento "humor".
- * Sono e hábitos seguem "hábitos".
+ * Sono e hábitos seguem "hábitos". Sem nenhum dos dois, nem a data nem a quantidade de
+ * check-ins sai: o volume de registros também é dado do paciente.
  */
 export function resumirCheckins(rows: LinhaDetalhe[], consent: Consentimentos) {
-  const registros = rows.map((l) => ({
+  const visiveis = consent.humor || consent.habitos ? rows : [];
+  const registros = visiveis.map((l) => ({
     id: l.id,
     data: l.data,
     horario: consent.humor ? l.horario : null,

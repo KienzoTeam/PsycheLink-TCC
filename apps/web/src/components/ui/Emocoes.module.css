@@ -1,0 +1,10 @@
+.lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-8);
+}
+
+.nenhuma {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+}

@@ -4,4 +4,5 @@
   border-radius: var(--forma-xl);
   background: var(--cor-cartao);
   color: var(--cor-sobre-superficie);
+  break-inside: avoid;
 }

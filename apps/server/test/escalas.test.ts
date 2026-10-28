@@ -288,7 +288,13 @@ describe('paciente responde', () => {
     assert.equal(evento.ator_user_id, paciente.usuario.id);
     assert.deepEqual(evento.metadados, { sigla: 'PHQ-9' });
 
-    assert.equal((await paciente.mobile('POST', `/paciente/aplicacoes/${id}/respostas`, { respostas })).status, 404);
+    // Repetir o mesmo envio (resposta perdida no caminho) devolve o mesmo sucesso sem auditar de novo.
+    const repetido = await paciente.mobile('POST', `/paciente/aplicacoes/${id}/respostas`, { respostas });
+    assert.equal(repetido.status, 200);
+    assert.deepEqual(await ler(repetido), { scoreTotal: 12, subscores: null });
+    assert.equal((await auditoriaDe('escala_respondida', paciente.id)).length, 1);
+    const outras = [3, 3, 3, 3, 3, 3, 3, 3, 3];
+    assert.equal((await paciente.mobile('POST', `/paciente/aplicacoes/${id}/respostas`, { respostas: outras })).status, 404);
     assert.equal((await paciente.mobile('GET', `/paciente/aplicacoes/${id}`)).status, 404);
     assert.deepEqual(await ler(await paciente.mobile('GET', '/paciente/escalas/pendentes')), []);
   });

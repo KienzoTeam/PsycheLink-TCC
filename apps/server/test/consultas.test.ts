@@ -278,11 +278,15 @@ describe('remarcar', () => {
 });
 
 describe('listar consultas', () => {
-  it('filtra por dia de São Paulo, ordena e limita a 92 dias', async () => {
+  it('filtra por dia de São Paulo (a que vira a meia-noite entra nos dois), ordena e limita a 92 dias', async () => {
     await criada(A, ana.id, em('04-02', '23:30'), em('04-03', '00:30'));
     await criada(A, bia.id, em('04-03', '10:00'), em('04-03', '11:00'), OBSERVACAO);
     const dia2 = await ler(await A.requisitar('GET', '/psicologo/consultas?de=2031-04-02&ate=2031-04-02'));
     assert.deepEqual(dia2.consultas.map((c: Json) => c.pacienteNome), ['Ana Consulta']);
+    const dia3 = await ler(await A.requisitar('GET', '/psicologo/consultas?de=2031-04-03&ate=2031-04-03'));
+    assert.deepEqual(dia3.consultas.map((c: Json) => c.pacienteNome), ['Ana Consulta', 'Bia Consulta']);
+    const dia4 = await ler(await A.requisitar('GET', '/psicologo/consultas?de=2031-04-04&ate=2031-04-04'));
+    assert.deepEqual(dia4.consultas, []);
     const dois = await ler(await A.requisitar('GET', '/psicologo/consultas?de=2031-04-02&ate=2031-04-03'));
     assert.deepEqual(dois.consultas.map((c: Json) => c.pacienteNome), ['Ana Consulta', 'Bia Consulta']);
     assert.equal(dois.consultas[1].observacao, OBSERVACAO);

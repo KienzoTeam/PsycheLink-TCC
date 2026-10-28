@@ -12,6 +12,8 @@ declare module 'axios' {
 export const api = axios.create({ baseURL: '/api', withCredentials: true, timeout: 15000 });
 
 const PREFIXO_AUTH = '/auth/';
+// O logout identifica a sessão pelo pl_at: com ele vencido, renova e repete para revogar de fato.
+const LOGOUT = '/auth/psicologo/logout';
 let renovacao: Promise<void> | null = null;
 
 async function renovar(): Promise<void> {
@@ -41,7 +43,7 @@ api.interceptors.response.use(undefined, async (erro: unknown) => {
   if (!isAxiosError(erro) || erro.response?.status !== 401 || !erro.config) throw erro;
   const original = erro.config;
   // Rotas de auth respondem 401 por credencial inválida ou sessão encerrada: renovar não resolve.
-  if (original._repetida || original.url?.startsWith(PREFIXO_AUTH)) throw erro;
+  if (original._repetida || (original.url?.startsWith(PREFIXO_AUTH) && original.url !== LOGOUT)) throw erro;
 
   try {
     await renovarSessao();
