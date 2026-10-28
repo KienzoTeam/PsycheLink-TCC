@@ -11,6 +11,7 @@ import MainTabNavigator from './MainTabNavigator';
 import Checkin from '../screens/paciente/checkin/checkin';
 import BemEstar from '../screens/paciente/BemEstar/BemEstar';
 import Dados from '../screens/paciente/dashboard/dados';
+import Consultas from '../screens/paciente/consultas/consultas';
 import ResponderEscala from '../screens/paciente/escalas/responderEscala';
 import Consentimento from '../screens/paciente/consentimento/consentimento';
 
@@ -25,6 +26,7 @@ export type RootStackParamList = {
   Checkin: undefined;
   BemEstar: undefined;
   Dados: undefined;
+  Consultas: undefined;
   ResponderEscala: { aplicacaoId: number };
   Consentimento: undefined;
 };
@@ -68,6 +70,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Main" component={MainTabNavigator} />
         <Stack.Screen name="Checkin" component={Checkin} />
          <Stack.Screen name="Dados" component={Dados} />
+        <Stack.Screen name="Consultas" component={Consultas} />
         <Stack.Screen name="ResponderEscala" component={ResponderEscala} />
         <Stack.Screen name="Consentimento" component={Consentimento} />
       </Stack.Navigator>
