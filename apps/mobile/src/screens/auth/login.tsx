@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, TextInputInstance } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/AppNavigator";
@@ -18,7 +18,7 @@ export default function Login() {
   const { theme, isDark } = useTheme();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const senhaRef = useRef<TextInput>(null);
+  const senhaRef = useRef<TextInputInstance>(null);
   const { login, carregando } = useAuth();
 
   const handleLogin = () => {

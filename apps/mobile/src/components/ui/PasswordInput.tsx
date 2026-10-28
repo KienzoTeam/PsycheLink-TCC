@@ -5,7 +5,9 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  TextInputProps} from 'react-native';
+  TextInputProps,
+  TextInputInstance,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -17,7 +19,7 @@ interface Props extends TextInputProps {
 }
 
 /** Campo de senha com olho de revelar. Ref exposta para cadeia de teclado (next → done). */
-const PasswordInput = forwardRef<RNTextInput, Props>(function PasswordInput(
+const PasswordInput = forwardRef<TextInputInstance, Props>(function PasswordInput(
   { label, placeholder, value, onChangeText, ...rest }: Props,
   ref
 ) {
