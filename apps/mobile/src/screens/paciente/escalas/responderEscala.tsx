@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import { usePreventRemove } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme } from '../../../theme/ThemeContext';
 import type { RootStackParamList } from '../../../navigation/AppNavigator';
@@ -48,16 +49,13 @@ export default function ResponderEscala({ navigation, route }: Props) {
     rolagem.current?.scrollTo({ y: 0, animated: false });
   }, [indice, revisando, enviado]);
 
-  const sair = () => {
-    if (enviado || respostas.every((r) => r === null)) {
-      navigation.goBack();
-      return;
-    }
+  // Seta, botão Voltar do Android e gesto passam pelo mesmo aviso: as respostas só existem neste estado.
+  usePreventRemove(!enviado && respostas.some((r) => r !== null), ({ data }) => {
     Alert.alert('Sair sem enviar?', 'Suas respostas ainda não foram enviadas e serão descartadas.', [
       { text: 'Continuar respondendo', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: () => navigation.goBack() },
+      { text: 'Sair', style: 'destructive', onPress: () => navigation.dispatch(data.action) },
     ]);
-  };
+  });
 
   const escolher = (valor: number) => {
     vibrarLeve();
@@ -307,7 +305,7 @@ export default function ResponderEscala({ navigation, route }: Props) {
       <View style={styles.cabecalho}>
         <TouchableOpacity
           style={styles.botaoSair}
-          onPress={sair}
+          onPress={() => navigation.goBack()}
           accessibilityRole="button"
           accessibilityLabel="Voltar"
         >
