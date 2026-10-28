@@ -75,13 +75,18 @@ export default function MeusDados({ navigation }: Props) {
   return (
     <SafeAreaView style={[estilos.tela, { backgroundColor: theme.colors.background }]}>
       <View style={estilos.cabecalho}>
-        <TouchableOpacity
-          onPress={() => navigation?.goBack()}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-        >
-          <Feather name="arrow-left" size={22} color={theme.colors.onBackground} />
-        </TouchableOpacity>
+        {/* Como aba (sem `navigation`) não há para onde voltar: o espaço fica para manter o título centralizado. */}
+        {navigation ? (
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+          >
+            <Feather name="arrow-left" size={22} color={theme.colors.onBackground} />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 22 }} />
+        )}
 
         <Text style={[estilos.tituloCabecalho, { color: theme.colors.onBackground }]}>
           Meus Dados
