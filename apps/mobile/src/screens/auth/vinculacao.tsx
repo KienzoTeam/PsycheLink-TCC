@@ -5,7 +5,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useTheme } from '../../theme/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { alertarDemonstracao } from '../../lib/prototipo';
+import { mensagemDeErro, vincular } from '../../lib/vinculoService';
 import CustomInput from '../../components/ui/CustomInput';
 import CustomButton from '../../components/ui/CustomButton';
 import { styles } from './registroStyles';
@@ -17,22 +17,27 @@ export default function Vinculacao({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const [codigo, setCodigo] = useState('');
   const [erroCodigo, setErroCodigo] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
-  const handleVincular = () => {
-    const valor = codigo.trim().toUpperCase();
-
-    if (!valor) {
-      setErroCodigo('Insira o código recebido do seu psicólogo.');
-      return;
-    }
-    if (!/^PSY\d{4}$/.test(valor)) {
-      setErroCodigo('O código segue o formato PSY0000: PSY seguido de 4 números.');
+  const handleVincular = async () => {
+    if (enviando) return;
+    if (codigo.length !== 6) {
+      setErroCodigo('O código tem 6 números. Confira com o seu psicólogo.');
       return;
     }
 
     setErroCodigo(null);
-    // Sem backend nesta demonstração: sinalizamos honestamente e permanecemos aqui.
-    alertarDemonstracao();
+    setEnviando(true);
+
+    try {
+      await vincular(codigo);
+      navigation.replace('Consentimento');
+    } catch (erro) {
+      setErroCodigo(
+        mensagemDeErro(erro, 'Não foi possível conectar ao servidor. Verifique sua internet e tente de novo.'),
+      );
+      setEnviando(false);
+    }
   };
 
   return (
@@ -78,8 +83,8 @@ export default function Vinculacao({ navigation }: Props) {
 
       <Text style={[styles.title, { color: theme.colors.onBackground }]}>Conecte-se ao seu psicólogo</Text>
 
-      <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-        Insira o código fornecido pelo seu psicólogo para vincular sua conta e iniciar seu acompanhamento pelo PsycheLink.
+      <Text style={[styles.subtitle, { color: theme.colors.subtext1 }]}>
+        Digite o código de 6 números que seu psicólogo te passou. Ao vincular, ele passa a ver seu humor, hábitos e escalas. Os textos do diário ficam só com você, a menos que você escolha compartilhar um deles no check-in. Você muda isso quando quiser.
       </Text>
 
       <View style={[styles.infoBox, { backgroundColor: theme.colors.primaryContainer }]}>
@@ -91,11 +96,16 @@ export default function Vinculacao({ navigation }: Props) {
 
       <CustomInput
         label="CÓDIGO DE VINCULAÇÃO"
-        placeholder="PSY0000"
-        autoCapitalize="characters"
+        placeholder="000000"
+        keyboardType="number-pad"
+        maxLength={6}
+        autoComplete="one-time-code"
+        textContentType="oneTimeCode"
+        returnKeyType="done"
+        onSubmitEditing={handleVincular}
         value={codigo}
         onChangeText={(texto) => {
-          setCodigo(texto);
+          setCodigo(texto.replace(/\D/g, ''));
           if (erroCodigo) setErroCodigo(null);
         }}
         style={[styles.inputCenter, { color: theme.colors.onSurface }]}
@@ -109,22 +119,17 @@ export default function Vinculacao({ navigation }: Props) {
         </Text>
       )}
 
-      <TouchableOpacity
-        style={[styles.emailLinkContainer, { flexDirection: 'row', gap: 6 }]}
-        onPress={() => alertarDemonstracao()}
-      >
-        <Feather name="mail" size={16} color={theme.colors.primary} />
-        <Text style={[styles.emailLink, { color: theme.colors.primary }]}>Recebi um convite por e-mail</Text>
-      </TouchableOpacity>
-
       <CustomButton
         title="Vincular Conta"
         onPress={handleVincular}
+        loading={enviando}
       />
 
       <TouchableOpacity
         style={[styles.skipButton, { borderColor: theme.colors.outline }]}
-        onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Login' }] })}
+        onPress={() => navigation.goBack()}
+        accessibilityRole="button"
+        accessibilityLabel="Fazer isso depois"
       >
         <Text style={[styles.skipButtonText, { color: theme.colors.primary }]}>Fazer isso depois</Text>
       </TouchableOpacity>

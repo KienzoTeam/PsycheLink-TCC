@@ -133,6 +133,20 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  consultaTitulo: {
+    flex: 1,
+  },
+  consultaData: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  consultaDetalhe: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  consultaCarregando: {
+    alignSelf: 'flex-start',
+  },
   emocoesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',

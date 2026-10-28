@@ -14,6 +14,7 @@ export type RascunhoCheckin = {
   contextos: string[];
   habitos: string[];
   notas: string;
+  diarioCompartilhado: boolean;
 };
 
 let rascunho: RascunhoCheckin | null = null;

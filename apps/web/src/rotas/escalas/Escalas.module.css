@@ -1,0 +1,94 @@
+.form {
+  display: grid;
+  gap: var(--espaco-16);
+}
+
+.situacoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-8);
+}
+
+.colunasCatalogo {
+  --colunas: minmax(0, 0.7fr) minmax(0, 2.4fr) minmax(0, 0.6fr) minmax(0, 1fr) minmax(0, 1.5fr);
+}
+
+.colunasComPaciente {
+  --colunas: minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1.6fr) minmax(0, 0.9fr);
+}
+
+.colunasSemPaciente {
+  --colunas: minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1.6fr) minmax(0, 0.9fr);
+}
+
+/* Linha sem ação principal (escala ainda sem resposta, catálogo): mesmo peso do título clicável. */
+.principalTexto {
+  font: var(--tipo-titulo-medio);
+  overflow-wrap: anywhere;
+}
+
+.acoes {
+  justify-items: end;
+}
+
+.detalhe {
+  display: grid;
+  gap: var(--espaco-16);
+  color: var(--cor-sobre-superficie);
+}
+
+.escalaNome {
+  font: var(--tipo-titulo-medio);
+}
+
+.apoio {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+}
+
+.escore {
+  display: grid;
+  justify-items: start;
+  gap: var(--espaco-8);
+}
+
+.rotuloEscore {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-grande);
+}
+
+.subescalas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-8) var(--espaco-24);
+}
+
+.subescalas dt {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.subescalas dd {
+  font: var(--tipo-titulo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+}
+
+.itens {
+  display: grid;
+  gap: var(--espaco-8);
+}
+
+.itens ol {
+  display: grid;
+}
+
+.itens li {
+  padding-block: var(--espaco-12);
+  border-block-end: var(--largura-borda) solid var(--cor-contorno-variante);
+  font: var(--tipo-corpo-medio);
+}
+
+.resposta {
+  color: var(--cor-sobre-superficie-variante);
+  font-variant-numeric: var(--numeros-tabulares);
+}

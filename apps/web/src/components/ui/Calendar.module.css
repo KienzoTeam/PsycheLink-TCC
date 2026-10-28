@@ -1,0 +1,94 @@
+.calendario {
+  display: grid;
+  gap: var(--espaco-8);
+  width: max-content;
+  max-width: 100%;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titulo {
+  font: var(--tipo-titulo-medio);
+}
+
+.titulo::first-letter {
+  text-transform: uppercase;
+}
+
+.grade {
+  border-spacing: 0;
+}
+
+.diaSemana {
+  height: var(--alvo-minimo);
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+  text-transform: uppercase;
+}
+
+.grade td {
+  padding: 0;
+}
+
+.celula {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--alvo-minimo);
+  height: var(--alvo-minimo);
+  border-radius: var(--forma-total);
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-corpo-medio);
+  font-variant-numeric: var(--numeros-tabulares);
+  cursor: pointer;
+  outline-offset: calc(var(--foco-largura) * -1);
+}
+
+.celula[data-hovered]:not([data-selected]) {
+  background: color-mix(in srgb, currentcolor var(--camada-hover), transparent);
+}
+
+/* Hoje: contorno, sem competir com a seleção. */
+.celula[data-today] {
+  border: var(--largura-borda-forte) solid var(--cor-primaria);
+}
+
+.celula[data-selected] {
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
+}
+
+/* Intervalo: as pontas são primárias e o miolo é uma faixa contínua de container. */
+.intervalo .celula[data-selected]:not([data-selection-start]):not([data-selection-end]) {
+  border-radius: var(--forma-nenhuma);
+  background: var(--cor-container-primaria);
+  color: var(--cor-sobre-container-primaria);
+}
+
+.intervalo .celula[data-selection-start]:not([data-selection-end]) {
+  border-start-end-radius: var(--forma-nenhuma);
+  border-end-end-radius: var(--forma-nenhuma);
+}
+
+.intervalo .celula[data-selection-end]:not([data-selection-start]) {
+  border-start-start-radius: var(--forma-nenhuma);
+  border-end-start-radius: var(--forma-nenhuma);
+}
+
+.celula[data-outside-month] {
+  display: none;
+}
+
+.celula[data-disabled],
+.celula[data-unavailable] {
+  color: color-mix(in srgb, var(--cor-sobre-superficie) var(--opacidade-desabilitado-conteudo), transparent);
+  cursor: not-allowed;
+}
+
+.celula[data-unavailable] {
+  text-decoration: line-through;
+}

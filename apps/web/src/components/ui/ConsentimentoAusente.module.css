@@ -1,0 +1,17 @@
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-12);
+  padding: var(--espaco-16);
+  border: var(--largura-borda) dashed var(--cor-contorno);
+  border-radius: var(--forma-md);
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-corpo-grande);
+}
+
+.aviso svg {
+  flex-shrink: 0;
+  width: var(--tamanho-icone);
+  height: var(--tamanho-icone);
+  color: var(--cor-sobre-superficie-variante);
+}

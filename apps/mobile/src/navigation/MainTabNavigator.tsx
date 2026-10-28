@@ -1,8 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Home from '../screens/paciente/dashboard/home';
 import Dados from '../screens/paciente/dashboard/dados';
 import Chat from '../screens/paciente/chat/chat';
@@ -10,6 +11,7 @@ import SOS from '../screens/paciente/sos/sos';
 import BemEstar from '../screens/paciente/BemEstar/BemEstar';
 import Escalas from '../screens/paciente/escalas/escalas';
 import { useTheme } from '../theme/ThemeContext';
+import type { RootStackParamList } from './AppNavigator';
 
 
 export type MainTabParamList = {
@@ -32,11 +34,19 @@ const ABAS = [
 
 
 // PagerView para as páginas, alterando por posições de cada página.
-export default function MainTabNavigator() {
+export default function MainTabNavigator({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Main'>) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [ativo, setAtivo] = useState(0);
   const pager = useRef<PagerView>(null);
+
+  // Telas empilhadas por cima (ex.: escala respondida) pedem uma aba ao voltar.
+  const abaPedida = route.params?.aba;
+  useEffect(() => {
+    if (!abaPedida) return;
+    pager.current?.setPage(ABAS.findIndex(aba => aba.nome === abaPedida));
+    navigation.setParams({ aba: undefined });
+  }, [abaPedida, navigation]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -56,7 +66,7 @@ export default function MainTabNavigator() {
           <Chat />
         </View>
         <View key="escalas" style={{ flex: 1 }}>
-          <Escalas />
+          <Escalas ativa={ABAS[ativo].nome === 'Escalas'} />
         </View>
         <View key="bem-estar" style={{ flex: 1 }}>
           <BemEstar onVoltar={() => pager.current?.setPage(0)} />

@@ -1,0 +1,254 @@
+/*
+ * Tokens do PsycheLink web: única fonte de cor, forma, tipografia, espaço e movimento.
+ * light = Catppuccin Latte, dark = Catppuccin Mocha. light-dark() escolhe pelo color-scheme,
+ * que segue o sistema ou o atributo data-theme ("system" | "light" | "dark") do <html>.
+ */
+
+:root {
+  color-scheme: light dark;
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+:root {
+  /* Paleta Catppuccin (Latte, Mocha). O teal Latte é #179299 (o mobile ainda tem #179287). */
+  --paleta-base: light-dark(#eff1f5, #1e1e2e);
+  --paleta-mantle: light-dark(#e6e9ef, #181825);
+  --paleta-crust: light-dark(#dce0e8, #11111b);
+  --paleta-surface0: light-dark(#ccd0da, #313244);
+  --paleta-surface1: light-dark(#bcc0cc, #45475a);
+  --paleta-overlay1: light-dark(#8c8fa1, #7f849c);
+  --paleta-overlay2: light-dark(#7c7f93, #9399b2);
+  --paleta-subtext0: light-dark(#6c6f85, #a6adc8);
+  --paleta-subtext1: light-dark(#5c5f77, #bac2de);
+  --paleta-text: light-dark(#4c4f69, #cdd6f4);
+  --paleta-mauve: light-dark(#8839ef, #cba6f7);
+  --paleta-lavender: light-dark(#7287fd, #b4befe);
+  --paleta-teal: light-dark(#179299, #94e2d5);
+  --paleta-blue: light-dark(#1e66f5, #89b4fa);
+  --paleta-yellow: light-dark(#df8e1d, #f9e2af);
+  --paleta-peach: light-dark(#fe640b, #fab387);
+  --paleta-pink: light-dark(#ea76cb, #f5c2e7);
+  --paleta-red: light-dark(#d20f39, #f38ba8);
+
+  /* Papéis de cor (M3). Cada par on-* é verificado em DESIGN.md. */
+  --cor-primaria: light-dark(#8738ee, var(--paleta-mauve));
+  --cor-sobre-primaria: light-dark(#ffffff, #4a0080);
+  --cor-container-primaria: light-dark(#e7d3f5, #663399);
+  --cor-sobre-container-primaria: light-dark(#21005d, #f5e0dc);
+
+  --cor-secundaria: light-dark(#4a5fd6, #b4befe);
+  --cor-sobre-secundaria: light-dark(#ffffff, #1e285a);
+  --cor-container-secundaria: light-dark(#e8eaff, #373f77);
+  --cor-sobre-container-secundaria: light-dark(#001d35, #dde3ff);
+
+  --cor-terciaria: light-dark(#127a80, #94e2d5);
+  --cor-sobre-terciaria: light-dark(#ffffff, #003733);
+  --cor-container-terciaria: light-dark(#c6fff8, #00504b);
+  --cor-sobre-container-terciaria: light-dark(#00201d, #c6fff8);
+
+  --cor-erro: light-dark(#d10d38, var(--paleta-red));
+  --cor-sobre-erro: light-dark(#ffffff, #690005);
+  --cor-container-erro: light-dark(#fbd5dc, #93000a);
+  --cor-sobre-container-erro: light-dark(#410008, #ffdad6);
+
+  /* Superfícies. O fundo e a barra seguem o mobile (background = base, surface = mantle). */
+  --cor-fundo: var(--paleta-base);
+  --cor-sobre-fundo: var(--paleta-text);
+  --cor-superficie: var(--paleta-mantle);
+  --cor-sobre-superficie: var(--paleta-text);
+  --cor-sobre-superficie-variante: var(--paleta-subtext1);
+  --cor-contorno: light-dark(var(--paleta-overlay2), var(--paleta-overlay1));
+  --cor-contorno-variante: var(--paleta-surface1);
+
+  /* Container de superfície em 5 níveis: lowest, low, container, high, highest. */
+  --cor-container-minimo: light-dark(#ffffff, var(--paleta-crust));
+  --cor-container-baixo: light-dark(var(--paleta-base), var(--paleta-mantle));
+  --cor-container: light-dark(var(--paleta-mantle), var(--paleta-base));
+  --cor-container-alto: light-dark(var(--paleta-crust), var(--paleta-surface0));
+  --cor-container-maximo: light-dark(var(--paleta-surface0), var(--paleta-surface1));
+  /* Card elevado: o container mais claro que o fundo nos dois temas (mobile: surfaceContainer). */
+  --cor-cartao: light-dark(#ffffff, var(--paleta-surface0));
+  /* O logo tem traço escuro: o tile fica claro nos dois temas, como o ícone do app. */
+  --cor-fundo-logo: #ffffff;
+
+  --cor-inversa: light-dark(var(--paleta-text), var(--paleta-text));
+  --cor-sobre-inversa: light-dark(var(--paleta-base), var(--paleta-base));
+  --cor-scrim: light-dark(rgb(76 79 105 / 40%), rgb(0 0 0 / 56%));
+
+  /* Dados sem valência: rampa sequencial de um só tom (mauve a lavender), do menor ao maior. */
+  --dados-1: light-dark(#6875f6, #6d7ac2);
+  --dados-2: light-dark(#685fe0, #8a8dd7);
+  --dados-3: light-dark(#6549ca, #a7a0ed);
+  --dados-4: light-dark(#6133b3, #c4b3ff);
+  --dados-5: light-dark(#5b199c, #e2c7ff);
+
+  /* Emoções: categóricas, fixas, sem valência. Sempre acompanhadas do rótulo. */
+  --emocao-feliz: light-dark(#c87800, var(--paleta-yellow));
+  --emocao-triste: var(--paleta-blue);
+  --emocao-ansioso: light-dark(#f25800, var(--paleta-peach));
+  --emocao-calmo: var(--paleta-teal);
+  --emocao-irritado: light-dark(#d361b6, var(--paleta-pink));
+  --emocao-cansado: var(--paleta-overlay2);
+}
+
+:root {
+  /* Forma (escala M3): nenhuma, xs, sm, md, lg, lg+, xl, xl+, 2xl, total. */
+  --forma-nenhuma: 0;
+  --forma-xs: 0.25rem;
+  --forma-sm: 0.5rem;
+  --forma-md: 0.75rem;
+  --forma-lg: 1rem;
+  --forma-lg-mais: 1.25rem;
+  --forma-xl: 1.75rem;
+  --forma-xl-mais: 2rem;
+  --forma-2xl: 3rem;
+  --forma-total: 9999px;
+
+  /* Espaço: grade de 4 (4, 8, 12, 16, 24, 32, 48). */
+  --espaco-4: 0.25rem;
+  --espaco-8: 0.5rem;
+  --espaco-12: 0.75rem;
+  --espaco-16: 1rem;
+  --espaco-24: 1.5rem;
+  --espaco-32: 2rem;
+  --espaco-48: 3rem;
+
+  /* Tipografia M3. Cada papel é um atalho `font`; a variante enfática pesa mais e alarga o eixo wdth. */
+  --fonte: 'Roboto Flex Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --tipo-display-grande: 400 clamp(2.5rem, 1.4rem + 4.4vw, 3.5625rem) / 1.125 var(--fonte);
+  --tipo-display-medio: 400 clamp(2.25rem, 1.5rem + 3vw, 2.8125rem) / 1.15 var(--fonte);
+  --tipo-display-pequeno: 400 2.25rem / 2.75rem var(--fonte);
+  --tipo-headline-grande: 400 2rem / 2.5rem var(--fonte);
+  --tipo-headline-medio: 400 1.75rem / 2.25rem var(--fonte);
+  --tipo-headline-pequeno: 400 1.5rem / 2rem var(--fonte);
+  --tipo-titulo-grande: 400 1.375rem / 1.75rem var(--fonte);
+  --tipo-titulo-medio: 500 1rem / 1.5rem var(--fonte);
+  --tipo-titulo-pequeno: 500 0.875rem / 1.25rem var(--fonte);
+  --tipo-corpo-grande: 400 1rem / 1.5rem var(--fonte);
+  --tipo-corpo-medio: 400 0.875rem / 1.25rem var(--fonte);
+  --tipo-corpo-pequeno: 400 0.75rem / 1rem var(--fonte);
+  --tipo-rotulo-grande: 500 0.875rem / 1.25rem var(--fonte);
+  --tipo-rotulo-medio: 500 0.75rem / 1rem var(--fonte);
+  --tipo-rotulo-pequeno: 500 0.6875rem / 1rem var(--fonte);
+  --tipo-display-grande-enfatico: 600 semi-expanded clamp(2.5rem, 1.4rem + 4.4vw, 3.5625rem) / 1.125 var(--fonte);
+  --tipo-display-medio-enfatico: 600 semi-expanded clamp(2.25rem, 1.5rem + 3vw, 2.8125rem) / 1.15 var(--fonte);
+  --tipo-display-pequeno-enfatico: 600 semi-expanded 2.25rem / 2.75rem var(--fonte);
+  --tipo-headline-grande-enfatico: 600 semi-expanded 2rem / 2.5rem var(--fonte);
+  --tipo-headline-medio-enfatico: 600 semi-expanded 1.75rem / 2.25rem var(--fonte);
+  --tipo-headline-pequeno-enfatico: 600 semi-expanded 1.5rem / 2rem var(--fonte);
+  --tipo-titulo-grande-enfatico: 600 semi-expanded 1.375rem / 1.75rem var(--fonte);
+  --tipo-titulo-medio-enfatico: 700 semi-expanded 1rem / 1.5rem var(--fonte);
+  --tipo-titulo-pequeno-enfatico: 700 semi-expanded 0.875rem / 1.25rem var(--fonte);
+  --tipo-corpo-grande-enfatico: 500 semi-expanded 1rem / 1.5rem var(--fonte);
+  --tipo-corpo-medio-enfatico: 500 semi-expanded 0.875rem / 1.25rem var(--fonte);
+  --tipo-corpo-pequeno-enfatico: 500 semi-expanded 0.75rem / 1rem var(--fonte);
+  --tipo-rotulo-grande-enfatico: 700 semi-expanded 0.875rem / 1.25rem var(--fonte);
+  --tipo-rotulo-medio-enfatico: 700 semi-expanded 0.75rem / 1rem var(--fonte);
+  --tipo-rotulo-pequeno-enfatico: 700 semi-expanded 0.6875rem / 1rem var(--fonte);
+  --numeros-tabulares: tabular-nums;
+
+  /* Estados: state layers M3, opacidade de desabilitado e foco visível (2px primary, offset 2). */
+  --camada-hover: 8%;
+  --camada-foco: 10%;
+  --camada-pressionado: 10%;
+  --opacidade-desabilitado-conteudo: 38%;
+  --opacidade-desabilitado-container: 12%;
+  --foco-largura: 2px;
+  --foco-afastamento: 2px;
+  --foco-cor: var(--cor-primaria);
+
+  /* Tamanhos de controle. 2.75rem = alvo mínimo de toque de 44px. */
+  --alvo-minimo: 2.75rem;
+  --altura-botao: 2.75rem;
+  --altura-campo: 3.5rem;
+  --altura-item-nav: 3rem;
+  --altura-item-trilho: 4rem;
+  --altura-barra-topo: 3.5rem;
+  --tamanho-icone: 1.5rem;
+  --tamanho-icone-pequeno: 1.125rem;
+  --tamanho-fab: 3.5rem;
+  --largura-barra-lateral: 17rem;
+  --largura-trilho: 5.5rem;
+  --largura-dialogo: 28rem;
+  --largura-dialogo-larga: 36rem;
+  --largura-menu: 14rem;
+  --largura-conteudo: 75rem;
+  --largura-formulario: 26rem;
+  --largura-marca: 28rem;
+  --tamanho-logo: 8rem;
+  --tamanho-logo-faixa: 3.5rem;
+  --largura-borda: 1px;
+  --largura-borda-forte: 2px;
+  --altura-scrollfade: 4rem;
+  --altura-rolagem: 20rem;
+  --altura-bloco-esqueleto: 6rem;
+  --altura-indicador-aba: 0.1875rem;
+  --largura-minima-coluna: 22rem;
+  --largura-select-periodo: 14rem;
+  --largura-minima-serie: 12rem;
+  --espacamento-letras-codigo: 0.08em;
+  --altura-hora-agenda: 5rem;
+  --largura-hora-agenda: 3.5rem;
+  --largura-minima-dia: 8rem;
+  --altura-rolagem-agenda: 40rem;
+  --altura-celula-mes: 4.5rem;
+  --largura-pagina: 210mm;
+  --margem-pagina: 15mm;
+
+  /* Gráficos: linha de 2px, marcador de 8px com anel de superfície de 2px, grade e eixos de 1px. */
+  --altura-grafico: 16rem;
+  --altura-sparkline: 3.5rem;
+  --largura-linha-dados: 2px;
+  --diametro-ponto-dados: 0.5rem;
+  --diametro-anel-dados: 0.75rem;
+  --tracejado-serie: 0.5rem 0.375rem;
+
+  /* Elevação é tonal (containers). Sombra só no FAB e em overlays. */
+  --sombra-fab: 0 0.25rem 0.75rem light-dark(rgb(76 79 105 / 28%), rgb(0 0 0 / 55%)),
+    0 0.0625rem 0.1875rem light-dark(rgb(76 79 105 / 20%), rgb(0 0 0 / 45%));
+  --sombra-overlay: 0 0.5rem 1.5rem light-dark(rgb(76 79 105 / 26%), rgb(0 0 0 / 60%)),
+    0 0.125rem 0.5rem light-dark(rgb(76 79 105 / 18%), rgb(0 0 0 / 45%));
+  --desfoque-scrollfade: 0.375rem;
+
+  --z-barra: 10;
+  --z-fab: 20;
+  --z-overlay: 30;
+  --z-toast: 40;
+
+  /* Movimento: molas M3 Expressive como linear() (massa 1). Espacial: posição, tamanho, forma.
+     Efeitos: cor e opacidade, sem overshoot. Espacial rápida ζ0.6 k800, padrão ζ0.8 k380, lenta ζ0.8 k200;
+     efeitos rápida ζ1 k3800, padrão ζ1 k1600. Duração = tempo até assentar em 0,2%. */
+  --mola-espacial-rapida: linear(0, 0.033, 0.119, 0.236, 0.369, 0.504, 0.634, 0.75, 0.849, 0.931, 0.993, 1.039, 1.07, 1.087, 1.094, 1.093, 1.087, 1.077, 1.064, 1.052, 1.039, 1.028, 1.018, 1.009, 1.003, 0.998, 0.994, 0.992, 0.991, 0.991, 0.991, 0.992, 0.993, 0.995, 0.996, 0.997, 1);
+  --mola-espacial-padrao: linear(0, 0.022, 0.078, 0.156, 0.246, 0.34, 0.433, 0.522, 0.604, 0.678, 0.744, 0.8, 0.848, 0.887, 0.92, 0.946, 0.967, 0.982, 0.994, 1.003, 1.008, 1.012, 1.014, 1.015, 1.015, 1.014, 1.013, 1.012, 1.011, 1.009, 1.008, 1.007, 1.005, 1.004, 1.003, 1.003, 1);
+  --mola-espacial-lenta: linear(0, 0.022, 0.078, 0.156, 0.246, 0.34, 0.433, 0.522, 0.604, 0.679, 0.744, 0.8, 0.848, 0.888, 0.92, 0.946, 0.967, 0.982, 0.994, 1.003, 1.008, 1.012, 1.014, 1.015, 1.015, 1.014, 1.013, 1.012, 1.011, 1.009, 1.008, 1.007, 1.005, 1.004, 1.003, 1.003, 1);
+  --mola-efeitos-rapida: linear(0, 0.024, 0.082, 0.159, 0.244, 0.331, 0.414, 0.492, 0.564, 0.627, 0.683, 0.732, 0.775, 0.811, 0.842, 0.869, 0.891, 0.91, 0.925, 0.938, 0.949, 0.958, 0.966, 0.972, 0.977, 0.981, 0.985, 0.987, 0.99, 0.992, 0.993, 0.995, 0.996, 0.996, 0.997, 0.998, 1);
+  --mola-efeitos-padrao: linear(0, 0.024, 0.082, 0.158, 0.243, 0.329, 0.413, 0.491, 0.562, 0.626, 0.682, 0.731, 0.773, 0.81, 0.841, 0.868, 0.89, 0.909, 0.925, 0.938, 0.949, 0.958, 0.965, 0.972, 0.977, 0.981, 0.984, 0.987, 0.99, 0.992, 0.993, 0.994, 0.995, 0.996, 0.997, 0.998, 1);
+  --duracao-espacial-rapida: 348ms;
+  --duracao-espacial-padrao: 412ms;
+  --duracao-espacial-lenta: 568ms;
+  --duracao-efeitos-rapida: 138ms;
+  --duracao-efeitos-padrao: 212ms;
+  --duracao-carregando: 1200ms;
+  --escala-pressionado: 0.97;
+  --escala-entrada: 0.92;
+  --deslocamento-entrada: 1rem;
+  --deslocamento-marca: 6rem;
+  --desfoque-entrada: 0.5rem;
+}
+
+/* Com movimento reduzido toda transição e animação vira mudança instantânea. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duracao-espacial-rapida: 0ms;
+    --duracao-espacial-padrao: 0ms;
+    --duracao-espacial-lenta: 0ms;
+    --duracao-efeitos-rapida: 0ms;
+    --duracao-efeitos-padrao: 0ms;
+    --duracao-carregando: 0ms;
+  }
+}

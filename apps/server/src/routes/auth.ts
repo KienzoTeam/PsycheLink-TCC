@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import rateLimit from 'express-rate-limit';
 import { pool } from '../db';
+import { emTransacao } from '../lib/contextoseguro';
+import { derrubarAcessosWeb } from '../lib/sessaoWeb';
 import { registroSchema, senhaSchema } from '../schemas';
 import { normalizarEmail } from '../lib/validarEmail';
 import { gerarCodigo, hashCodigo, codigoConfere } from '../lib/codigo';
@@ -14,7 +16,7 @@ const limite = (n: number) => rateLimit({ windowMs: 15 * 60_000, limit: n });
 
 export interface TokenPayload {
   id: number;
-  email: string;
+  email?: string;
   iat?: number;
 }
 
@@ -140,6 +142,18 @@ auth.post('/registro', limite(10), async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Formato de e-mail inválido.' });
 
   try {
+    // Conta de psicólogo nunca passa pelo cadastro de paciente (evita perfil misto).
+    const ehPsicologo = await pool.query(
+      'SELECT 1 FROM psicologo p JOIN users u ON u.id = p.user_id WHERE u.email = $1',
+      [email],
+    );
+    if (ehPsicologo.rows.length > 0) {
+      return res.status(409).json({
+        error:
+          'Não foi possível concluir o cadastro com este e-mail. Motivos possíveis: ele já pertence a uma conta ativa. Tente fazer login ou recuperar a senha.',
+      });
+    }
+
     const existente = await pool.query(
       'SELECT id, email_verificado FROM users WHERE email = $1',
       [email],
@@ -325,14 +339,19 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(senha.data, 10);
-    const atualizado = await pool.query(
-      `UPDATE users
-          SET password_hash = $1, sessao_invalidada_em = now()
-        WHERE email = $2 AND email_verificado
-        RETURNING id`,
-      [hashedPassword, email],
-    );
-    if (atualizado.rows.length === 0) {
+    // Troca a senha e derruba sessões web e desafios 2FA na mesma transação: ou tudo, ou nada.
+    const trocou = await emTransacao(async (client) => {
+      const { rows } = await client.query<{ id: number }>(
+        `UPDATE users SET password_hash = $1, sessao_invalidada_em = now()
+          WHERE email = $2 AND email_verificado
+          RETURNING id`,
+        [hashedPassword, email],
+      );
+      if (!rows[0]) return false;
+      await derrubarAcessosWeb(client, rows[0].id);
+      return true;
+    });
+    if (!trocou) {
       return res.status(400).json({ error: 'Conta não encontrada.' });
     }
     await pool.query('DELETE FROM verificacoes_email WHERE email = $1', [email]);

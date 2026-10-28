@@ -93,12 +93,6 @@ export default function Login() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Vinculacao")} hitSlop={{ top: 8, bottom: 8 }}>
-          <Text style={[styles.linkText, { color: theme.colors.primary }]}>
-            Vincular-se a um psicólogo
-          </Text>
-        </TouchableOpacity>
-
         <View style={styles.separatorContainer}>
           <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
           <Text style={[styles.separatorText, { color: theme.colors.onSurfaceVariant }]}>ou</Text>

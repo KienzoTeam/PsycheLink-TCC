@@ -1,0 +1,94 @@
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-8);
+  min-height: var(--espaco-32);
+  padding-inline: var(--espaco-12);
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-sm);
+  background: transparent;
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-rotulo-grande);
+}
+
+.chip svg {
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+}
+
+.marca {
+  width: var(--espaco-8);
+  height: var(--espaco-8);
+  border-radius: var(--forma-total);
+  background: var(--cor-marca);
+}
+
+.feliz {
+  --cor-marca: var(--emocao-feliz);
+}
+
+.triste {
+  --cor-marca: var(--emocao-triste);
+}
+
+.ansioso {
+  --cor-marca: var(--emocao-ansioso);
+}
+
+.calmo {
+  --cor-marca: var(--emocao-calmo);
+}
+
+.irritado {
+  --cor-marca: var(--emocao-irritado);
+}
+
+.cansado {
+  --cor-marca: var(--emocao-cansado);
+}
+
+/* Chip de filtro: alvo de toque de 44px com a aparência compacta do chip. */
+.filtro {
+  min-height: var(--alvo-minimo);
+  padding-inline: var(--espaco-16);
+  border-color: var(--cor-contorno);
+  border-radius: var(--forma-md);
+  cursor: pointer;
+  transition: border-radius var(--duracao-espacial-rapida) var(--mola-espacial-rapida);
+}
+
+.filtro::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentcolor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+.filtro[data-hovered]::before {
+  opacity: var(--camada-hover);
+}
+
+.filtro[data-focus-visible]::before {
+  opacity: var(--camada-foco);
+}
+
+.filtro[data-pressed]::before {
+  opacity: var(--camada-pressionado);
+}
+
+.filtro[data-selected] {
+  border-color: transparent;
+  border-radius: var(--forma-total);
+  background: var(--cor-container-secundaria);
+  color: var(--cor-sobre-container-secundaria);
+}
+
+.filtro[data-disabled] {
+  opacity: var(--opacidade-desabilitado-conteudo);
+  cursor: not-allowed;
+}

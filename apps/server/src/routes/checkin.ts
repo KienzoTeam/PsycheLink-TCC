@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { pool } from '../db';
 import { checkinSchema } from '../schemas';
 import { verificarToken } from './auth';
 import { criptografar, criptografarOuNulo, descriptografar } from '../lib/criptografia';
 import { comContextoPaciente } from '../lib/contextoseguro';
+import { obterOuCriarPacienteId, obterPacienteId } from '../lib/paciente';
 
 export const checkin = Router();
 
@@ -46,26 +46,6 @@ interface CheckinPainelRow {
   emocao_predominante: string | null;
 }
 
-
-async function obterOuCriarPacienteId(userId: number): Promise<number> {
-  const existente = await pool.query('SELECT id FROM paciente WHERE user_id = $1', [userId]);
-  if (existente.rows[0]) {
-    return (existente.rows[0] as { id: number }).id;
-  }
-
-  const criado = await pool.query(
-    'INSERT INTO paciente (user_id) VALUES ($1) RETURNING id',
-    [userId],
-  );
-  return (criado.rows[0] as { id: number }).id;
-}
-
-
-async function obterPacienteId(userId: number): Promise<number | null> {
-  const resultado = await pool.query('SELECT id FROM paciente WHERE user_id = $1', [userId]);
-  const row = resultado.rows[0] as { id: number } | undefined;
-  return row?.id ?? null;
-}
 
 function formatarDataISO(data: Date): string {
   // Data local (calendário do dispositivo/servidor), não UTC: evita deslocar
@@ -200,8 +180,8 @@ checkin.post(['/', '/checkins'], limite(20), verificarToken, async (req, res) =>
       client.query(
         `INSERT INTO checkin_diario
            (paciente_id, emocao_predominante, intensidade_humor, intensidade_ansiedade,
-            horas_sono, qualidade_sono, contexto_gatilho, diario_livre)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            horas_sono, qualidade_sono, contexto_gatilho, diario_livre, diario_compartilhado)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING id, data, criado_em`,
         [
           pacienteId,
@@ -212,6 +192,7 @@ checkin.post(['/', '/checkins'], limite(20), verificarToken, async (req, res) =>
           qualidadeSono,
           contextoGatilho,
           diarioLivre,
+          diarioLivre !== null && dados.diarioCompartilhado,
         ],
       ),
     )) as { rows: CheckinPostResultRow[] };

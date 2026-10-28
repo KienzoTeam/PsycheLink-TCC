@@ -1,0 +1,49 @@
+.grupo {
+  display: flex;
+  padding: var(--espaco-4);
+  border-radius: var(--forma-total);
+  background: var(--cor-container-alto);
+}
+
+.opcao {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--alvo-minimo);
+  padding-inline: var(--espaco-16);
+  border: 0;
+  border-radius: var(--forma-total);
+  background: transparent;
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-grande);
+  cursor: pointer;
+  transition: color var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+.opcao[data-hovered]:not([data-selected]) {
+  color: var(--cor-sobre-superficie);
+}
+
+.opcao[data-selected] {
+  color: var(--cor-sobre-primaria);
+}
+
+.opcao[data-disabled] {
+  opacity: var(--opacidade-desabilitado-conteudo);
+  cursor: not-allowed;
+}
+
+/* O indicador desliza entre as opções: RAC compara as posições e anima o translate. */
+.indicador {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--cor-primaria);
+  transition: translate var(--duracao-espacial-padrao) var(--mola-espacial-padrao);
+}
+
+.rotulo {
+  position: relative;
+}
