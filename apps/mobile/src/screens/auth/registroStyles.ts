@@ -102,15 +102,6 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
-  emailLinkContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 20,
-  },
-  emailLink: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
   skipButton: {
     height: 55,
     borderRadius: 16,

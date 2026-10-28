@@ -18,12 +18,20 @@ export async function enviarCheckin(rascunho: RascunhoCheckin): Promise<CheckinS
     contextos: rascunho.contextos,
     habitos: rascunho.habitos,
     notas: rascunho.notas || undefined,
+    // O switch só aparece com texto; sem texto não há o que compartilhar.
+    diarioCompartilhado: rascunho.notas.trim() !== '' && rascunho.diarioCompartilhado,
   };
 
   // Chama o endpoint POST /checkin alinhado com o servidor
   const response = await api.post<{ checkin: CheckinSalvo }>('/checkin', payload);
 
   return response.data.checkin;
+}
+
+/** Preferência `diario` do paciente: valor inicial do interruptor "Compartilhar este texto". */
+export async function buscarDiarioPadrao(): Promise<boolean> {
+  const { data } = await api.get<{ diario: boolean }>('/paciente/consentimento');
+  return data.diario;
 }
 
 export type PontoSerieTemporal = {

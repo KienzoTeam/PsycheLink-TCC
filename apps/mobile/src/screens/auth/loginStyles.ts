@@ -20,12 +20,6 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
   },
 
-  linkText: {
-    textAlign: 'center',
-    marginTop: 24,
-    fontWeight: '600',
-  },
-
   forgotPasswordText: {
     textAlign: 'center',
     marginTop: 16,
