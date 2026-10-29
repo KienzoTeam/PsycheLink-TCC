@@ -1,6 +1,7 @@
 import React from 'react';
-import { Alert, Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
+import { Alert, Modal, ScrollView, Text, TouchableOpacity, View,} from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../../theme/ThemeContext';
 import { styles } from '../../screens/paciente/BemEstar/StyleBemEstar';
@@ -23,6 +24,7 @@ export function GuidedExerciseModal({
   onComplete,
 }: GuidedExerciseModalProps) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const {
     status,
@@ -71,12 +73,24 @@ export function GuidedExerciseModal({
           ? breathingPhase.description
           : currentStep;
 
+  // Translúcido nas duas barras: sem isso, no Android a tela de trás aparece na
+  // status bar. Os insets afastam o cartão das barras.
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={requestClose}>
-      <View style={styles.modalOverlay}>
-        <SafeAreaView
-          style={[styles.guidedModal, { backgroundColor: theme.colors.surfaceContainer }]}
-        >
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={requestClose}
+      statusBarTranslucent
+      navigationBarTranslucent
+    >
+      <View
+        style={[
+          styles.modalOverlay,
+          { paddingTop: 22 + insets.top, paddingBottom: 22 + insets.bottom },
+        ]}
+      >
+        <View style={[styles.guidedModal, { backgroundColor: theme.colors.surfaceContainer }]}>
           <View style={styles.guidedModalHeader}>
             <View style={styles.modalHeaderSpacer} />
 
@@ -271,7 +285,7 @@ export function GuidedExerciseModal({
               Finalizar agora
             </Text>
           </TouchableOpacity>
-        </SafeAreaView>
+        </View>
       </View>
     </Modal>
   );

@@ -435,11 +435,14 @@ export default function SOS() {
       <ExercicioRespiracao visivel={respirandoAberto} aoFechar={() => setRespirandoAberto(false)} />
 
       {/* MODAL PARA DEFINIR/CONFIRMAR O NOME DA PESSOA */}
+      {/* Só a status bar translúcida: com a barra de navegação também, o Android para de
+          redimensionar a janela para o teclado e ele cobriria o campo e o Salvar. */}
       <Modal
         visible={modalNomeVisivel}
         transparent
         animationType="fade"
         onRequestClose={() => setModalNomeVisivel(false)}
+        statusBarTranslucent
       >
         <View
           style={{

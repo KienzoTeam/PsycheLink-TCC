@@ -1,6 +1,7 @@
 import React from 'react';
-import { Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme/ThemeContext';
 import { styles } from '../../screens/paciente/BemEstar/StyleBemEstar';
 import { TECHNIQUE_STEPS } from '../../constants/data';
@@ -21,14 +22,27 @@ export function TechniqueModal({
   onComplete,
 }: TechniqueModalProps) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const allStepsCompleted = completedSteps.length === TECHNIQUE_STEPS.length;
 
+  // Translúcido nas duas barras: sem isso, no Android a tela de trás aparece na
+  // status bar. Os insets afastam o cartão das barras.
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <SafeAreaView
-          style={[styles.techniqueModal, { backgroundColor: theme.colors.surfaceContainer }]}
-        >
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+      navigationBarTranslucent
+    >
+      <View
+        style={[
+          styles.modalOverlay,
+          { paddingTop: 22 + insets.top, paddingBottom: 22 + insets.bottom },
+        ]}
+      >
+        <View style={[styles.techniqueModal, { backgroundColor: theme.colors.surfaceContainer }]}>
           <View style={styles.guidedModalHeader}>
             <View style={styles.modalHeaderSpacer} />
 
@@ -159,7 +173,7 @@ export function TechniqueModal({
               </Text>
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
+        </View>
       </View>
     </Modal>
   );

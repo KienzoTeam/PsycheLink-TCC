@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Modal, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../../theme/ThemeContext';
 import { styles } from '../../screens/paciente/BemEstar/StyleBemEstar';
@@ -14,6 +15,7 @@ interface MoodModalProps {
 
 export function MoodModal({ visible, onClose, onRegister }: MoodModalProps) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
 
  
@@ -31,11 +33,23 @@ export function MoodModal({ visible, onClose, onRegister }: MoodModalProps) {
     setSelectedMood(null);
   };
 
+  // Translúcido nas duas barras: sem isso, no Android a tela de trás aparece na
+  // status bar. O inset de baixo tira os botões de sob a barra de navegação.
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={handleClose}
+      statusBarTranslucent
+      navigationBarTranslucent
+    >
       <View style={styles.moodOverlay}>
-        <SafeAreaView
-          style={[styles.moodSheet, { backgroundColor: theme.colors.surfaceContainer }]}
+        <View
+          style={[
+            styles.moodSheet,
+            { backgroundColor: theme.colors.surfaceContainer, paddingBottom: 18 + insets.bottom },
+          ]}
         >
           <View style={styles.moodHandle} />
 
@@ -118,7 +132,7 @@ export function MoodModal({ visible, onClose, onRegister }: MoodModalProps) {
               Agora não
             </Text>
           </TouchableOpacity>
-        </SafeAreaView>
+        </View>
       </View>
     </Modal>
   );
