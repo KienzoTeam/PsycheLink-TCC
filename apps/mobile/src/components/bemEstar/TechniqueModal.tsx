@@ -32,11 +32,23 @@ export function TechniqueModal({
           <View style={styles.guidedModalHeader}>
             <View style={styles.modalHeaderSpacer} />
 
-            <Text style={[styles.guidedModalTitle, { color: theme.colors.onSurface }]}>
-              Técnica 5-4-3-2-1
-            </Text>
+            {/* Mesmo wrapper flex do GuidedExerciseModal: centraliza o título e empurra o X para o canto. */}
+            <View style={styles.modalHeaderText}>
+              <Text
+                style={[styles.guidedModalTitle, { color: theme.colors.onSurface }]}
+                maxFontSizeMultiplier={1.2}
+              >
+                Técnica 5-4-3-2-1
+              </Text>
+            </View>
 
-            <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={onClose}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar técnica"
+            >
               <Feather name="x" size={22} color={theme.colors.onSurfaceVariant} />
             </TouchableOpacity>
           </View>
