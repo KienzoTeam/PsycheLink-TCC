@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 
 import { useTheme } from '../../../theme/ThemeContext';
@@ -106,8 +107,13 @@ export default function BemEstar({ onVoltar, onRegistrarHumor }: BemEstarProps) 
     [pendingMoodSource, onRegistrarHumor],
   );
 
+  // SafeAreaView do safe-area-context: o do react-native não afasta o cabeçalho da status bar
+  // no Android. Só o topo: embaixo quem cuida do inset é a barra de abas.
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView
+      edges={['top']}
+      style={[styles.screen, { backgroundColor: theme.colors.background }]}
+    >
       <ScreenHeader title="Bem-estar" onBack={onVoltar} />
 
       <ScrollView
