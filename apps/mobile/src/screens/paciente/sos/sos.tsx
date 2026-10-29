@@ -373,6 +373,7 @@ export default function SOS() {
             <View style={styles.contatoAcoes}>
               <TouchableOpacity
                 style={[styles.contatoBotaoAcao, { backgroundColor: theme.colors.primaryContainer }]}
+                hitSlop={4}
                 onPress={() => abrirWhatsapp(contato.telefone)}
                 accessibilityRole="button"
                 accessibilityLabel={`Chamar ${contato.nome} no WhatsApp`}
@@ -382,6 +383,7 @@ export default function SOS() {
 
               <TouchableOpacity
                 style={[styles.contatoBotaoAcao, { backgroundColor: theme.colors.primaryContainer }]}
+                hitSlop={4}
                 onPress={() => ligarPara(contato.telefone)}
                 accessibilityRole="button"
                 accessibilityLabel={`Ligar para ${contato.nome}`}
@@ -391,6 +393,7 @@ export default function SOS() {
 
               <TouchableOpacity
                 style={styles.contatoBotaoAcao}
+                hitSlop={4}
                 onPress={() => removerContato(contato.id, contato.nome)}
                 accessibilityRole="button"
                 accessibilityLabel={`Remover ${contato.nome}`}

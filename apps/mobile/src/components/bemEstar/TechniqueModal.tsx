@@ -96,6 +96,8 @@ export function TechniqueModal({
                     ]}
                     onPress={() => onToggleStep(step.number)}
                     activeOpacity={0.8}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: completed }}
                   >
                     <View
                       style={[

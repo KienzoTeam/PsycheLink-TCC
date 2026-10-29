@@ -82,6 +82,7 @@ export default function MeusDados({ navigation }: Props) {
         {navigation ? (
           <TouchableOpacity
             onPress={() => navigation.goBack()}
+            hitSlop={11}
             accessibilityRole="button"
             accessibilityLabel="Voltar"
           >

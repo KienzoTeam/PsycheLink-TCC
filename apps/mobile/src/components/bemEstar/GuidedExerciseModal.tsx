@@ -118,6 +118,7 @@ export function GuidedExerciseModal({
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={requestClose}
+              hitSlop={6}
               accessibilityRole="button"
               accessibilityLabel="Fechar exercício"
             >

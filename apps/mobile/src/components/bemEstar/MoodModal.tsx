@@ -53,7 +53,13 @@ export function MoodModal({ visible, onClose, onRegister }: MoodModalProps) {
         >
           <View style={styles.moodHandle} />
 
-          <TouchableOpacity style={styles.moodCloseButton} onPress={handleClose}>
+          <TouchableOpacity
+            style={styles.moodCloseButton}
+            onPress={handleClose}
+            hitSlop={5}
+            accessibilityRole="button"
+            accessibilityLabel="Fechar"
+          >
             <Feather name="x" size={21} color={theme.colors.onSurfaceVariant} />
           </TouchableOpacity>
 
@@ -86,6 +92,8 @@ export function MoodModal({ visible, onClose, onRegister }: MoodModalProps) {
                     },
                   ]}
                   onPress={() => setSelectedMood(option.value)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
                 >
                   <Text style={styles.moodEmoji}>{option.emoji}</Text>
 
