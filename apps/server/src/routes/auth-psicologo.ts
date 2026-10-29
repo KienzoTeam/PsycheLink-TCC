@@ -371,7 +371,7 @@ authPsicologo.post('/registro-psicologo', limite(10), async (req, res) => {
     try {
       await enviarCodigo(email, codigo);
     } catch (erroSmtp) {
-      console.error(`[SMTP Error] Falha ao entregar e-mail para ${email}:`, erroSmtp);
+      console.error('[SMTP Error] Falha ao entregar o código de verificação:', erroSmtp);
       await client.query('ROLLBACK');
       return res.status(400).json({
         error:

@@ -79,7 +79,7 @@ async function emitirCodigo(email: string, assunto?: string): Promise<boolean> {
     // 1. Disparo real via SMTP
     await enviarCodigo(email, codigo, assunto);
   } catch (erroSmtp) {
-    console.error(`[SMTP Error] Falha ao entregar e-mail para ${email}:`, erroSmtp);
+    console.error('[SMTP Error] Falha ao entregar o código de verificação:', erroSmtp);
     return false;
   }
 
