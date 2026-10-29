@@ -155,18 +155,26 @@ auth.post('/registro', limite(10), async (req, res) => {
     }
 
     const existente = await pool.query(
-      'SELECT id, email_verificado FROM users WHERE email = $1',
+      `SELECT u.id, u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo
+         FROM users u LEFT JOIN verificacoes_email v ON v.email = u.email
+        WHERE u.email = $1`,
       [email],
     );
+    const { nome, password, dataNascimento } = parsed.data;
 
-    if (existente.rows[0]?.email_verificado) {
+    // Enquanto o código de um cadastro pendente vale, só quem sabe a senha dele pode refazê-lo:
+    // senão um terceiro troca a senha e o dono do e-mail confirma a conta com a senha do outro.
+    if (
+      existente.rows[0]?.email_verificado ||
+      (existente.rows[0]?.codigo_ativo &&
+        !(await bcrypt.compare(password, existente.rows[0].password_hash)))
+    ) {
       return res.status(409).json({
         error:
           'Não foi possível concluir o cadastro com este e-mail. Motivos possíveis: ele já pertence a uma conta ativa. Tente fazer login ou recuperar a senha.',
       });
     }
 
-    const { nome, password, dataNascimento } = parsed.data;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 1. PRIMEIRO cria ou atualiza o usuário pendente na tabela `users`

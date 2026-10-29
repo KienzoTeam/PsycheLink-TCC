@@ -303,13 +303,25 @@ authPsicologo.post('/registro-psicologo', limite(10), async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    const existente = await client.query<{ id: number; email_verificado: boolean }>(
-      'SELECT id, email_verificado FROM users WHERE email = $1 FOR UPDATE',
+    const existente = await client.query<{
+      id: number;
+      email_verificado: boolean;
+      password_hash: string;
+      codigo_ativo: boolean | null;
+    }>(
+      `SELECT u.id, u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo
+         FROM users u LEFT JOIN verificacoes_email v ON v.email = u.email
+        WHERE u.email = $1
+          FOR UPDATE OF u`,
       [email],
     );
     const conta = existente.rows[0];
 
-    if (conta?.email_verificado) {
+    // Cadastro pendente com código válido só é refeito por quem sabe a senha dele (ver /registro).
+    if (
+      conta?.email_verificado ||
+      (conta?.codigo_ativo && !(await bcrypt.compare(password, conta.password_hash)))
+    ) {
       await client.query('ROLLBACK');
       return res.status(409).json({ error: MSG_CADASTRO_INDISPONIVEL });
     }
