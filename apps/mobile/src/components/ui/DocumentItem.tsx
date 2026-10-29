@@ -85,7 +85,7 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
                 <View style={[styles.modalIconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
                   <Feather name="file-text" size={18} color={theme.colors.primary} />
                 </View>
-                <View>
+                <View style={styles.modalTituloContainer}>
                   <Text style={[styles.modalTitulo, { color: theme.colors.onBackground }]}>
                     {titulo}
                   </Text>
@@ -211,6 +211,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // flex: 1 faz título longo quebrar linha em vez de passar por baixo do X.
+  modalTituloContainer: {
+    flex: 1,
   },
   modalTitulo: {
     fontSize: 16,
