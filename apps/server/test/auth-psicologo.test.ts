@@ -262,6 +262,39 @@ describe('POST /auth/psicologo/2fa/reenviar', () => {
     assert.equal((await enviar(String(codigoNovo))).status, 200);
   });
 
+  it('não ressuscita desafio expirado nem estende além de 30 min do login', async () => {
+    const psicologo = await criarPsicologo();
+    const cliente = criarCliente(servidor.url);
+    const { desafioId } = (await login(cliente, psicologo.email, psicologo.senha)).corpo;
+    const reenviar = () =>
+      cliente.requisitar('POST', '/auth/psicologo/2fa/reenviar', { corpo: { desafioId } });
+
+    await pool.query(
+      `UPDATE desafio_2fa SET reenviado_em = now() - interval '61 seconds', tentativas = 5,
+                              expira_em = now() - interval '1 second' WHERE id = $1`,
+      [desafioId],
+    );
+    assert.equal((await reenviar()).status, 400);
+    const expirado = await pool.query(
+      'SELECT tentativas, expira_em < now() AS vencido FROM desafio_2fa WHERE id = $1',
+      [desafioId],
+    );
+    assert.equal(expirado.rows[0].tentativas, 5);
+    assert.equal(expirado.rows[0].vencido, true);
+
+    await pool.query(
+      `UPDATE desafio_2fa SET criado_em = now() - interval '25 minutes',
+                              expira_em = now() + interval '1 minute' WHERE id = $1`,
+      [desafioId],
+    );
+    assert.equal((await reenviar()).status, 200);
+    const { rows } = await pool.query(
+      `SELECT expira_em = criado_em + interval '30 minutes' AS no_teto FROM desafio_2fa WHERE id = $1`,
+      [desafioId],
+    );
+    assert.equal(rows[0].no_teto, true);
+  });
+
   it('desafio inexistente ou já usado → 400', async () => {
     const cliente = criarCliente(servidor.url);
     const res = await cliente.requisitar('POST', '/auth/psicologo/2fa/reenviar', {
