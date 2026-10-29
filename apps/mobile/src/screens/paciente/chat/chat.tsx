@@ -69,8 +69,21 @@ export default function Chat() {
               'Precisa falar com alguém agora?',
               'O CVV atende de graça, 24 horas por dia.',
               [
-                { text: 'Ligar 188', onPress: () => Linking.openURL('tel:188') },
-                { text: 'Abrir chat', onPress: () => Linking.openURL('https://www.cvv.org.br/chat/') },
+                // Sem o catch, aparelho sem telefonia (ou sem navegador) não dava retorno nenhum.
+                {
+                  text: 'Ligar 188',
+                  onPress: () =>
+                    Linking.openURL('tel:188').catch(() =>
+                      Alert.alert('Não foi possível ligar', 'Disque 188 no seu telefone.'),
+                    ),
+                },
+                {
+                  text: 'Abrir chat',
+                  onPress: () =>
+                    Linking.openURL('https://www.cvv.org.br/chat/').catch(() =>
+                      Alert.alert('Não foi possível abrir o chat', 'Acesse cvv.org.br/chat no navegador.'),
+                    ),
+                },
                 { text: 'Fechar', style: 'cancel' },
               ]
             )

@@ -312,7 +312,11 @@ export default function SOS() {
 
       <TouchableOpacity
         style={styles.linkSecundario}
-        onPress={() => Linking.openURL('https://www.cvv.org.br/chat/')}
+        onPress={() =>
+          Linking.openURL('https://www.cvv.org.br/chat/').catch(() =>
+            Alert.alert('Não foi possível abrir o chat', 'Acesse cvv.org.br/chat no navegador.'),
+          )
+        }
         accessibilityRole="button"
         accessibilityLabel="Abrir chat do CVV"
       >
