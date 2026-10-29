@@ -218,6 +218,9 @@ export default function Checkin({ navigation }: Props) {
   // Espelha o rascunho nos estados que o compõem: interrupção (background/kill)
   // retoma de onde parou. Com deps, não roda em renders alheios (ex.: erro de etapa).
   useEffect(() => {
+    // Concluído não é rascunho: sem isso, sair pelo Voltar do Android na etapa 7
+    // fazia o próximo check-in abrir direto na tela de sucesso.
+    if (etapa === total_etapas) return;
     salvarRascunho({ etapa, emocoes: emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextos: contextosSelecionados, habitos: habitosSelecionados, notas, diarioCompartilhado });
   }, [etapa, emocoesSelecionadas, intensidade, humor, ansiedade, horasSono, qualidadeSono, contextosSelecionados, habitosSelecionados, notas, diarioCompartilhado]);
 
@@ -245,7 +248,8 @@ export default function Checkin({ navigation }: Props) {
       setErroEmocoes(true);
       return;
     }
-    if (etapa < total_etapas) {
+    // A etapa 7 (sucesso) só abre pelo envio: o gesto de avançar não pode pular o salvamento.
+    if (etapa < total_etapas - 1) {
       setDirecao('frente');
       vibrarLeve();
       setEtapa(etapa + 1);
@@ -253,7 +257,8 @@ export default function Checkin({ navigation }: Props) {
   };
 
   const etapaAnterior = () => {
-    if (etapa > 1) {
+    // Depois de salvo não volta: reabrir a etapa 6 deixaria enviar o mesmo check-in de novo.
+    if (etapa > 1 && etapa < total_etapas) {
       setDirecao('tras');
       vibrarLeve();
       setEtapa(etapa - 1);
@@ -717,7 +722,8 @@ export default function Checkin({ navigation }: Props) {
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity
           onPress={() => {
-            if (etapa > 1) {
+            // Na etapa 7 o registro já foi salvo: não há o que descartar.
+            if (etapa > 1 && etapa < total_etapas) {
               Alert.alert(
                 'Descartar check-in?',
                 'Seu registro deste dia ainda não foi concluído.',
@@ -738,6 +744,7 @@ export default function Checkin({ navigation }: Props) {
             resetarRascunho();
             navigation.goBack();
           }}
+          hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel="Voltar"
         >
