@@ -338,7 +338,6 @@ export const styles = StyleSheet.create({
 
   breathingPhaseTitle: {
     marginTop: 6,
-    color: '#FFFFFF',
     fontSize: 17,
     lineHeight: 22,
     fontWeight: '700',

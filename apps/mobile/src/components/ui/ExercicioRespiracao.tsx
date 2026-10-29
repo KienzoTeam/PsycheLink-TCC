@@ -6,7 +6,7 @@ import { useTheme } from '../../theme/ThemeContext';
 
 const DURACAO = 60; // segundos
 
-type Fase = 'Inspire' | 'Espire';
+type Fase = 'Inspire' | 'Expire';
 
 /**
  * Respiração guiada de 1 minuto — 100% local, zero backend.
@@ -46,7 +46,7 @@ export default function ExercicioRespiracao({ visivel, aoFechar }: { visivel: bo
     animacao?.start();
 
     const trocaFase = setInterval(
-      () => setFase(f => (f === 'Inspire' ? 'Espire' : 'Inspire')),
+      () => setFase(f => (f === 'Inspire' ? 'Expire' : 'Inspire')),
       4000
     );
     const relogio = setInterval(() => {
