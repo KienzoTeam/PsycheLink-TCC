@@ -22,6 +22,8 @@ export default function Login() {
   const { login, carregando } = useAuth();
 
   const handleLogin = () => {
+    // O "done" do teclado também chama aqui: sem a trava, dava para enviar duas vezes.
+    if (carregando) return;
     login(
       email,
       senha,
@@ -85,6 +87,7 @@ export default function Login() {
         <CustomButton
           title={carregando ? 'Entrando...' : 'Entrar'}
           onPress={handleLogin}
+          loading={carregando}
         />
 
         <TouchableOpacity onPress={() => navigation.navigate("EsqueciSenha")} hitSlop={{ top: 8, bottom: 8 }}>

@@ -45,6 +45,7 @@ export default function Vinculacao({ navigation }: Props) {
       style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={[styles.container, { paddingTop: insets.top + 8 }]}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       <TouchableOpacity
         style={styles.backButton}
