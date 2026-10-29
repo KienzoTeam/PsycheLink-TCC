@@ -218,7 +218,20 @@ auth.post('/verificar-email', limite(10), async (req, res) => {
       return res.status(resultado.status).json({ error: resultado.msg });
     }
 
-    await pool.query('UPDATE users SET email_verificado = true WHERE email = $1', [email]);
+    // Dois cadastros pendentes podem ter o mesmo CRP; fica com ele quem confirmar o e-mail primeiro.
+    const verificado = await pool.query(
+      `UPDATE users SET email_verificado = true
+        WHERE email = $1
+          AND NOT EXISTS (
+            SELECT 1 FROM psicologo p
+              JOIN psicologo outro ON outro.crp = p.crp AND outro.user_id <> p.user_id
+              JOIN users u ON u.id = outro.user_id AND u.email_verificado
+             WHERE p.user_id = users.id)`,
+      [email],
+    );
+    if (!verificado.rowCount) {
+      return res.status(409).json({ error: 'Não foi possível concluir o cadastro com estes dados.' });
+    }
     await pool.query('DELETE FROM verificacoes_email WHERE email = $1', [email]);
 
     return res.json({ message: 'E-mail confirmado com sucesso!' });

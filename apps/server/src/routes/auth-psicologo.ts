@@ -314,9 +314,11 @@ authPsicologo.post('/registro-psicologo', limite(10), async (req, res) => {
       return res.status(409).json({ error: MSG_CADASTRO_INDISPONIVEL });
     }
 
-    // CRP já associado a outro psicólogo não pode ser reutilizado.
+    // CRP de outro psicólogo verificado não pode ser reutilizado. Cadastro pendente não conta:
+    // senão qualquer um "ocupa" o CRP alheio sem nunca confirmar o e-mail.
     const crpEmUso = await client.query(
-      'SELECT 1 FROM psicologo WHERE crp = $1 AND user_id <> $2',
+      `SELECT 1 FROM psicologo p JOIN users u ON u.id = p.user_id
+        WHERE p.crp = $1 AND p.user_id <> $2 AND u.email_verificado`,
       [crp, conta?.id ?? 0],
     );
     if (crpEmUso.rows.length > 0) {
