@@ -161,7 +161,7 @@ export default function Home() {
             style={[styles.header, { borderRadius: theme.borderRadius.xl, paddingTop: insets.top + 12 }]}
           >
             <View style={styles.headerTop}>
-              <View>
+              <View style={styles.saudacao}>
                 <Text style={styles.greeting}>{texto}, {nome} {emoji}</Text>
                 <Text style={styles.headerSubtitle}>Seu bem-estar importa.</Text>
               </View>

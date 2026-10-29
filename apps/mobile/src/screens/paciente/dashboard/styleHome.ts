@@ -13,6 +13,11 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
+  // flex: 1 deixa nome longo ou fonte grande quebrar linha em vez de empurrar o avatar para fora.
+  saudacao: {
+    flex: 1,
+    marginRight: 12,
+  },
   greeting: {
     fontSize: 24,
     fontWeight: 'bold',
