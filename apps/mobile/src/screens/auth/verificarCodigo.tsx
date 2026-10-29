@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, TextInputInstance } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -19,7 +19,7 @@ export default function VerificarCodigo({ navigation, route }: Props) {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [enviando, setEnviando] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const inputs = useRef<(TextInput | null)[]>([]);
+  const inputs = useRef<(TextInputInstance | null)[]>([]);
 
   // Contagem regressiva do reenvio (o servidor também impõe cooldown de 60 s).
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, Linking } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert, Linking, ScrollViewInstance } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -23,7 +23,7 @@ const mensagensIniciais: Mensagem[] = [
 export default function Chat() {
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const listaRef = useRef<ScrollView>(null);
+  const listaRef = useRef<ScrollViewInstance>(null);
   const [mensagens, setMensagens] = useState<Mensagem[]>(mensagensIniciais);
   const [rascunho, setRascunho] = useState('');
 

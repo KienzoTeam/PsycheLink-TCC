@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Alert, PanResponder, KeyboardAvoidingView, Platform} from 'react-native';
+import {View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Alert, PanResponder, KeyboardAvoidingView, Platform, ViewInstance} from 'react-native';
 import Animated, { SlideInLeft, SlideInRight, SlideOutLeft, SlideOutRight, FadeInDown, FadeInUp, ZoomIn, useAnimatedStyle, useSharedValue, withSpring, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Feather } from '@expo/vector-icons';
@@ -71,7 +71,7 @@ function SliderControl({
   formato?: (v: number) => string;
 }) {
   const { theme } = useTheme();
-  const trackRef = useRef<View>(null);
+  const trackRef = useRef<ViewInstance>(null);
   const trackGeo = useRef({ x: 0, width: 1 });
   
   // Espelho do valor: o PanResponder captura aplicar na criação, então
