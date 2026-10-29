@@ -373,7 +373,7 @@ auth.post('/login', limite(10), async (req, res) => {
 
   try {
     const user = await pool.query(
-      'SELECT id, email, password_hash, email_verificado FROM users WHERE email = $1',
+      'SELECT id, nome, email, data_nascimento, password_hash, email_verificado FROM users WHERE email = $1',
       [email],
     );
     if (user.rows.length === 0) {
@@ -397,7 +397,9 @@ auth.post('/login', limite(10), async (req, res) => {
       process.env.JWT_SECRET!,
       { expiresIn: '1d' },
     );
-    return res.json({ token });
+    // Mesmo perfil do GET /me: o app entra sem mais uma ida e volta.
+    const { id, nome, data_nascimento } = user.rows[0];
+    return res.json({ token, usuario: { id, nome, email: user.rows[0].email, data_nascimento } });
   } catch (err) {
     console.error('Erro ao logar:', err);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
