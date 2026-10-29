@@ -53,12 +53,11 @@ function dataParaISO(dataBR: string): string | null {
   return `${ano}-${mm}-${dd}`;
 }
 
-const buscarUsuarioComToken = async (token: string): Promise<UsuarioAutenticado> => {
+// O token já está no storage (o interceptor lê de lá).
+const buscarUsuarioSalvo = async (): Promise<UsuarioAutenticado> => {
   atualizarCarregandoUsuario(true);
 
   try {
-    // Garante que o token está no storage antes do interceptor rodar
-    await salvarTokenSeguro(token);
     const response = await api.get<UsuarioAutenticado>('/auth/me');
     atualizarUsuarioCompartilhado(response.data);
     return response.data;
@@ -81,7 +80,7 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
       return null;
     }
 
-    const usuario = await buscarUsuarioComToken(token);
+    const usuario = await buscarUsuarioSalvo();
     sessaoInicializada = true;
     return usuario;
   } catch (error: any) {
@@ -142,7 +141,7 @@ export function useAuth() {
     }
 
     try {
-      const usuarioAtual = await buscarUsuarioComToken(token);
+      const usuarioAtual = await buscarUsuarioSalvo();
       sessaoInicializada = true;
       return usuarioAtual;
     } catch (error: any) {
@@ -178,9 +177,10 @@ export function useAuth() {
         password: senha,
       });
 
-      const { token } = response.data;
+      // O login já devolve o perfil: sem o GET /auth/me em seguida.
+      const { token, usuario } = response.data;
       await salvarTokenSeguro(token);
-      await buscarUsuarioComToken(token);
+      atualizarUsuarioCompartilhado(usuario);
       sessaoInicializada = true;
       onSuccess();
     } catch (error: any) {
