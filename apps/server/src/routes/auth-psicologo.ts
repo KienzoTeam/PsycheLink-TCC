@@ -178,13 +178,15 @@ authPsicologo.post('/psicologo/2fa/reenviar', limite(5), async (req, res) => {
   const { desafioId } = parsed.data;
 
   // O UPDATE reserva o intervalo de 60 s antes do envio; dois cliques seguidos geram um e-mail só.
+  // Só reenvia desafio ainda válido e nunca além de 30 min do login: reenviar não ressuscita
+  // um desafio expirado nem renova as tentativas para sempre.
   const codigo = gerarCodigo();
   const { rows } = await pool.query<{ email: string; reenviar_em: Date }>(
     `UPDATE desafio_2fa d
         SET codigo_hash = $2, tentativas = 0, reenviado_em = now(),
-            expira_em = now() + interval '10 minutes'
+            expira_em = LEAST(now() + interval '10 minutes', d.criado_em + interval '30 minutes')
        FROM users u
-      WHERE d.id = $1 AND u.id = d.user_id AND d.usado_em IS NULL
+      WHERE d.id = $1 AND u.id = d.user_id AND d.usado_em IS NULL AND d.expira_em > now()
         AND d.reenviado_em <= now() - interval '60 seconds'
       RETURNING u.email, d.reenviado_em + interval '60 seconds' AS reenviar_em`,
     [desafioId, hashCodigo(codigo, desafioId)],
@@ -193,10 +195,16 @@ authPsicologo.post('/psicologo/2fa/reenviar', limite(5), async (req, res) => {
   if (!rows[0]) {
     const { rows: pendente } = await pool.query<{ reenviar_em: Date }>(
       `SELECT reenviado_em + interval '60 seconds' AS reenviar_em
-         FROM desafio_2fa WHERE id = $1 AND usado_em IS NULL`,
+         FROM desafio_2fa WHERE id = $1 AND usado_em IS NULL AND expira_em > now()`,
       [desafioId],
     );
-    if (!pendente[0]) return res.status(400).json({ error: MSG_CODIGO_INVALIDO });
+    // Desafio vencido, usado ou inexistente: reenviar não adianta, o cliente precisa voltar ao login.
+    if (!pendente[0]) {
+      return res.status(400).json({
+        codigo: 'DESAFIO_EXPIRADO',
+        error: 'Este acesso expirou. Entre de novo para receber outro código.',
+      });
+    }
     return res.status(429).json({
       error: 'Aguarde um minuto antes de pedir um novo código.',
       reenviarEm: pendente[0].reenviar_em.toISOString(),
@@ -300,21 +308,37 @@ authPsicologo.post('/registro-psicologo', limite(10), async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    // Mesmo lock do /auth/registro: cadastros do mesmo e-mail, por qualquer rota, entram um por vez.
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [email]);
 
-    const existente = await client.query<{ id: number; email_verificado: boolean }>(
-      'SELECT id, email_verificado FROM users WHERE email = $1 FOR UPDATE',
+    const existente = await client.query<{
+      id: number;
+      email_verificado: boolean;
+      password_hash: string;
+      codigo_ativo: boolean | null;
+    }>(
+      `SELECT u.id, u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo
+         FROM users u LEFT JOIN verificacoes_email v ON v.email = u.email
+        WHERE u.email = $1
+          FOR UPDATE OF u`,
       [email],
     );
     const conta = existente.rows[0];
 
-    if (conta?.email_verificado) {
+    // Cadastro pendente com código válido só é refeito por quem sabe a senha dele (ver /registro).
+    if (
+      conta?.email_verificado ||
+      (conta?.codigo_ativo && !(await bcrypt.compare(password, conta.password_hash)))
+    ) {
       await client.query('ROLLBACK');
       return res.status(409).json({ error: MSG_CADASTRO_INDISPONIVEL });
     }
 
-    // CRP já associado a outro psicólogo não pode ser reutilizado.
+    // CRP de outro psicólogo verificado não pode ser reutilizado. Cadastro pendente não conta:
+    // senão qualquer um "ocupa" o CRP alheio sem nunca confirmar o e-mail.
     const crpEmUso = await client.query(
-      'SELECT 1 FROM psicologo WHERE crp = $1 AND user_id <> $2',
+      `SELECT 1 FROM psicologo p JOIN users u ON u.id = p.user_id
+        WHERE p.crp = $1 AND p.user_id <> $2 AND u.email_verificado`,
       [crp, conta?.id ?? 0],
     );
     if (crpEmUso.rows.length > 0) {
@@ -355,7 +379,7 @@ authPsicologo.post('/registro-psicologo', limite(10), async (req, res) => {
     try {
       await enviarCodigo(email, codigo);
     } catch (erroSmtp) {
-      console.error(`[SMTP Error] Falha ao entregar e-mail para ${email}:`, erroSmtp);
+      console.error('[SMTP Error] Falha ao entregar o código de verificação:', erroSmtp);
       await client.query('ROLLBACK');
       return res.status(400).json({
         error:

@@ -190,7 +190,7 @@ export async function limpar() {
 
 export const ORIGEM_WEB = 'http://localhost:5173';
 
-// O mailer escreve o código no console fora de produção; os testes leem de lá.
+// Sem SMTP e fora de produção o mailer escreve o código no console; os testes leem de lá.
 const codigosEnviados = new Map<string, number>();
 
 export function capturarCodigos() {

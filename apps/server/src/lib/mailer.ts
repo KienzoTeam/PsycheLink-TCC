@@ -21,8 +21,8 @@ export async function enviarCodigo(
   codigo: number,
   assunto = 'PsycheLink · Confirme seu e-mail'
 ): Promise<void> {
-  // Fora de produção o código aparece no console, para testar sem abrir o e-mail.
-  if (process.env.NODE_ENV !== 'production') {
+  // Só no dev sem SMTP o código vai para o console; com e-mail de verdade ele nunca chega ao log.
+  if (!smtpAtivo && process.env.NODE_ENV !== 'production') {
     console.log(`[código] ${email} · ${assunto}: ${codigo}`);
   }
 

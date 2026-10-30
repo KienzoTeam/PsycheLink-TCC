@@ -11,7 +11,10 @@ export const salvarTokenSeguro = async (token: string) => {
     return;
   }
 
-  await SecureStore.setItemAsync(TOKEN_KEY, token);
+  // Só com o aparelho desbloqueado e sem ir para backup/outro aparelho (o padrão migra no backup do iOS).
+  await SecureStore.setItemAsync(TOKEN_KEY, token, {
+    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+  });
 };
 
 export const obterTokenSeguro = async (): Promise<string | null> => {

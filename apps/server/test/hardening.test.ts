@@ -78,6 +78,25 @@ describe('código OTP no log', () => {
       definirAmbiente(anterior);
     }
   });
+
+  it('nunca aparece com SMTP configurado, nem fora de produção', async (t) => {
+    const log = t.mock.method(console, 'log', () => {});
+    const anterior = { NODE_ENV: process.env.NODE_ENV, SMTP_HOST: process.env.SMTP_HOST };
+    const caminho = require.resolve('../src/lib/mailer');
+    try {
+      // O mailer lê SMTP_HOST ao ser carregado; recarrega com SMTP e sem rede (sendMail falso).
+      definirAmbiente({ NODE_ENV: 'development', SMTP_HOST: 'smtp.psychelink.test' });
+      delete require.cache[caminho];
+      const comSmtp = require(caminho) as typeof import('../src/lib/mailer');
+      const envio = t.mock.method(comSmtp.mailer, 'sendMail', async () => ({}));
+      await comSmtp.enviarCodigo('otp@psychelink.test', 123456);
+      assert.equal(envio.mock.callCount(), 1);
+      assert.equal(log.mock.callCount(), 0);
+    } finally {
+      definirAmbiente(anterior);
+      delete require.cache[caminho];
+    }
+  });
 });
 
 describe('TLS do banco', () => {
