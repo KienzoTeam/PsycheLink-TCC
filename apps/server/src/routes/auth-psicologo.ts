@@ -198,7 +198,13 @@ authPsicologo.post('/psicologo/2fa/reenviar', limite(5), async (req, res) => {
          FROM desafio_2fa WHERE id = $1 AND usado_em IS NULL AND expira_em > now()`,
       [desafioId],
     );
-    if (!pendente[0]) return res.status(400).json({ error: MSG_CODIGO_INVALIDO });
+    // Desafio vencido, usado ou inexistente: reenviar não adianta, o cliente precisa voltar ao login.
+    if (!pendente[0]) {
+      return res.status(400).json({
+        codigo: 'DESAFIO_EXPIRADO',
+        error: 'Este acesso expirou. Entre de novo para receber outro código.',
+      });
+    }
     return res.status(429).json({
       error: 'Aguarde um minuto antes de pedir um novo código.',
       reenviarEm: pendente[0].reenviar_em.toISOString(),

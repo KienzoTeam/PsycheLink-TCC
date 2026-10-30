@@ -274,7 +274,9 @@ describe('POST /auth/psicologo/2fa/reenviar', () => {
                               expira_em = now() - interval '1 second' WHERE id = $1`,
       [desafioId],
     );
-    assert.equal((await reenviar()).status, 400);
+    const vencido = await reenviar();
+    assert.equal(vencido.status, 400);
+    assert.equal(((await vencido.json()) as { codigo: string }).codigo, 'DESAFIO_EXPIRADO');
     const expirado = await pool.query(
       'SELECT tentativas, expira_em < now() AS vencido FROM desafio_2fa WHERE id = $1',
       [desafioId],
@@ -301,5 +303,6 @@ describe('POST /auth/psicologo/2fa/reenviar', () => {
       corpo: { desafioId: 'inexistente' },
     });
     assert.equal(res.status, 400);
+    assert.equal(((await res.json()) as { codigo: string }).codigo, 'DESAFIO_EXPIRADO');
   });
 });
