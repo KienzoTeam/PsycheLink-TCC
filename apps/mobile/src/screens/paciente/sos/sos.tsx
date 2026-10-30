@@ -9,6 +9,8 @@ import { ContatoConfianca, MAX_CONTATOS, lerContatos, salvarContatos } from '../
 import { styles } from './styleSOS';
 
 const NUMERO_CVV = '188';
+// Mantém o JSON dos contatos bem abaixo de ~2 KB com MAX_CONTATOS (limite do SecureStore em iOS antigos).
+const MAX_NOME = 60;
 const CORES_AVATAR = ['#6C4CE0', '#4B32B0', '#2E9E6B', '#D08C2E', '#C2445C'];
 
 function corAvatar(nome: string) {
@@ -75,6 +77,8 @@ export default function SOS() {
   const [respirandoAberto, setRespirandoAberto] = useState(false);
   const [contatos, setContatos] = useState<ContatoConfianca[]>([]);
   const [carregandoContatos, setCarregandoContatos] = useState(true);
+  // Leitura falhou: os contatos podem estar intactos, então não gravamos por cima de uma lista vazia.
+  const [contatosIndisponiveis, setContatosIndisponiveis] = useState(false);
 
   // Estados para o Modal de definição do Nome do Contato
   const [modalNomeVisivel, setModalNomeVisivel] = useState(false);
@@ -85,6 +89,13 @@ export default function SOS() {
   useEffect(() => {
     lerContatos()
       .then(setContatos)
+      .catch(() => {
+        setContatosIndisponiveis(true);
+        Alert.alert(
+          'Não foi possível carregar seus contatos',
+          'Seus contatos de confiança continuam salvos. Feche e abra o app para tentar de novo.'
+        );
+      })
       .finally(() => setCarregandoContatos(false));
   }, []);
 
@@ -146,6 +157,11 @@ export default function SOS() {
   );
 
   const adicionarContato = useCallback(async () => {
+    if (carregandoContatos) return; // lista ainda não lida: gravar agora apagaria os contatos salvos
+    if (contatosIndisponiveis) {
+      Alert.alert('Contatos indisponíveis', 'Feche e abra o app para carregar seus contatos antes de adicionar outro.');
+      return;
+    }
     if (contatos.length >= MAX_CONTATOS) {
       Alert.alert(
         'Limite de contatos',
@@ -217,13 +233,13 @@ export default function SOS() {
       // Preenche os dados e abre a janelinha para confirmar o NOME
       setIdPendente(escolhido.id || `${Date.now()}`);
       setTelefonePendente(telefone);
-      setNomeEditado(nomeIdentificado); // Se achou o nome, já deixa preenchido
+      setNomeEditado(nomeIdentificado.slice(0, MAX_NOME)); // Se achou o nome, já deixa preenchido
       setModalNomeVisivel(true);
     } catch {
       console.warn('Erro ao selecionar contato.');
       Alert.alert('Atenção', 'Não foi possível selecionar o contato. Tente novamente.');
     }
-  }, [contatos.length]);
+  }, [contatos.length, contatosIndisponiveis, carregandoContatos]);
 
   // Salva o contato com o nome que o usuário confirmou/digitou
   const salvarContatoConfirmado = useCallback(async () => {
@@ -521,6 +537,7 @@ export default function SOS() {
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={nomeEditado}
               onChangeText={setNomeEditado}
+              maxLength={MAX_NOME}
               autoFocus
             />
 

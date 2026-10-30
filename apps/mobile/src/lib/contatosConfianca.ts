@@ -58,9 +58,10 @@ export async function lerContatos(): Promise<ContatoConfianca[]> {
       }
     }
     return interpretar(antigo);
-  } catch {
+  } catch (erro) {
+    // Propaga: devolver [] faria a tela gravar por cima de uma lista que continua intacta.
     console.warn('Não foi possível ler os contatos de confiança.');
-    return [];
+    throw erro;
   }
 }
 
