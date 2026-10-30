@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import axios from 'axios';
-import { obterTokenSeguro, removerTokenSeguro } from './authToken';
+import { obterTokenSeguro } from './authToken';
 
 const devHost = Constants.expoConfig?.hostUri?.split(':')[0];
 
@@ -14,8 +14,21 @@ export const api = axios.create({
   timeout: 15000,
 });
 
+// Versão da sessão, em memória: login e logout incrementam antes de mexer no token. Cada
+// requisição guarda a versão de quando saiu; resposta de versão antiga não mexe na sessão nova.
+let versaoSessao = 0;
+export const novaVersaoSessao = () => void versaoSessao++;
+export const respostaDeSessaoAntiga = (config?: any) => config?.versaoSessao !== versaoSessao;
+
+// O useAuth registra aqui a limpeza da sessão (token, usuário e ouvintes) para ter um lugar só.
+let aoSessaoExpirar: () => Promise<void> = async () => {};
+export const registrarAoSessaoExpirar = (fn: () => Promise<void>) => {
+  aoSessaoExpirar = fn;
+};
+
 // Anexa Bearer em toda chamada
 api.interceptors.request.use(async (config) => {
+  (config as any).versaoSessao = versaoSessao;
   const token = await obterTokenSeguro();
 
   if (token) {
@@ -25,10 +38,6 @@ api.interceptors.request.use(async (config) => {
 
   return config;
 });
-
-// Resposta atrasada de uma requisição feita com token antigo não pode mexer na sessão nova.
-export const tokenAindaEhOAtual = async (config?: { headers?: any }) =>
-  config?.headers?.Authorization === `Bearer ${await obterTokenSeguro()}`;
 
 // Se a sessão morreu no server, limpa o token local
 api.interceptors.response.use(
@@ -44,9 +53,9 @@ api.interceptors.response.use(
       // Não limpa em EMAIL_NAO_VERIFICADO (403 de login legítimo)
       if (
         error?.response?.data?.codigo !== 'EMAIL_NAO_VERIFICADO' &&
-        (await tokenAindaEhOAtual(error.config))
+        !respostaDeSessaoAntiga(error.config)
       ) {
-        await removerTokenSeguro();
+        await aoSessaoExpirar();
       }
     }
 

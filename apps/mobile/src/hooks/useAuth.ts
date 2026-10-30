@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
-import { api, tokenAindaEhOAtual } from '../lib/api';
+import {
+  api,
+  novaVersaoSessao,
+  registrarAoSessaoExpirar,
+  respostaDeSessaoAntiga,
+} from '../lib/api';
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
 import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,} from '../lib/authToken';
@@ -60,7 +65,7 @@ const buscarUsuarioSalvo = async (): Promise<UsuarioAutenticado> => {
   try {
     const response = await api.get<UsuarioAutenticado>('/auth/me');
     // Se o token mudou no meio da chamada (novo login), esse perfil é da conta anterior.
-    if (await tokenAindaEhOAtual(response.config)) atualizarUsuarioCompartilhado(response.data);
+    if (!respostaDeSessaoAntiga(response.config)) atualizarUsuarioCompartilhado(response.data);
     return response.data;
   } finally {
     atualizarCarregandoUsuario(false);
@@ -86,10 +91,7 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
     return usuario;
   } catch (error: any) {
     if (tokenInvalidoOuExpirado(error)) {
-      if (await tokenAindaEhOAtual(error.config)) {
-        await removerTokenSeguro();
-        atualizarUsuarioCompartilhado(null);
-      }
+      if (!respostaDeSessaoAntiga(error.config)) await limparSessao();
       sessaoInicializada = true;
       return null;
     }
@@ -115,6 +117,7 @@ const limparSessao = async () => {
   sessaoInicializada = true;
   notificarSessao();
 };
+registrarAoSessaoExpirar(limparSessao);
 
 export function useAuth() {
   const [carregando, setCarregando] = useState(false);
@@ -148,7 +151,7 @@ export function useAuth() {
       sessaoInicializada = true;
       return usuarioAtual;
     } catch (error: any) {
-      if (tokenInvalidoOuExpirado(error) && (await tokenAindaEhOAtual(error.config))) {
+      if (tokenInvalidoOuExpirado(error) && !respostaDeSessaoAntiga(error.config)) {
         await limparSessao();
       }
       throw error;
@@ -182,6 +185,7 @@ export function useAuth() {
 
       // O login já devolve o perfil: sem o GET /auth/me em seguida.
       const { token, usuario } = response.data;
+      novaVersaoSessao();
       await salvarTokenSeguro(token);
       atualizarUsuarioCompartilhado(usuario);
       sessaoInicializada = true;
@@ -385,6 +389,7 @@ export function useAuth() {
     }
 
     resetarRascunho();
+    novaVersaoSessao();
     await limparSessao();
   };
 
