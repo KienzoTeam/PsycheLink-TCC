@@ -7,6 +7,7 @@ import { pool } from '../db';
 import { emTransacao } from '../lib/contextoseguro';
 import { derrubarAcessosWeb } from '../lib/sessaoWeb';
 import { registroSchema, senhaSchema } from '../schemas';
+import { HASH_REFERENCIA } from '../lib/hashReferencia';
 import { normalizarEmail } from '../lib/validarEmail';
 import { gerarCodigo, hashCodigo, codigoConfere } from '../lib/codigo';
 import { enviarCodigo } from '../lib/mailer';
@@ -412,12 +413,9 @@ auth.post('/login', limite(10), async (req, res) => {
       'SELECT id, nome, email, data_nascimento, password_hash, email_verificado FROM users WHERE email = $1',
       [email],
     );
-    if (user.rows.length === 0) {
-      return res.status(400).json({ error: 'E-mail ou senha inválidos.' });
-    }
-
-    const valido = await bcrypt.compare(password, user.rows[0].password_hash);
-    if (!valido) {
+    // Compara mesmo sem conta, para o tempo não revelar se o e-mail existe.
+    const valido = await bcrypt.compare(password, user.rows[0]?.password_hash ?? HASH_REFERENCIA);
+    if (!user.rows[0] || !valido) {
       return res.status(400).json({ error: 'E-mail ou senha inválidos.' });
     }
 

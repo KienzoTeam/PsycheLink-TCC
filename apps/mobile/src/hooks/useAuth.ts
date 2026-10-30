@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
-import { api } from '../lib/api';
+import {
+  api,
+  novaVersaoSessao,
+  registrarAoSessaoExpirar,
+  respostaDeSessaoAntiga,
+} from '../lib/api';
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
+import { limparContatos } from '../lib/contatosConfianca';
 import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,} from '../lib/authToken';
 let avisoFalhaRestauracaoEmitido = false;
 
@@ -59,7 +65,8 @@ const buscarUsuarioSalvo = async (): Promise<UsuarioAutenticado> => {
 
   try {
     const response = await api.get<UsuarioAutenticado>('/auth/me');
-    atualizarUsuarioCompartilhado(response.data);
+    // Se o token mudou no meio da chamada (novo login), esse perfil é da conta anterior.
+    if (!respostaDeSessaoAntiga(response.config)) atualizarUsuarioCompartilhado(response.data);
     return response.data;
   } finally {
     atualizarCarregandoUsuario(false);
@@ -85,13 +92,12 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
     return usuario;
   } catch (error: any) {
     if (tokenInvalidoOuExpirado(error)) {
-      await removerTokenSeguro();
-      atualizarUsuarioCompartilhado(null);
+      if (!respostaDeSessaoAntiga(error.config)) await limparSessao();
       sessaoInicializada = true;
       return null;
     }
 
-    console.warn('Erro ao restaurar sessão:', error);
+    console.warn('Erro ao restaurar sessão:', error?.message);
 
     if (!avisoFalhaRestauracaoEmitido) {
       avisoFalhaRestauracaoEmitido = true;
@@ -106,12 +112,15 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
 };
 
 const limparSessao = async () => {
+  // Avança antes de apagar: resposta que saiu antes da limpeza não traz o perfil de volta.
+  novaVersaoSessao();
   await removerTokenSeguro();
   usuarioCompartilhado = null;
   carregandoUsuarioCompartilhado = false;
   sessaoInicializada = true;
   notificarSessao();
 };
+registrarAoSessaoExpirar(limparSessao);
 
 export function useAuth() {
   const [carregando, setCarregando] = useState(false);
@@ -145,7 +154,7 @@ export function useAuth() {
       sessaoInicializada = true;
       return usuarioAtual;
     } catch (error: any) {
-      if (tokenInvalidoOuExpirado(error)) {
+      if (tokenInvalidoOuExpirado(error) && !respostaDeSessaoAntiga(error.config)) {
         await limparSessao();
       }
       throw error;
@@ -179,6 +188,7 @@ export function useAuth() {
 
       // O login já devolve o perfil: sem o GET /auth/me em seguida.
       const { token, usuario } = response.data;
+      novaVersaoSessao();
       await salvarTokenSeguro(token);
       atualizarUsuarioCompartilhado(usuario);
       sessaoInicializada = true;
@@ -357,9 +367,9 @@ export function useAuth() {
   const redefinirSenha = async (token: string, senha: string): Promise<boolean> => {
     try {
       await api.post('/auth/redefinir-senha', { token, password: senha });
-      // Garante que nenhum token antigo de acesso continue válido no aparelho
-      await removerTokenSeguro();
-      atualizarUsuarioCompartilhado(null);
+      // Garante que nenhum token antigo de acesso continue válido no aparelho (pela limpeza única,
+      // que também avança a versão da sessão).
+      await limparSessao();
       return true;
     } catch (error: any) {
       Alert.alert(
@@ -377,11 +387,13 @@ export function useAuth() {
       if (token) {
         await api.post('/auth/logout');
       }
-    } catch (error) {
-      console.warn('Não foi possível notificar o servidor do logout:', error);
+    } catch (error: any) {
+      console.warn('Não foi possível notificar o servidor do logout:', error?.message);
     }
 
     resetarRascunho();
+    // Só no "Sair" explícito: a sessão que expira sozinha não apaga os contatos de crise do paciente.
+    await limparContatos();
     await limparSessao();
   };
 

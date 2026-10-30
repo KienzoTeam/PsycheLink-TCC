@@ -70,7 +70,7 @@ export default function Home() {
         .catch((erro) => {
           // Erro de rede/servidor não é "sem dados": mantém o painel anterior
           // (se houver) e sinaliza a falha em vez de exibir números de exemplo.
-          console.warn('Não foi possível carregar o painel da Home:', erro);
+          console.warn('Não foi possível carregar o painel da Home:', erro?.message);
           if (telaAtiva) setErroPainel(true);
         })
         .finally(() => {
@@ -109,7 +109,7 @@ export default function Home() {
     if (!sheetContaAberta) return;
     buscarVinculo()
       .then((vinculo) => setPsicologo(vinculo?.psicologo ?? null))
-      .catch((erro) => console.warn('Não foi possível carregar o vínculo:', erro));
+      .catch((erro) => console.warn('Não foi possível carregar o vínculo:', erro?.message));
   }, [sheetContaAberta]);
 
   const sairDaConta = async () => {

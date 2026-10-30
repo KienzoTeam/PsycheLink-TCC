@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { pool } from '../db';
 import { desafioSchema, doisFatoresSchema, psicologoRegistroSchema } from '../schemas';
+import { HASH_REFERENCIA } from '../lib/hashReferencia';
 import { normalizarEmail } from '../lib/validarEmail';
 import { codigoConfere, gerarCodigo, hashCodigo } from '../lib/codigo';
 import { enviarCodigo } from '../lib/mailer';
@@ -39,10 +40,6 @@ const MSG_CADASTRO_INDISPONIVEL =
 const MSG_CODIGO_INVALIDO = 'Código inválido ou expirado. Solicite um novo.';
 const MSG_FALHA_ENVIO = 'Não foi possível enviar o código. Tente novamente.';
 const ASSUNTO_2FA = 'PsycheLink · Código de acesso';
-
-// Hash de referência usado quando o e-mail não existe, para o tempo de resposta
-// não revelar quais e-mails estão cadastrados.
-const HASH_REFERENCIA = bcrypt.hashSync('referencia-sem-conta', 10);
 
 const mascararEmail = (email: string) => `${email[0]}•••${email.slice(email.lastIndexOf('@'))}`;
 

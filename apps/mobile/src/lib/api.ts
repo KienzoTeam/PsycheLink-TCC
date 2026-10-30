@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import axios from 'axios';
-import { obterTokenSeguro, removerTokenSeguro } from './authToken';
+import { obterTokenSeguro, tokenEmMemoria } from './authToken';
 
 const devHost = Constants.expoConfig?.hostUri?.split(':')[0];
 
@@ -14,9 +14,25 @@ export const api = axios.create({
   timeout: 15000,
 });
 
+// Versão da sessão, em memória: login e logout incrementam antes de mexer no token. Cada
+// requisição guarda a versão de quando saiu; resposta de versão antiga não mexe na sessão nova.
+let versaoSessao = 0;
+export const novaVersaoSessao = () => void versaoSessao++;
+export const respostaDeSessaoAntiga = (config?: any) => config?.versaoSessao !== versaoSessao;
+
+// O useAuth registra aqui a limpeza da sessão (token, usuário e ouvintes) para ter um lugar só.
+let aoSessaoExpirar: () => Promise<void> = async () => {};
+export const registrarAoSessaoExpirar = (fn: () => Promise<void>) => {
+  aoSessaoExpirar = fn;
+};
+
 // Anexa Bearer em toda chamada
 api.interceptors.request.use(async (config) => {
-  const token = await obterTokenSeguro();
+  // Só a primeira requisição espera o armazenamento; depois o token vem do espelho em memória.
+  if (tokenEmMemoria() === undefined) await obterTokenSeguro();
+  // Versão e token lidos juntos, sem await no meio: login e logout trocam os dois no mesmo instante.
+  (config as any).versaoSessao = versaoSessao;
+  const token = tokenEmMemoria();
 
   if (token) {
     config.headers = config.headers ?? {};
@@ -38,8 +54,11 @@ api.interceptors.response.use(
       (status === 403 && (msg.includes('sessão') || msg.includes('token') || msg.includes('acesso')))
     ) {
       // Não limpa em EMAIL_NAO_VERIFICADO (403 de login legítimo)
-      if (error?.response?.data?.codigo !== 'EMAIL_NAO_VERIFICADO') {
-        await removerTokenSeguro();
+      if (
+        error?.response?.data?.codigo !== 'EMAIL_NAO_VERIFICADO' &&
+        !respostaDeSessaoAntiga(error.config)
+      ) {
+        await aoSessaoExpirar();
       }
     }
 
