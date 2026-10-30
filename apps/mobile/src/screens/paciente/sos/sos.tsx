@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Contacts from 'expo-contacts';
 import { useTheme } from '../../../theme/ThemeContext';
 import ExercicioRespiracao from '../../../components/ui/ExercicioRespiracao';
-import { ContatoConfianca, lerContatos, salvarContatos } from '../../../lib/contatosConfianca';
+import { ContatoConfianca, MAX_CONTATOS, lerContatos, salvarContatos } from '../../../lib/contatosConfianca';
 import { styles } from './styleSOS';
 
 const NUMERO_CVV = '188';
@@ -146,6 +146,13 @@ export default function SOS() {
   );
 
   const adicionarContato = useCallback(async () => {
+    if (contatos.length >= MAX_CONTATOS) {
+      Alert.alert(
+        'Limite de contatos',
+        `Você pode ter até ${MAX_CONTATOS} pessoas de confiança. Remova alguma para adicionar outra.`
+      );
+      return;
+    }
     try {
       // Checa a permissão
       let { status, canAskAgain } = await Contacts.getPermissionsAsync();
@@ -212,11 +219,11 @@ export default function SOS() {
       setTelefonePendente(telefone);
       setNomeEditado(nomeIdentificado); // Se achou o nome, já deixa preenchido
       setModalNomeVisivel(true);
-    } catch (erro) {
-      console.warn('Erro ao selecionar contato:', erro);
+    } catch {
+      console.warn('Erro ao selecionar contato.');
       Alert.alert('Atenção', 'Não foi possível selecionar o contato. Tente novamente.');
     }
-  }, []);
+  }, [contatos.length]);
 
   // Salva o contato com o nome que o usuário confirmou/digitou
   const salvarContatoConfirmado = useCallback(async () => {
@@ -244,9 +251,13 @@ export default function SOS() {
       papel: 'Contato de Confiança',
     };
 
+    // Só mostra o contato na lista depois de gravado; se falhar, o modal fica aberto para tentar de novo.
     const atualizados = [...contatos, novoContato];
+    if (!(await salvarContatos(atualizados))) {
+      Alert.alert('Atenção', 'Não foi possível salvar o contato. Tente novamente.');
+      return;
+    }
     setContatos(atualizados);
-    await salvarContatos(atualizados);
 
     setModalNomeVisivel(false);
 
@@ -263,8 +274,11 @@ export default function SOS() {
           style: 'destructive',
           onPress: async () => {
             const atualizados = contatos.filter((c) => c.id !== id);
+            if (!(await salvarContatos(atualizados))) {
+              Alert.alert('Atenção', 'Não foi possível remover o contato. Tente novamente.');
+              return;
+            }
             setContatos(atualizados);
-            await salvarContatos(atualizados);
           },
         },
       ]);
