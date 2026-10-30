@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Alert, PanResponder, KeyboardAvoidingView, Platform, ViewInstance} from 'react-native';
+import React, { memo, useEffect, useRef, useState } from 'react';
+import {View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Alert, KeyboardAvoidingView, Platform} from 'react-native';
 import Animated, { SlideInLeft, SlideInRight, SlideOutLeft, SlideOutRight, FadeInDown, FadeInUp, ZoomIn, useAnimatedStyle, useSharedValue, withSpring, runOnJS } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, useCompetingGestures, usePanGesture, useTapGesture } from 'react-native-gesture-handler';
+import { scheduleOnRN } from 'react-native-worklets';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -57,7 +58,10 @@ const habitos = [
   { id: 'social', label: 'Contato social', icone: 'users' },
 ];
 
-function SliderControl({
+// Arraste na thread de UI (Gesture Handler + Reanimated): o trilho acompanha o dedo sem esperar o JS.
+// Durante o gesto só este slider re-renderiza (rótulo e escala); a tela e o rascunho recebem o valor
+// ao soltar.
+const SliderControl = memo(function SliderControl({
   label,
   value,
   onChange,
@@ -71,97 +75,116 @@ function SliderControl({
   formato?: (v: number) => string;
 }) {
   const { theme } = useTheme();
-  const trackRef = useRef<ViewInstance>(null);
-  const trackGeo = useRef({ x: 0, width: 1 });
-  
-  // Espelho do valor: o PanResponder captura aplicar na criação, então
-  // comparações precisam ler o valor atual por ref (não por closure).
-  const valorRef = useRef(value);
-  valorRef.current = value;
+  const [atual, setAtual] = useState(value);
+  const posicao = useSharedValue(value);
+  // Último valor entregue ao pai: arraste interrompido volta para ele.
+  const confirmado = useSharedValue(value);
+  const largura = useSharedValue(1);
 
-  // Toda mudança de valor passa por aqui: háptico marca o marco alcançado.
+  // Háptico marca cada inteiro alcançado.
+  const mostrar = (novo: number) => {
+    vibrarLeve();
+    setAtual(novo);
+  };
+
+  // Toque (no trilho ou na escala) e ações de acessibilidade confirmam na hora.
   const mudar = (novo: number) => {
     const clamp = Math.min(max, Math.max(1, novo));
-    if (clamp === valorRef.current) return;
-    vibrarLeve();
+    if (clamp === atual) return;
+    posicao.value = clamp;
+    confirmado.value = clamp;
+    mostrar(clamp);
     onChange(clamp);
   };
 
-  // onChange é sempre um setState (identidade estável); seguro capturar no PanResponder.
-  const aplicar = (pageX: number) => {
-    const { x, width } = trackGeo.current;
-    const ratio = Math.min(1, Math.max(0, (pageX - x) / width));
-    mudar(Math.round(ratio * max));
+  // Posição do dedo no trilho → inteiro de 1 a max.
+  const valorEm = (x: number) => {
+    'worklet';
+    return Math.min(max, Math.max(1, Math.round((x / largura.value) * max)));
   };
 
-  const gesto = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: e => aplicar(e.nativeEvent.pageX),
-      onPanResponderMove: e => aplicar(e.nativeEvent.pageX),
-    })
-  ).current;
-
-  const medirTrack = () => {
-    trackRef.current?.measureInWindow((x, _y, width) => {
-      trackGeo.current = { x, width };
-    });
+  const arrastar = (x: number) => {
+    'worklet';
+    const novo = valorEm(x);
+    if (novo === posicao.value) return;
+    posicao.value = novo;
+    scheduleOnRN(mostrar, novo);
   };
+
+  // O valor só muda depois que o arraste ativa na horizontal: rolar a tela começando no slider
+  // não mexe na resposta. Ativa antes do swipe de etapa (14 pt) e o cancela.
+  const arraste = usePanGesture({
+    activeOffsetX: [-5, 5],
+    failOffsetY: [-10, 10],
+    onActivate: e => arrastar(e.x),
+    onUpdate: e => arrastar(e.x),
+    onDeactivate: e => {
+      if (e.canceled) {
+        posicao.value = confirmado.value;
+        scheduleOnRN(setAtual, confirmado.value);
+        return;
+      }
+      confirmado.value = posicao.value;
+      scheduleOnRN(onChange, posicao.value);
+    },
+  });
+  // Toque parado no trilho: concorre com o arraste e falha se o dedo andar.
+  const toque = useTapGesture({
+    maxDistance: 10,
+    onActivate: e => scheduleOnRN(mudar, valorEm(e.x)),
+  });
+  const gesto = useCompetingGestures(arraste, toque);
+
+  const estiloFill = useAnimatedStyle(() => ({ width: `${(posicao.value / max) * 100}%` }));
+  const estiloThumb = useAnimatedStyle(() => ({ left: `${(posicao.value / max) * 100}%` }));
 
   return (
     <View style={styles.sliderItem}>
       <View style={styles.sliderHeader}>
         <Text style={[styles.sliderLabel, { color: theme.colors.onBackground }]}>{label}</Text>
         <Text style={[styles.sliderValue, { color: theme.colors.primary }]}>
-          {formato ? formato(value) : `${value}/${max}`}
+          {formato ? formato(atual) : `${atual}/${max}`}
         </Text>
       </View>
-      <View
-        ref={trackRef}
-        style={styles.sliderHitArea}
-        onLayout={medirTrack}
-        {...gesto.panHandlers}
-        accessibilityRole="adjustable"
-        accessibilityLabel={label}
-        accessibilityValue={{ min: 1, max, now: value, text: formato ? formato(value) : `${value} de ${max}` }}
-        accessibilityActions={[
-          { name: 'increment', label: 'Aumentar' },
-          { name: 'decrement', label: 'Diminuir' },
-        ]}
-        onAccessibilityAction={e => {
-          const passo = e.nativeEvent.actionName === 'increment' ? 1 : -1;
-          mudar(value + passo);
-        }}
-      >
-        <View style={[styles.sliderTrack, { backgroundColor: theme.colors.surfaceVariant }]}>
-          <View
-            style={[
-              styles.sliderFill,
-              { width: `${(value / max) * 100}%`, backgroundColor: theme.colors.primary },
-            ]}
-          />
-          <View
-            pointerEvents="none"
-            style={[
-              styles.sliderThumb,
-              {
-                left: `${(value / max) * 100}%`,
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.primary,
-              },
-            ]}
-          />
+      <GestureDetector gesture={gesto}>
+        <View
+          style={styles.sliderHitArea}
+          onLayout={e => {
+            largura.value = e.nativeEvent.layout.width;
+          }}
+          accessibilityRole="adjustable"
+          accessibilityLabel={label}
+          accessibilityValue={{ min: 1, max, now: atual, text: formato ? formato(atual) : `${atual} de ${max}` }}
+          accessibilityActions={[
+            { name: 'increment', label: 'Aumentar' },
+            { name: 'decrement', label: 'Diminuir' },
+          ]}
+          onAccessibilityAction={e => {
+            const passo = e.nativeEvent.actionName === 'increment' ? 1 : -1;
+            mudar(atual + passo);
+          }}
+        >
+          <View style={[styles.sliderTrack, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <Animated.View style={[styles.sliderFill, { backgroundColor: theme.colors.primary }, estiloFill]} />
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.sliderThumb,
+                { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary },
+                estiloThumb,
+              ]}
+            />
+          </View>
         </View>
-      </View>
+      </GestureDetector>
       <View style={styles.sliderEscala}>
         {Array.from({ length: max }, (_, i) => i + 1).map(v => (
           <TouchableOpacity key={v} style={styles.sliderNumeroAlvo} onPress={() => mudar(v)} accessibilityLabel={`${label}: ${v}`}>
             <View
-              style={[styles.sliderNumero, v === value && { backgroundColor: theme.colors.primary }]}
-              accessibilityState={{ selected: v === value }}
+              style={[styles.sliderNumero, v === atual && { backgroundColor: theme.colors.primary }]}
+              accessibilityState={{ selected: v === atual }}
             >
-              <Text style={{ fontSize: max > 10 ? 9 : 10, color: v === value ? '#FFF' : theme.colors.onSurfaceVariant }}>
+              <Text style={{ fontSize: max > 10 ? 9 : 10, color: v === atual ? theme.colors.onPrimary : theme.colors.onSurfaceVariant }}>
                 {v}
               </Text>
             </View>
@@ -170,7 +193,7 @@ function SliderControl({
       </View>
     </View>
   );
-}
+});
 
 export default function Checkin({ navigation }: Props) {
   const { theme } = useTheme();
