@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useRef, useState } from 'react';
 import {View, Text, ScrollView, TouchableOpacity, TextInput, Switch, Alert, KeyboardAvoidingView, Platform} from 'react-native';
 import Animated, { SlideInLeft, SlideInRight, SlideOutLeft, SlideOutRight, FadeInDown, FadeInUp, ZoomIn, useAnimatedStyle, useSharedValue, withSpring, runOnJS } from 'react-native-reanimated';
-import { Gesture, GestureDetector, usePanGesture } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, useCompetingGestures, usePanGesture, useTapGesture } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -77,6 +77,8 @@ const SliderControl = memo(function SliderControl({
   const { theme } = useTheme();
   const [atual, setAtual] = useState(value);
   const posicao = useSharedValue(value);
+  // Último valor entregue ao pai: arraste interrompido volta para ele.
+  const confirmado = useSharedValue(value);
   const largura = useSharedValue(1);
 
   // Háptico marca cada inteiro alcançado.
@@ -85,32 +87,53 @@ const SliderControl = memo(function SliderControl({
     setAtual(novo);
   };
 
-  // Toque na escala e ações de acessibilidade confirmam na hora.
+  // Toque (no trilho ou na escala) e ações de acessibilidade confirmam na hora.
   const mudar = (novo: number) => {
     const clamp = Math.min(max, Math.max(1, novo));
     if (clamp === atual) return;
     posicao.value = clamp;
+    confirmado.value = clamp;
     mostrar(clamp);
     onChange(clamp);
   };
 
+  // Posição do dedo no trilho → inteiro de 1 a max.
+  const valorEm = (x: number) => {
+    'worklet';
+    return Math.min(max, Math.max(1, Math.round((x / largura.value) * max)));
+  };
+
   const arrastar = (x: number) => {
     'worklet';
-    const ratio = Math.min(1, Math.max(0, x / largura.value));
-    const novo = Math.min(max, Math.max(1, Math.round(ratio * max)));
+    const novo = valorEm(x);
     if (novo === posicao.value) return;
     posicao.value = novo;
     scheduleOnRN(mostrar, novo);
   };
 
-  // Na horizontal ativa antes do swipe de etapa (14 pt) e o cancela; na vertical falha e a tela rola.
-  const gesto = usePanGesture({
+  // O valor só muda depois que o arraste ativa na horizontal: rolar a tela começando no slider
+  // não mexe na resposta. Ativa antes do swipe de etapa (14 pt) e o cancela.
+  const arraste = usePanGesture({
     activeOffsetX: [-5, 5],
     failOffsetY: [-10, 10],
-    onBegin: e => arrastar(e.x),
+    onActivate: e => arrastar(e.x),
     onUpdate: e => arrastar(e.x),
-    onFinalize: () => scheduleOnRN(onChange, posicao.value),
+    onDeactivate: e => {
+      if (e.canceled) {
+        posicao.value = confirmado.value;
+        scheduleOnRN(setAtual, confirmado.value);
+        return;
+      }
+      confirmado.value = posicao.value;
+      scheduleOnRN(onChange, posicao.value);
+    },
   });
+  // Toque parado no trilho: concorre com o arraste e falha se o dedo andar.
+  const toque = useTapGesture({
+    maxDistance: 10,
+    onActivate: e => scheduleOnRN(mudar, valorEm(e.x)),
+  });
+  const gesto = useCompetingGestures(arraste, toque);
 
   const estiloFill = useAnimatedStyle(() => ({ width: `${(posicao.value / max) * 100}%` }));
   const estiloThumb = useAnimatedStyle(() => ({ left: `${(posicao.value / max) * 100}%` }));
