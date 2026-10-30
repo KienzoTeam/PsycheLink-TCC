@@ -109,6 +109,19 @@ export function FormularioAcesso({ email, aoRecuperarSenha }: Props) {
     navigate('/inicio');
   }
 
+  async function reenviarDesafio(desafioId: string) {
+    try {
+      return await reenviarDoisFatores(desafioId);
+    } catch (falha) {
+      // Desafio expirado: reenviar não adianta, volta ao login como na confirmação.
+      if (codigoDeErro(falha) === 'DESAFIO_EXPIRADO') {
+        setAberta(false);
+        setMensagem(mensagemDeErro(falha));
+      }
+      throw falha;
+    }
+  }
+
   async function confirmarEmail(emailVerificado: string, codigo: string) {
     await verificarEmail(emailVerificado, codigo);
     setAberta(false);
@@ -192,7 +205,7 @@ export function FormularioAcesso({ email, aoRecuperarSenha }: Props) {
           email={verificacao.emailMascarado}
           reenviarEm={verificacao.reenviarEm}
           onConfirmar={(codigo) => confirmarDesafio(verificacao.desafioId, codigo)}
-          onReenviar={() => reenviarDoisFatores(verificacao.desafioId)}
+          onReenviar={() => reenviarDesafio(verificacao.desafioId)}
         />
       )}
       {verificacao?.tipo === 'email' && (
