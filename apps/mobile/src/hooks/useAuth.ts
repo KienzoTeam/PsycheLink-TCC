@@ -8,6 +8,7 @@ import {
 } from '../lib/api';
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
+import { limparContatos } from '../lib/contatosConfianca';
 import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,} from '../lib/authToken';
 let avisoFalhaRestauracaoEmitido = false;
 
@@ -391,6 +392,8 @@ export function useAuth() {
     }
 
     resetarRascunho();
+    // Só no "Sair" explícito: a sessão que expira sozinha não apaga os contatos de crise do paciente.
+    await limparContatos();
     await limparSessao();
   };
 
