@@ -40,14 +40,17 @@ export async function lerContatos(): Promise<ContatoConfianca[]> {
     }
 
     const seguro = await SecureStore.getItemAsync(CHAVE, OPCOES);
-    const antigo = await AsyncStorage.getItem(CHAVE_ANTIGA);
 
     if (seguro !== null) {
       // Migração já feita; se o app morreu antes de apagar a cópia em texto puro, apaga agora.
-      if (antigo !== null) await AsyncStorage.removeItem(CHAVE_ANTIGA).catch(() => {});
+      // Best-effort: falha aqui não pode esconder a lista segura que já foi lida.
+      await AsyncStorage.removeItem(CHAVE_ANTIGA).catch(() => {
+        console.warn('Não foi possível apagar a cópia antiga dos contatos.');
+      });
       return interpretar(seguro);
     }
 
+    const antigo = await AsyncStorage.getItem(CHAVE_ANTIGA);
     if (antigo !== null) {
       // Só apaga a chave antiga depois de gravar no SecureStore; se falhar, tenta de novo na próxima leitura.
       try {

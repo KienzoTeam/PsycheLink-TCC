@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text,ScrollView,TouchableOpacity,Linking,Alert,Modal,TextInput,} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -79,6 +79,17 @@ export default function SOS() {
   const [carregandoContatos, setCarregandoContatos] = useState(true);
   // Leitura falhou: os contatos podem estar intactos, então não gravamos por cima de uma lista vazia.
   const [contatosIndisponiveis, setContatosIndisponiveis] = useState(false);
+  // Grava uma lista por vez: duas gravações em paralelo partiriam da mesma lista e uma desfaria a outra.
+  const gravando = useRef(false);
+  const gravarContatos = useCallback(async (lista: ContatoConfianca[]) => {
+    if (gravando.current) return false;
+    gravando.current = true;
+    try {
+      return await salvarContatos(lista);
+    } finally {
+      gravando.current = false;
+    }
+  }, []);
 
   // Estados para o Modal de definição do Nome do Contato
   const [modalNomeVisivel, setModalNomeVisivel] = useState(false);
@@ -269,7 +280,7 @@ export default function SOS() {
 
     // Só mostra o contato na lista depois de gravado; se falhar, o modal fica aberto para tentar de novo.
     const atualizados = [...contatos, novoContato];
-    if (!(await salvarContatos(atualizados))) {
+    if (!(await gravarContatos(atualizados))) {
       Alert.alert('Atenção', 'Não foi possível salvar o contato. Tente novamente.');
       return;
     }
@@ -279,7 +290,7 @@ export default function SOS() {
 
     // Abre opções de contato na hora
     abrirOpcoesContato(nomeFinal, telefonePendente);
-  }, [nomeEditado, telefonePendente, idPendente, contatos, abrirOpcoesContato]);
+  }, [nomeEditado, telefonePendente, idPendente, contatos, abrirOpcoesContato, gravarContatos]);
 
   const removerContato = useCallback(
     (id: string, nome: string) => {
@@ -290,7 +301,7 @@ export default function SOS() {
           style: 'destructive',
           onPress: async () => {
             const atualizados = contatos.filter((c) => c.id !== id);
-            if (!(await salvarContatos(atualizados))) {
+            if (!(await gravarContatos(atualizados))) {
               Alert.alert('Atenção', 'Não foi possível remover o contato. Tente novamente.');
               return;
             }
@@ -299,7 +310,7 @@ export default function SOS() {
         },
       ]);
     },
-    [contatos],
+    [contatos, gravarContatos],
   );
 
   return (
