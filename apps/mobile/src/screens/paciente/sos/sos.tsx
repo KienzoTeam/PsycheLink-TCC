@@ -1,14 +1,16 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text,ScrollView,TouchableOpacity,Linking,Alert,Modal,TextInput,} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Contacts from 'expo-contacts';
 import { useTheme } from '../../../theme/ThemeContext';
 import ExercicioRespiracao from '../../../components/ui/ExercicioRespiracao';
-import { ContatoConfianca, lerContatos, salvarContatos } from '../../../lib/contatosConfianca';
+import { ContatoConfianca, MAX_CONTATOS, lerContatos, salvarContatos } from '../../../lib/contatosConfianca';
 import { styles } from './styleSOS';
 
 const NUMERO_CVV = '188';
+// Mantém o JSON dos contatos bem abaixo de ~2 KB com MAX_CONTATOS (limite do SecureStore em iOS antigos).
+const MAX_NOME = 60;
 const CORES_AVATAR = ['#6C4CE0', '#4B32B0', '#2E9E6B', '#D08C2E', '#C2445C'];
 
 function corAvatar(nome: string) {
@@ -75,6 +77,19 @@ export default function SOS() {
   const [respirandoAberto, setRespirandoAberto] = useState(false);
   const [contatos, setContatos] = useState<ContatoConfianca[]>([]);
   const [carregandoContatos, setCarregandoContatos] = useState(true);
+  // Leitura falhou: os contatos podem estar intactos, então não gravamos por cima de uma lista vazia.
+  const [contatosIndisponiveis, setContatosIndisponiveis] = useState(false);
+  // Grava uma lista por vez: duas gravações em paralelo partiriam da mesma lista e uma desfaria a outra.
+  const gravando = useRef(false);
+  const gravarContatos = useCallback(async (lista: ContatoConfianca[]) => {
+    if (gravando.current) return false;
+    gravando.current = true;
+    try {
+      return await salvarContatos(lista);
+    } finally {
+      gravando.current = false;
+    }
+  }, []);
 
   // Estados para o Modal de definição do Nome do Contato
   const [modalNomeVisivel, setModalNomeVisivel] = useState(false);
@@ -85,6 +100,13 @@ export default function SOS() {
   useEffect(() => {
     lerContatos()
       .then(setContatos)
+      .catch(() => {
+        setContatosIndisponiveis(true);
+        Alert.alert(
+          'Não foi possível carregar seus contatos',
+          'Seus contatos de confiança continuam salvos. Feche e abra o app para tentar de novo.'
+        );
+      })
       .finally(() => setCarregandoContatos(false));
   }, []);
 
@@ -146,6 +168,18 @@ export default function SOS() {
   );
 
   const adicionarContato = useCallback(async () => {
+    if (carregandoContatos) return; // lista ainda não lida: gravar agora apagaria os contatos salvos
+    if (contatosIndisponiveis) {
+      Alert.alert('Contatos indisponíveis', 'Feche e abra o app para carregar seus contatos antes de adicionar outro.');
+      return;
+    }
+    if (contatos.length >= MAX_CONTATOS) {
+      Alert.alert(
+        'Limite de contatos',
+        `Você pode ter até ${MAX_CONTATOS} pessoas de confiança. Remova alguma para adicionar outra.`
+      );
+      return;
+    }
     try {
       // Checa a permissão
       let { status, canAskAgain } = await Contacts.getPermissionsAsync();
@@ -210,13 +244,13 @@ export default function SOS() {
       // Preenche os dados e abre a janelinha para confirmar o NOME
       setIdPendente(escolhido.id || `${Date.now()}`);
       setTelefonePendente(telefone);
-      setNomeEditado(nomeIdentificado); // Se achou o nome, já deixa preenchido
+      setNomeEditado(nomeIdentificado.slice(0, MAX_NOME)); // Se achou o nome, já deixa preenchido
       setModalNomeVisivel(true);
-    } catch (erro) {
-      console.warn('Erro ao selecionar contato:', erro);
+    } catch {
+      console.warn('Erro ao selecionar contato.');
       Alert.alert('Atenção', 'Não foi possível selecionar o contato. Tente novamente.');
     }
-  }, []);
+  }, [contatos.length, contatosIndisponiveis, carregandoContatos]);
 
   // Salva o contato com o nome que o usuário confirmou/digitou
   const salvarContatoConfirmado = useCallback(async () => {
@@ -244,15 +278,19 @@ export default function SOS() {
       papel: 'Contato de Confiança',
     };
 
+    // Só mostra o contato na lista depois de gravado; se falhar, o modal fica aberto para tentar de novo.
     const atualizados = [...contatos, novoContato];
+    if (!(await gravarContatos(atualizados))) {
+      Alert.alert('Atenção', 'Não foi possível salvar o contato. Tente novamente.');
+      return;
+    }
     setContatos(atualizados);
-    await salvarContatos(atualizados);
 
     setModalNomeVisivel(false);
 
     // Abre opções de contato na hora
     abrirOpcoesContato(nomeFinal, telefonePendente);
-  }, [nomeEditado, telefonePendente, idPendente, contatos, abrirOpcoesContato]);
+  }, [nomeEditado, telefonePendente, idPendente, contatos, abrirOpcoesContato, gravarContatos]);
 
   const removerContato = useCallback(
     (id: string, nome: string) => {
@@ -263,13 +301,16 @@ export default function SOS() {
           style: 'destructive',
           onPress: async () => {
             const atualizados = contatos.filter((c) => c.id !== id);
+            if (!(await gravarContatos(atualizados))) {
+              Alert.alert('Atenção', 'Não foi possível remover o contato. Tente novamente.');
+              return;
+            }
             setContatos(atualizados);
-            await salvarContatos(atualizados);
           },
         },
       ]);
     },
-    [contatos],
+    [contatos, gravarContatos],
   );
 
   return (
@@ -507,6 +548,7 @@ export default function SOS() {
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={nomeEditado}
               onChangeText={setNomeEditado}
+              maxLength={MAX_NOME}
               autoFocus
             />
 
