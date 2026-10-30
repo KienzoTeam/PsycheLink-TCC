@@ -101,8 +101,10 @@ export default function VerificarCodigo({ navigation, route }: Props) {
 
   const handleReenviar = async () => {
     if (cooldown > 0) return;
+    // Trava já no toque: esperar a resposta deixava um segundo toque reenviar.
+    setCooldown(60);
     const ok = await reenviarCodigo(email);
-    if (ok) setCooldown(60);
+    if (!ok) setCooldown(0);
   };
 
   return (
@@ -110,6 +112,7 @@ export default function VerificarCodigo({ navigation, route }: Props) {
       style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       <TouchableOpacity
         style={styles.backButton}
@@ -154,6 +157,7 @@ export default function VerificarCodigo({ navigation, route }: Props) {
             onChangeText={text => handleChange(text, index)}
             onKeyPress={handleTecla(index)}
             accessibilityLabel={`Dígito ${index + 1} de 6`}
+            maxFontSizeMultiplier={1.3}
           />
         ))}
       </View>

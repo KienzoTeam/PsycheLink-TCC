@@ -1,6 +1,7 @@
 import React from 'react';
-import { Modal, SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme/ThemeContext';
 import { styles } from '../../screens/paciente/BemEstar/StyleBemEstar';
 import { TECHNIQUE_STEPS } from '../../constants/data';
@@ -21,22 +22,47 @@ export function TechniqueModal({
   onComplete,
 }: TechniqueModalProps) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const allStepsCompleted = completedSteps.length === TECHNIQUE_STEPS.length;
 
+  // Translúcido nas duas barras: sem isso, no Android a tela de trás aparece na
+  // status bar. Os insets afastam o cartão das barras.
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <SafeAreaView
-          style={[styles.techniqueModal, { backgroundColor: theme.colors.surfaceContainer }]}
-        >
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+      statusBarTranslucent
+      navigationBarTranslucent
+    >
+      <View
+        style={[
+          styles.modalOverlay,
+          { paddingTop: 22 + insets.top, paddingBottom: 22 + insets.bottom },
+        ]}
+      >
+        <View style={[styles.techniqueModal, { backgroundColor: theme.colors.surfaceContainer }]}>
           <View style={styles.guidedModalHeader}>
             <View style={styles.modalHeaderSpacer} />
 
-            <Text style={[styles.guidedModalTitle, { color: theme.colors.onSurface }]}>
-              Técnica 5-4-3-2-1
-            </Text>
+            {/* Mesmo wrapper flex do GuidedExerciseModal: centraliza o título e empurra o X para o canto. */}
+            <View style={styles.modalHeaderText}>
+              <Text
+                style={[styles.guidedModalTitle, { color: theme.colors.onSurface }]}
+                maxFontSizeMultiplier={1.2}
+              >
+                Técnica 5-4-3-2-1
+              </Text>
+            </View>
 
-            <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={onClose}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar técnica"
+            >
               <Feather name="x" size={22} color={theme.colors.onSurfaceVariant} />
             </TouchableOpacity>
           </View>
@@ -70,6 +96,8 @@ export function TechniqueModal({
                     ]}
                     onPress={() => onToggleStep(step.number)}
                     activeOpacity={0.8}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: completed }}
                   >
                     <View
                       style={[
@@ -147,7 +175,7 @@ export function TechniqueModal({
               </Text>
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
+        </View>
       </View>
     </Modal>
   );

@@ -22,7 +22,7 @@ export default function NovaSenha({ navigation, route }: Props) {
 
   const handleRedefinir = async () => {
     if (salvando) return;
-    if (senha.length < 8) {
+    if (!senha.trim() || senha.length < 8) {
       Alert.alert('Senha curta demais', 'Use pelo menos 8 caracteres para proteger sua conta.');
       return;
     }
@@ -50,6 +50,7 @@ export default function NovaSenha({ navigation, route }: Props) {
       style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       <TouchableOpacity
         style={styles.backButton}

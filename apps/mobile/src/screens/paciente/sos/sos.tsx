@@ -312,7 +312,11 @@ export default function SOS() {
 
       <TouchableOpacity
         style={styles.linkSecundario}
-        onPress={() => Linking.openURL('https://www.cvv.org.br/chat/')}
+        onPress={() =>
+          Linking.openURL('https://www.cvv.org.br/chat/').catch(() =>
+            Alert.alert('Não foi possível abrir o chat', 'Acesse cvv.org.br/chat no navegador.'),
+          )
+        }
         accessibilityRole="button"
         accessibilityLabel="Abrir chat do CVV"
       >
@@ -373,6 +377,7 @@ export default function SOS() {
             <View style={styles.contatoAcoes}>
               <TouchableOpacity
                 style={[styles.contatoBotaoAcao, { backgroundColor: theme.colors.primaryContainer }]}
+                hitSlop={4}
                 onPress={() => abrirWhatsapp(contato.telefone)}
                 accessibilityRole="button"
                 accessibilityLabel={`Chamar ${contato.nome} no WhatsApp`}
@@ -382,6 +387,7 @@ export default function SOS() {
 
               <TouchableOpacity
                 style={[styles.contatoBotaoAcao, { backgroundColor: theme.colors.primaryContainer }]}
+                hitSlop={4}
                 onPress={() => ligarPara(contato.telefone)}
                 accessibilityRole="button"
                 accessibilityLabel={`Ligar para ${contato.nome}`}
@@ -391,6 +397,7 @@ export default function SOS() {
 
               <TouchableOpacity
                 style={styles.contatoBotaoAcao}
+                hitSlop={4}
                 onPress={() => removerContato(contato.id, contato.nome)}
                 accessibilityRole="button"
                 accessibilityLabel={`Remover ${contato.nome}`}
@@ -435,11 +442,14 @@ export default function SOS() {
       <ExercicioRespiracao visivel={respirandoAberto} aoFechar={() => setRespirandoAberto(false)} />
 
       {/* MODAL PARA DEFINIR/CONFIRMAR O NOME DA PESSOA */}
+      {/* Só a status bar translúcida: com a barra de navegação também, o Android para de
+          redimensionar a janela para o teclado e ele cobriria o campo e o Salvar. */}
       <Modal
         visible={modalNomeVisivel}
         transparent
         animationType="fade"
         onRequestClose={() => setModalNomeVisivel(false)}
+        statusBarTranslucent
       >
         <View
           style={{

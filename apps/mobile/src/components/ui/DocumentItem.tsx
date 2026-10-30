@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {View, Text, TouchableOpacity, Modal,ScrollView, StyleSheet} from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme/ThemeContext';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 
 export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito, onAceitar }: Props) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [modalVisivel, setModalVisivel] = useState(false);
 
   const handleAceitar = () => {
@@ -57,14 +59,23 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
         <Feather name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} />
       </TouchableOpacity>
 
+      {/* Translúcido nas duas barras: sem isso, no Android a tela de trás aparece na
+          status bar. O inset de baixo tira o botão de sob a barra de navegação. */}
       <Modal
         visible={modalVisivel}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setModalVisivel(false)}
+        statusBarTranslucent
+        navigationBarTranslucent
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}>
+          <View
+            style={[
+              styles.modalContainer,
+              { backgroundColor: theme.colors.surface, paddingBottom: 24 + insets.bottom },
+            ]}
+          >
 
             <View style={[styles.handleBar, { backgroundColor: theme.colors.outline }]} />
 
@@ -74,7 +85,7 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
                 <View style={[styles.modalIconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
                   <Feather name="file-text" size={18} color={theme.colors.primary} />
                 </View>
-                <View>
+                <View style={styles.modalTituloContainer}>
                   <Text style={[styles.modalTitulo, { color: theme.colors.onBackground }]}>
                     {titulo}
                   </Text>
@@ -200,6 +211,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  // flex: 1 faz título longo quebrar linha em vez de passar por baixo do X.
+  modalTituloContainer: {
+    flex: 1,
   },
   modalTitulo: {
     fontSize: 16,

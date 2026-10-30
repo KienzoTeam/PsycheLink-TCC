@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Modal, View, Text, StyleSheet, Animated, Easing, TouchableOpacity, AccessibilityInfo } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme/ThemeContext';
 
 const DURACAO = 60; // segundos
 
-type Fase = 'Inspire' | 'Espire';
+type Fase = 'Inspire' | 'Expire';
 
 /**
  * Respiração guiada de 1 minuto — 100% local, zero backend.
@@ -13,6 +14,7 @@ type Fase = 'Inspire' | 'Espire';
  */
 export default function ExercicioRespiracao({ visivel, aoFechar }: { visivel: boolean; aoFechar: () => void }) {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const escala = useRef(new Animated.Value(1)).current;
   const [restante, setRestante] = useState(DURACAO);
   const [fase, setFase] = useState<Fase>('Inspire');
@@ -44,7 +46,7 @@ export default function ExercicioRespiracao({ visivel, aoFechar }: { visivel: bo
     animacao?.start();
 
     const trocaFase = setInterval(
-      () => setFase(f => (f === 'Inspire' ? 'Espire' : 'Inspire')),
+      () => setFase(f => (f === 'Inspire' ? 'Expire' : 'Inspire')),
       4000
     );
     const relogio = setInterval(() => {
@@ -69,11 +71,20 @@ export default function ExercicioRespiracao({ visivel, aoFechar }: { visivel: bo
     };
   }, [visivel, escala, reduceMotion]);
 
+  // Translúcido nas duas barras: sem isso, no Android a tela de trás aparece na
+  // status bar. O X desce pelo inset em vez de um topo fixo.
   return (
-    <Modal visible={visivel} transparent animationType="fade" onRequestClose={aoFechar}>
+    <Modal
+      visible={visivel}
+      transparent
+      animationType="fade"
+      onRequestClose={aoFechar}
+      statusBarTranslucent
+      navigationBarTranslucent
+    >
       <View style={[styles.overlay, { backgroundColor: theme.colors.background }]}>
         <TouchableOpacity
-          style={[styles.fechar, { borderColor: theme.colors.outline }]}
+          style={[styles.fechar, { borderColor: theme.colors.outline, top: insets.top + 16 }]}
           onPress={aoFechar}
           accessibilityRole="button"
           accessibilityLabel="Encerrar exercício de respiração"
@@ -128,7 +139,6 @@ const styles = StyleSheet.create({
   },
   fechar: {
     position: 'absolute',
-    top: 60,
     right: 24,
     width: 44,
     height: 44,

@@ -43,6 +43,7 @@ export default function EsqueciSenha({ navigation }: Props) {
       style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]} 
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       <TouchableOpacity
         style={styles.backButton}

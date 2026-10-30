@@ -49,9 +49,13 @@ export function BreathingCircle({ status, phaseTitle }: BreathingCircleProps) {
       <Animated.View
         style={[styles.breathingInnerCircle, { backgroundColor: theme.colors.primary }]}
       >
-        <Feather name="wind" size={28} color="#FFFFFF" />
+        {/* onPrimary, não branco fixo: no tema escuro o primary é claro (branco dava 2:1). */}
+        <Feather name="wind" size={28} color={theme.colors.onPrimary} />
 
-        <Text style={styles.breathingPhaseTitle} maxFontSizeMultiplier={1.15}>
+        <Text
+          style={[styles.breathingPhaseTitle, { color: theme.colors.onPrimary }]}
+          maxFontSizeMultiplier={1.15}
+        >
           {phaseTitle}
         </Text>
       </Animated.View>

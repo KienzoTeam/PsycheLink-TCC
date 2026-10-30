@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, SafeAreaView, ScrollView, Text, TouchableOpacity, View,StyleSheet,} from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View,StyleSheet,} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -72,13 +73,16 @@ export default function MeusDados({ navigation }: Props) {
       frontColor: CORES_BARRAS[indice % CORES_BARRAS.length],
     })) ?? [];
 
+  // SafeAreaView do safe-area-context: o do react-native não afasta o cabeçalho da status bar
+  // no Android. Só o topo: embaixo quem cuida do inset é a barra de abas.
   return (
-    <SafeAreaView style={[estilos.tela, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView edges={['top']} style={[estilos.tela, { backgroundColor: theme.colors.background }]}>
       <View style={estilos.cabecalho}>
         {/* Como aba (sem `navigation`) não há para onde voltar: o espaço fica para manter o título centralizado. */}
         {navigation ? (
           <TouchableOpacity
             onPress={() => navigation.goBack()}
+            hitSlop={11}
             accessibilityRole="button"
             accessibilityLabel="Voltar"
           >
