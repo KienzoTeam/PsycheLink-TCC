@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import axios from 'axios';
-import { obterTokenSeguro } from './authToken';
+import { obterTokenSeguro, tokenEmMemoria } from './authToken';
 
 const devHost = Constants.expoConfig?.hostUri?.split(':')[0];
 
@@ -28,8 +28,11 @@ export const registrarAoSessaoExpirar = (fn: () => Promise<void>) => {
 
 // Anexa Bearer em toda chamada
 api.interceptors.request.use(async (config) => {
+  // Só a primeira requisição espera o armazenamento; depois o token vem do espelho em memória.
+  if (tokenEmMemoria() === undefined) await obterTokenSeguro();
+  // Versão e token lidos juntos, sem await no meio: login e logout trocam os dois no mesmo instante.
   (config as any).versaoSessao = versaoSessao;
-  const token = await obterTokenSeguro();
+  const token = tokenEmMemoria();
 
   if (token) {
     config.headers = config.headers ?? {};

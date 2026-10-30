@@ -367,9 +367,9 @@ export function useAuth() {
   const redefinirSenha = async (token: string, senha: string): Promise<boolean> => {
     try {
       await api.post('/auth/redefinir-senha', { token, password: senha });
-      // Garante que nenhum token antigo de acesso continue válido no aparelho
-      await removerTokenSeguro();
-      atualizarUsuarioCompartilhado(null);
+      // Garante que nenhum token antigo de acesso continue válido no aparelho (pela limpeza única,
+      // que também avança a versão da sessão).
+      await limparSessao();
       return true;
     } catch (error: any) {
       Alert.alert(
