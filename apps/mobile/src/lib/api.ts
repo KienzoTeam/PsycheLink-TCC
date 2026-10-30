@@ -26,6 +26,10 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Resposta atrasada de uma requisição feita com token antigo não pode mexer na sessão nova.
+export const tokenAindaEhOAtual = async (config?: { headers?: any }) =>
+  config?.headers?.Authorization === `Bearer ${await obterTokenSeguro()}`;
+
 // Se a sessão morreu no server, limpa o token local
 api.interceptors.response.use(
   (response) => response,
@@ -38,7 +42,10 @@ api.interceptors.response.use(
       (status === 403 && (msg.includes('sessão') || msg.includes('token') || msg.includes('acesso')))
     ) {
       // Não limpa em EMAIL_NAO_VERIFICADO (403 de login legítimo)
-      if (error?.response?.data?.codigo !== 'EMAIL_NAO_VERIFICADO') {
+      if (
+        error?.response?.data?.codigo !== 'EMAIL_NAO_VERIFICADO' &&
+        (await tokenAindaEhOAtual(error.config))
+      ) {
         await removerTokenSeguro();
       }
     }

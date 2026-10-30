@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
-import { api } from '../lib/api';
+import { api, tokenAindaEhOAtual } from '../lib/api';
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
 import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,} from '../lib/authToken';
@@ -59,7 +59,8 @@ const buscarUsuarioSalvo = async (): Promise<UsuarioAutenticado> => {
 
   try {
     const response = await api.get<UsuarioAutenticado>('/auth/me');
-    atualizarUsuarioCompartilhado(response.data);
+    // Se o token mudou no meio da chamada (novo login), esse perfil é da conta anterior.
+    if (await tokenAindaEhOAtual(response.config)) atualizarUsuarioCompartilhado(response.data);
     return response.data;
   } finally {
     atualizarCarregandoUsuario(false);
@@ -85,13 +86,15 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
     return usuario;
   } catch (error: any) {
     if (tokenInvalidoOuExpirado(error)) {
-      await removerTokenSeguro();
-      atualizarUsuarioCompartilhado(null);
+      if (await tokenAindaEhOAtual(error.config)) {
+        await removerTokenSeguro();
+        atualizarUsuarioCompartilhado(null);
+      }
       sessaoInicializada = true;
       return null;
     }
 
-    console.warn('Erro ao restaurar sessão:', error);
+    console.warn('Erro ao restaurar sessão:', error?.message);
 
     if (!avisoFalhaRestauracaoEmitido) {
       avisoFalhaRestauracaoEmitido = true;
@@ -145,7 +148,7 @@ export function useAuth() {
       sessaoInicializada = true;
       return usuarioAtual;
     } catch (error: any) {
-      if (tokenInvalidoOuExpirado(error)) {
+      if (tokenInvalidoOuExpirado(error) && (await tokenAindaEhOAtual(error.config))) {
         await limparSessao();
       }
       throw error;
@@ -377,8 +380,8 @@ export function useAuth() {
       if (token) {
         await api.post('/auth/logout');
       }
-    } catch (error) {
-      console.warn('Não foi possível notificar o servidor do logout:', error);
+    } catch (error: any) {
+      console.warn('Não foi possível notificar o servidor do logout:', error?.message);
     }
 
     resetarRascunho();
