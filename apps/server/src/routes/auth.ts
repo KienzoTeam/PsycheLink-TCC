@@ -9,7 +9,7 @@ import { derrubarAcessosWeb } from '../lib/sessaoWeb';
 import { registroSchema, senhaSchema } from '../schemas';
 import { normalizarEmail } from '../lib/validarEmail';
 import { gerarCodigo, hashCodigo, codigoConfere } from '../lib/codigo';
-import { enviarAvisoCadastro, enviarCodigo } from '../lib/mailer';
+import { enviarAvisoCadastro, enviarCodigo, resumoErroSmtp } from '../lib/mailer';
 
 export const auth = Router();
 
@@ -80,7 +80,7 @@ async function emitirCodigo(email: string, assunto?: string): Promise<void> {
     // 1. Disparo real via SMTP
     await enviarCodigo(email, codigo, assunto);
   } catch (erroSmtp) {
-    console.error('[SMTP Error] Falha ao entregar o código de verificação:', erroSmtp);
+    console.error('[SMTP Error] Falha ao entregar o código de verificação:', resumoErroSmtp(erroSmtp));
     return;
   }
 
@@ -199,7 +199,7 @@ auth.post('/registro', limite(10), async (req, res) => {
     try {
       await (aceito ? enviarCodigo(email, codigo) : enviarAvisoCadastro(email));
     } catch (erroSmtp) {
-      console.error('[SMTP Error] Falha ao entregar o e-mail do cadastro:', erroSmtp);
+      console.error('[SMTP Error] Falha ao entregar o e-mail do cadastro:', resumoErroSmtp(erroSmtp));
       return res.status(400).json({
         error:
           'Não foi possível entregar o código para este e-mail. Verifique se o endereço foi digitado corretamente.',

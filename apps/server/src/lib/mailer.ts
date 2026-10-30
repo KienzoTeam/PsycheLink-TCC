@@ -16,6 +16,12 @@ export const mailer = nodemailer.createTransport({
   socketTimeout: 15_000,
 });
 
+// Para log: a mensagem e o envelope do nodemailer podem trazer o endereço do destinatário.
+export const resumoErroSmtp = (erro: unknown) => {
+  const { code, responseCode } = (erro ?? {}) as { code?: string; responseCode?: number };
+  return { code, responseCode };
+};
+
 export async function enviarCodigo(
   email: string,
   codigo: number,
