@@ -260,20 +260,11 @@ auth.post('/reenviar-codigo', limite(5), async (req, res) => {
       'SELECT 1 FROM users WHERE email = $1 AND NOT email_verificado',
       [email],
     );
-    if (pendente.rows.length === 0) {
-      return res.json({ message: 'Se houver uma conta pendente, você receberá um novo código.' });
+    // Cooldown e falha de SMTP também respondem igual: 429/400 só existiriam para conta pendente.
+    if (pendente.rows.length > 0 && !(await cooldownAtivo(email))) {
+      await emitirCodigo(email);
     }
-
-    if (await cooldownAtivo(email)) {
-      return res.status(429).json({ error: 'Aguarde um minuto antes de pedir um novo código.' });
-    }
-
-    const enviado = await emitirCodigo(email);
-    if (!enviado) {
-      return res.status(400).json({ error: 'Não foi possível entregar o código para este e-mail.' });
-    }
-
-    return res.json({ message: 'Novo código enviado.' });
+    return res.json({ message: 'Se houver uma conta pendente, você receberá um novo código.' });
   } catch (err) {
     console.error('Erro ao reenviar código:', err);
     return res.status(500).json({ error: 'Erro interno ao reenviar código.' });
