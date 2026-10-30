@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { after, afterEach, before, describe, it, mock } from 'node:test';
+import { setTimeout as esperaMs } from 'node:timers/promises';
 import bcrypt from 'bcrypt';
 import { pool } from '../src/db';
 import { carregarApp, criarCliente, criarPaciente, criarPsicologo, iniciar, limpar } from './ajuda';
@@ -24,8 +25,29 @@ const smtpForaDoAr = () => {
   mock.method(mailer, 'sendMail', async () => {
     throw new Error('SMTP fora do ar');
   });
-  mock.method(console, 'error', () => {});
+  return mock.method(console, 'error', () => {});
 };
+
+// Reenvio e esqueci-senha enviam depois de responder: os testes esperam esse envio terminar.
+const esperar = async (pronto: () => Promise<boolean>) => {
+  for (let i = 0; i < 300; i++) {
+    if (await pronto()) return;
+    await esperaMs(10);
+  }
+  assert.fail('o envio em segundo plano não terminou');
+};
+const cooldownAtivo = async (email: string) =>
+  (
+    await pool.query(
+      "SELECT 1 FROM verificacoes_email WHERE email = $1 AND criado_em > now() - interval '1 minute'",
+      [email],
+    )
+  ).rowCount === 1;
+const vencerCooldown = (email: string) =>
+  pool.query(
+    "UPDATE verificacoes_email SET criado_em = now() - interval '2 minutes' WHERE email = $1",
+    [email],
+  );
 
 const emails: string[] = [];
 let servidor: Awaited<ReturnType<typeof iniciar>>;
@@ -118,21 +140,45 @@ describe('reenvio de código e esqueci a senha não revelam a conta', () => {
     // O cadastro acabou de gravar um código, então o cooldown está ativo e nada é enviado.
     enviadas = [];
     assert.deepEqual(await chamar('/auth/reenviar-codigo', { email: pendente }), semConta);
+    await esperaMs(50);
     assert.equal(enviadas.length, 0);
 
-    const vencerCooldown = () =>
-      pool.query(
-        "UPDATE verificacoes_email SET criado_em = now() - interval '2 minutes' WHERE email = $1",
-        [pendente],
-      );
-    await vencerCooldown();
+    // O envio sai depois da resposta; espera ele e a gravação do código terminarem.
+    await vencerCooldown(pendente);
     assert.deepEqual(await chamar('/auth/reenviar-codigo', { email: pendente }), semConta);
-    assert.equal(enviadas.length, 1);
+    await esperar(async () => enviadas.length === 1 && (await cooldownAtivo(pendente)));
 
-    await vencerCooldown();
+    await vencerCooldown(pendente);
     mock.restoreAll();
-    smtpForaDoAr();
+    const erro = smtpForaDoAr();
     assert.deepEqual(await chamar('/auth/reenviar-codigo', { email: pendente }), semConta);
+    await esperar(async () => erro.mock.callCount() > 0);
+  });
+
+  it('responde antes de o e-mail ser enviado, com e sem conta', async () => {
+    smtpOk();
+    const pendente = novoEmail();
+    await cadastrar(pendente, 'senha-do-dono');
+    await vencerCooldown(pendente);
+    mock.restoreAll();
+    enviadas = [];
+
+    let liberar!: () => void;
+    const travado = new Promise<void>((r) => (liberar = r));
+    mock.method(mailer, 'sendMail', async (m: Mensagem) => {
+      enviadas.push(m);
+      await travado;
+      return {};
+    });
+
+    // Com o SMTP travado, as duas respostas saem mesmo assim: a espera não revela a conta.
+    const semConta = await chamar('/auth/reenviar-codigo', { email: novoEmail() });
+    const comConta = await chamar('/auth/reenviar-codigo', { email: pendente });
+    assert.deepEqual(comConta, semConta);
+    await esperar(async () => enviadas.length === 1);
+
+    liberar();
+    await esperar(() => cooldownAtivo(pendente));
   });
 
   it('esqueci-senha responde igual sem conta, com conta verificada e com pendente', async () => {
@@ -140,10 +186,17 @@ describe('reenvio de código e esqueci a senha não revelam a conta', () => {
     const paciente = await criarPaciente();
     const pendente = novoEmail();
     await cadastrar(pendente, 'senha-do-dono');
+    enviadas = [];
 
     const semConta = await chamar('/auth/esqueci-senha', { email: novoEmail() });
     assert.equal(semConta.status, 200);
     assert.deepEqual(await chamar('/auth/esqueci-senha', { email: paciente.email }), semConta);
+    await esperar(async () => enviadas.length === 1 && (await cooldownAtivo(paciente.email)));
+    assert.equal(enviadas[0].to, paciente.email);
+
+    // Pendente não recebe código de redefinição.
     assert.deepEqual(await chamar('/auth/esqueci-senha', { email: pendente }), semConta);
+    await esperaMs(50);
+    assert.equal(enviadas.length, 1);
   });
 });

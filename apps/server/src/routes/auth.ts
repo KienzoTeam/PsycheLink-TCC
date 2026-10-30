@@ -73,7 +73,7 @@ export const verificarToken = async (req: Request, res: Response, next: NextFunc
  * Tenta enviar o código via SMTP de verdade.
  * Salva na tabela verificacoes_email apenas se o envio SMTP for aceito.
  */
-async function emitirCodigo(email: string, assunto?: string): Promise<boolean> {
+async function emitirCodigo(email: string, assunto?: string): Promise<void> {
   const codigo = gerarCodigo();
 
   try {
@@ -81,14 +81,18 @@ async function emitirCodigo(email: string, assunto?: string): Promise<boolean> {
     await enviarCodigo(email, codigo, assunto);
   } catch (erroSmtp) {
     console.error('[SMTP Error] Falha ao entregar o código de verificação:', erroSmtp);
-    return false;
+    return;
   }
 
   // 2. Com o e-mail já existente na tabela `users`, a Foreign Key é respeitada
   await gravarCodigo(pool, email, codigo);
-
-  return true;
 }
+
+// Reenvio e esqueci-senha respondem antes de enviar: esperar o SMTP só quando há conta revelaria
+// a conta pela demora. Falhas só são logadas, sem o e-mail.
+const emitirSemEsperar = (email: string, assunto?: string) => {
+  emitirCodigo(email, assunto).catch(() => console.error('[SMTP Error] Falha ao emitir o código.'));
+};
 
 const gravarCodigo = (db: Pool | PoolClient, email: string, codigo: number) =>
   db.query(
@@ -262,7 +266,7 @@ auth.post('/reenviar-codigo', limite(5), async (req, res) => {
     );
     // Cooldown e falha de SMTP também respondem igual: 429/400 só existiriam para conta pendente.
     if (pendente.rows.length > 0 && !(await cooldownAtivo(email))) {
-      await emitirCodigo(email);
+      emitirSemEsperar(email);
     }
     return res.json({ message: 'Se houver uma conta pendente, você receberá um novo código.' });
   } catch (err) {
@@ -282,7 +286,7 @@ auth.post('/esqueci-senha', limite(5), async (req, res) => {
       [email],
     );
     if (alvo.rows.length > 0 && !(await cooldownAtivo(email))) {
-      await emitirCodigo(email, 'PsycheLink · Código de redefinição de senha');
+      emitirSemEsperar(email, 'PsycheLink · Código de redefinição de senha');
     }
     return res.json({
       message: 'Se houver uma conta ativa com este e-mail, você receberá um código.',
