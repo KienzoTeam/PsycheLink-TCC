@@ -8,7 +8,7 @@ import { desafioSchema, doisFatoresSchema, psicologoRegistroSchema } from '../sc
 import { HASH_REFERENCIA } from '../lib/hashReferencia';
 import { normalizarEmail } from '../lib/validarEmail';
 import { codigoConfere, gerarCodigo, hashCodigo } from '../lib/codigo';
-import { enviarCodigo } from '../lib/mailer';
+import { enviarCodigo, resumoErroSmtp } from '../lib/mailer';
 import { registrarAuditoria } from '../lib/auditoria';
 import { emTransacao } from '../lib/contextoseguro';
 import {
@@ -98,7 +98,7 @@ authPsicologo.post('/psicologo/login', limite(10), async (req, res) => {
   try {
     await enviarCodigo(email, codigo, ASSUNTO_2FA);
   } catch (erroSmtp) {
-    console.error('[SMTP Error] Falha ao entregar o código de acesso:', erroSmtp);
+    console.error('[SMTP Error] Falha ao entregar o código de acesso:', resumoErroSmtp(erroSmtp));
     return res.status(502).json({ error: MSG_FALHA_ENVIO });
   }
 
@@ -211,7 +211,7 @@ authPsicologo.post('/psicologo/2fa/reenviar', limite(5), async (req, res) => {
   try {
     await enviarCodigo(rows[0].email, codigo, ASSUNTO_2FA);
   } catch (erroSmtp) {
-    console.error('[SMTP Error] Falha ao reenviar o código de acesso:', erroSmtp);
+    console.error('[SMTP Error] Falha ao reenviar o código de acesso:', resumoErroSmtp(erroSmtp));
     return res.status(502).json({ error: MSG_FALHA_ENVIO });
   }
   return res.json({ reenviarEm: rows[0].reenviar_em.toISOString() });
@@ -376,7 +376,7 @@ authPsicologo.post('/registro-psicologo', limite(10), async (req, res) => {
     try {
       await enviarCodigo(email, codigo);
     } catch (erroSmtp) {
-      console.error('[SMTP Error] Falha ao entregar o código de verificação:', erroSmtp);
+      console.error('[SMTP Error] Falha ao entregar o código de verificação:', resumoErroSmtp(erroSmtp));
       await client.query('ROLLBACK');
       return res.status(400).json({
         error:

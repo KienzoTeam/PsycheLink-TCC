@@ -74,7 +74,8 @@ describe('cadastro pendente refeito por outra pessoa', () => {
     assert.equal((await cadastrarPaciente(email, 'senha-do-dono')).status, 201);
     const codigo = ultimoCodigo(email);
 
-    assert.equal((await cadastrarPaciente(email, 'senha-de-outro')).status, 409);
+    // Responde 201 como um cadastro novo (não revela a conta), mas não troca a senha nem o código.
+    assert.equal((await cadastrarPaciente(email, 'senha-de-outro')).status, 201);
     assert.equal(await senhaGravada(email, 'senha-do-dono'), true);
     assert.equal(ultimoCodigo(email), codigo);
 

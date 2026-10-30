@@ -71,7 +71,7 @@ export function FormularioAcesso({ email, aoRecuperarSenha }: Props) {
       });
     } catch (falha) {
       if (codigoDeErro(falha) !== 'EMAIL_NAO_VERIFICADO') throw falha;
-      // 429: um código acabou de ser enviado (cadastro recente), então basta abrir a verificação.
+      // 429: limite de reenvios do IP; um código já foi enviado há pouco, então basta abrir a verificação.
       await reenviarCodigoEmail(email).catch((erro: unknown) => {
         if (!isAxiosError(erro) || erro.response?.status !== 429) throw erro;
       });

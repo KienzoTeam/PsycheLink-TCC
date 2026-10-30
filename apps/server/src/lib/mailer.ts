@@ -16,6 +16,12 @@ export const mailer = nodemailer.createTransport({
   socketTimeout: 15_000,
 });
 
+// Para log: a mensagem e o envelope do nodemailer podem trazer o endereço do destinatário.
+export const resumoErroSmtp = (erro: unknown) => {
+  const { code, responseCode } = (erro ?? {}) as { code?: string; responseCode?: number };
+  return { code, responseCode };
+};
+
 export async function enviarCodigo(
   email: string,
   codigo: number,
@@ -33,5 +39,28 @@ export async function enviarCodigo(
     subject: assunto,
     text: `Seu código é ${codigo}. Ele expira em 15 minutos.`,
     html: `<p>Seu código é <strong>${codigo}</strong>.</p><p>Expira em 15 minutos.</p>`,
+  });
+}
+
+// Cadastro tentado com um e-mail que já existe: o dono é avisado aqui, sem código nenhum,
+// porque a resposta da API é igual à de um cadastro novo e não pode revelar a conta.
+export async function enviarAvisoCadastro(email: string): Promise<void> {
+  const assunto = 'PsycheLink · Tentativa de cadastro com seu e-mail';
+  const texto =
+    'Alguém tentou criar uma conta no PsycheLink com este e-mail. ' +
+    "Se foi você, entre normalmente ou use 'Esqueci minha senha'; se ainda não confirmou o cadastro, use o código que enviamos antes. " +
+    'Se não foi você, ignore esta mensagem.';
+
+  if (!smtpAtivo && process.env.NODE_ENV !== 'production') {
+    console.log(`[aviso] ${email} · ${assunto}`);
+  }
+
+  if (!smtpAtivo) return;
+  await mailer.sendMail({
+    from: process.env.EMAIL_FROM,
+    to: email,
+    subject: assunto,
+    text: texto,
+    html: `<p>${texto}</p>`,
   });
 }

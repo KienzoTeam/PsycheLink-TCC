@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, describe, it } from 'node:test';
 import { app } from '../src/app';
 import { pool } from '../src/db';
-import { enviarCodigo } from '../src/lib/mailer';
+import { enviarAvisoCadastro, enviarCodigo } from '../src/lib/mailer';
 import { carregarApp, definirAmbiente, iniciar, limpar } from './ajuda';
 
 after(limpar);
@@ -74,6 +74,23 @@ describe('código OTP no log', () => {
       definirAmbiente({ NODE_ENV: 'development' });
       await enviarCodigo('otp@psychelink.test', 123456);
       assert.equal(log.mock.callCount(), 1);
+    } finally {
+      definirAmbiente(anterior);
+    }
+  });
+
+  it('o aviso de cadastro só loga fora de produção e nunca leva código', async (t) => {
+    const log = t.mock.method(console, 'log', () => {});
+    const anterior = { NODE_ENV: process.env.NODE_ENV };
+    try {
+      definirAmbiente({ NODE_ENV: 'production' });
+      await enviarAvisoCadastro('aviso@psychelink.test');
+      assert.equal(log.mock.callCount(), 0);
+
+      definirAmbiente({ NODE_ENV: 'development' });
+      await enviarAvisoCadastro('aviso@psychelink.test');
+      assert.equal(log.mock.callCount(), 1);
+      assert.doesNotMatch(String(log.mock.calls[0].arguments[0]), /\d{6}/);
     } finally {
       definirAmbiente(anterior);
     }

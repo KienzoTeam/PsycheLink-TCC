@@ -10,7 +10,7 @@ import { registroSchema, senhaSchema } from '../schemas';
 import { HASH_REFERENCIA } from '../lib/hashReferencia';
 import { normalizarEmail } from '../lib/validarEmail';
 import { gerarCodigo, hashCodigo, codigoConfere } from '../lib/codigo';
-import { enviarCodigo } from '../lib/mailer';
+import { enviarAvisoCadastro, enviarCodigo, resumoErroSmtp } from '../lib/mailer';
 
 export const auth = Router();
 
@@ -74,22 +74,26 @@ export const verificarToken = async (req: Request, res: Response, next: NextFunc
  * Tenta enviar o código via SMTP de verdade.
  * Salva na tabela verificacoes_email apenas se o envio SMTP for aceito.
  */
-async function emitirCodigo(email: string, assunto?: string): Promise<boolean> {
+async function emitirCodigo(email: string, assunto?: string): Promise<void> {
   const codigo = gerarCodigo();
 
   try {
     // 1. Disparo real via SMTP
     await enviarCodigo(email, codigo, assunto);
   } catch (erroSmtp) {
-    console.error('[SMTP Error] Falha ao entregar o código de verificação:', erroSmtp);
-    return false;
+    console.error('[SMTP Error] Falha ao entregar o código de verificação:', resumoErroSmtp(erroSmtp));
+    return;
   }
 
   // 2. Com o e-mail já existente na tabela `users`, a Foreign Key é respeitada
   await gravarCodigo(pool, email, codigo);
-
-  return true;
 }
+
+// Reenvio e esqueci-senha respondem antes de enviar: esperar o SMTP só quando há conta revelaria
+// a conta pela demora. Falhas só são logadas, sem o e-mail.
+const emitirSemEsperar = (email: string, assunto?: string) => {
+  emitirCodigo(email, assunto).catch(() => console.error('[SMTP Error] Falha ao emitir o código.'));
+};
 
 const gravarCodigo = (db: Pool | PoolClient, email: string, codigo: number) =>
   db.query(
@@ -147,18 +151,6 @@ auth.post('/registro', limite(10), async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Formato de e-mail inválido.' });
 
   try {
-    // Conta de psicólogo nunca passa pelo cadastro de paciente (evita perfil misto).
-    const ehPsicologo = await pool.query(
-      'SELECT 1 FROM psicologo p JOIN users u ON u.id = p.user_id WHERE u.email = $1',
-      [email],
-    );
-    if (ehPsicologo.rows.length > 0) {
-      return res.status(409).json({
-        error:
-          'Não foi possível concluir o cadastro com este e-mail. Motivos possíveis: ele já pertence a uma conta ativa. Tente fazer login ou recuperar a senha.',
-      });
-    }
-
     const { nome, password, dataNascimento } = parsed.data;
     const hashedPassword = await bcrypt.hash(password, 10);
     const codigo = gerarCodigo();
@@ -168,7 +160,8 @@ auth.post('/registro', limite(10), async (req, res) => {
     const aceito = await emTransacao(async (client) => {
       await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [email]);
       const { rows } = await client.query(
-        `SELECT u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo
+        `SELECT u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo,
+                EXISTS (SELECT 1 FROM psicologo p WHERE p.user_id = u.id) AS psicologo
            FROM users u LEFT JOIN verificacoes_email v ON v.email = u.email
           WHERE u.email = $1`,
         [email],
@@ -177,8 +170,10 @@ auth.post('/registro', limite(10), async (req, res) => {
 
       // Enquanto o código de um cadastro pendente vale, só quem sabe a senha dele pode refazê-lo:
       // senão um terceiro troca a senha e o dono do e-mail confirma a conta com a senha do outro.
+      // Conta de psicólogo nunca passa pelo cadastro de paciente (evita perfil misto).
       if (
         conta?.email_verificado ||
+        conta?.psicologo ||
         (conta?.codigo_ativo && !(await bcrypt.compare(password, conta.password_hash)))
       ) {
         return false;
@@ -200,17 +195,12 @@ auth.post('/registro', limite(10), async (req, res) => {
       return true;
     });
 
-    if (!aceito) {
-      return res.status(409).json({
-        error:
-          'Não foi possível concluir o cadastro com este e-mail. Motivos possíveis: ele já pertence a uma conta ativa. Tente fazer login ou recuperar a senha.',
-      });
-    }
-
+    // Não revela conta existente: a resposta é a de um cadastro novo e o dono recebe só um aviso.
+    // O aviso é aguardado como o código, para o tempo e a falha de SMTP serem os mesmos.
     try {
-      await enviarCodigo(email, codigo);
+      await (aceito ? enviarCodigo(email, codigo) : enviarAvisoCadastro(email));
     } catch (erroSmtp) {
-      console.error('[SMTP Error] Falha ao entregar o código de verificação:', erroSmtp);
+      console.error('[SMTP Error] Falha ao entregar o e-mail do cadastro:', resumoErroSmtp(erroSmtp));
       return res.status(400).json({
         error:
           'Não foi possível entregar o código para este e-mail. Verifique se o endereço foi digitado corretamente.',
@@ -275,20 +265,11 @@ auth.post('/reenviar-codigo', limite(5), async (req, res) => {
       'SELECT 1 FROM users WHERE email = $1 AND NOT email_verificado',
       [email],
     );
-    if (pendente.rows.length === 0) {
-      return res.json({ message: 'Se houver uma conta pendente, você receberá um novo código.' });
+    // Cooldown e falha de SMTP também respondem igual: 429/400 só existiriam para conta pendente.
+    if (pendente.rows.length > 0 && !(await cooldownAtivo(email))) {
+      emitirSemEsperar(email);
     }
-
-    if (await cooldownAtivo(email)) {
-      return res.status(429).json({ error: 'Aguarde um minuto antes de pedir um novo código.' });
-    }
-
-    const enviado = await emitirCodigo(email);
-    if (!enviado) {
-      return res.status(400).json({ error: 'Não foi possível entregar o código para este e-mail.' });
-    }
-
-    return res.json({ message: 'Novo código enviado.' });
+    return res.json({ message: 'Se houver uma conta pendente, você receberá um novo código.' });
   } catch (err) {
     console.error('Erro ao reenviar código:', err);
     return res.status(500).json({ error: 'Erro interno ao reenviar código.' });
@@ -306,7 +287,7 @@ auth.post('/esqueci-senha', limite(5), async (req, res) => {
       [email],
     );
     if (alvo.rows.length > 0 && !(await cooldownAtivo(email))) {
-      await emitirCodigo(email, 'PsycheLink · Código de redefinição de senha');
+      emitirSemEsperar(email, 'PsycheLink · Código de redefinição de senha');
     }
     return res.json({
       message: 'Se houver uma conta ativa com este e-mail, você receberá um código.',

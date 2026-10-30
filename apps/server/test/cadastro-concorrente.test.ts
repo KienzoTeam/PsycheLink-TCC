@@ -31,8 +31,14 @@ it('cadastro paralelo durante o envio do e-mail do dono não troca a senha', asy
   const chegou = new Promise<void>((r) => (entregaChegou = r));
   const liberada = new Promise<void>((r) => (liberarEntrega = r));
   const codigos: string[] = [];
+  let avisos = 0;
   mock.method(mailer, 'sendMail', async (mensagem: { text: string }) => {
-    const primeira = codigos.push(/\d{6}/.exec(mensagem.text)![0]) === 1;
+    const codigo = /\d{6}/.exec(mensagem.text);
+    if (!codigo) {
+      avisos += 1; // aviso ao dono, sem código
+      return {};
+    }
+    const primeira = codigos.push(codigo[0]) === 1;
     if (primeira) {
       entregaChegou();
       await liberada;
@@ -46,7 +52,10 @@ it('cadastro paralelo durante o envio do e-mail do dono não troca a senha', asy
   const outro = await cadastrar('senha-de-outro');
   liberarEntrega();
   assert.equal((await dono).status, 201);
-  assert.equal(outro.status, 409);
+  // O outro cadastro responde como sucesso, mas só o dono recebe código; a senha não muda.
+  assert.equal(outro.status, 201);
+  assert.equal(codigos.length, 1);
+  assert.equal(avisos, 1);
 
   const confirmado = await criarCliente(servidor.url).requisitar('POST', '/auth/verificar-email', {
     corpo: { email, codigo: Number(codigos[0]) },
