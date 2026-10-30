@@ -302,6 +302,8 @@ authPsicologo.post('/registro-psicologo', limite(10), async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    // Mesmo lock do /auth/registro: cadastros do mesmo e-mail, por qualquer rota, entram um por vez.
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [email]);
 
     const existente = await client.query<{
       id: number;

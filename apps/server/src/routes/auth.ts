@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import rateLimit from 'express-rate-limit';
+import type { Pool, PoolClient } from 'pg';
 import { pool } from '../db';
 import { emTransacao } from '../lib/contextoseguro';
 import { derrubarAcessosWeb } from '../lib/sessaoWeb';
@@ -84,7 +85,13 @@ async function emitirCodigo(email: string, assunto?: string): Promise<boolean> {
   }
 
   // 2. Com o e-mail já existente na tabela `users`, a Foreign Key é respeitada
-  await pool.query(
+  await gravarCodigo(pool, email, codigo);
+
+  return true;
+}
+
+const gravarCodigo = (db: Pool | PoolClient, email: string, codigo: number) =>
+  db.query(
     `INSERT INTO verificacoes_email (email, codigo_hash, expira_em, tentativas, criado_em)
      VALUES ($1, $2, now() + interval '15 minutes', 0, now())
      ON CONFLICT (email) DO UPDATE
@@ -94,9 +101,6 @@ async function emitirCodigo(email: string, assunto?: string): Promise<boolean> {
            criado_em   = now()`,
     [email, hashCodigo(codigo, email)],
   );
-
-  return true;
-}
 
 type ResultadoCodigo = { ok: true } | { ok: false; status: number; msg: string };
 
@@ -154,47 +158,58 @@ auth.post('/registro', limite(10), async (req, res) => {
       });
     }
 
-    const existente = await pool.query(
-      `SELECT u.id, u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo
-         FROM users u LEFT JOIN verificacoes_email v ON v.email = u.email
-        WHERE u.email = $1`,
-      [email],
-    );
     const { nome, password, dataNascimento } = parsed.data;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const codigo = gerarCodigo();
 
-    // Enquanto o código de um cadastro pendente vale, só quem sabe a senha dele pode refazê-lo:
-    // senão um terceiro troca a senha e o dono do e-mail confirma a conta com a senha do outro.
-    if (
-      existente.rows[0]?.email_verificado ||
-      (existente.rows[0]?.codigo_ativo &&
-        !(await bcrypt.compare(password, existente.rows[0].password_hash)))
-    ) {
+    // Checagem, senha e código entram juntos sob um lock do e-mail: um cadastro paralelo espera e já
+    // encontra o código ativo. O e-mail só sai depois do COMMIT, sem segurar o lock durante o SMTP.
+    const aceito = await emTransacao(async (client) => {
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [email]);
+      const { rows } = await client.query(
+        `SELECT u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo
+           FROM users u LEFT JOIN verificacoes_email v ON v.email = u.email
+          WHERE u.email = $1`,
+        [email],
+      );
+      const conta = rows[0];
+
+      // Enquanto o código de um cadastro pendente vale, só quem sabe a senha dele pode refazê-lo:
+      // senão um terceiro troca a senha e o dono do e-mail confirma a conta com a senha do outro.
+      if (
+        conta?.email_verificado ||
+        (conta?.codigo_ativo && !(await bcrypt.compare(password, conta.password_hash)))
+      ) {
+        return false;
+      }
+
+      if (conta) {
+        await client.query(
+          'UPDATE users SET nome = $1, password_hash = $2, data_nascimento = $3 WHERE email = $4',
+          [nome, hashedPassword, dataNascimento, email],
+        );
+      } else {
+        await client.query(
+          `INSERT INTO users (nome, email, password_hash, data_nascimento, email_verificado)
+           VALUES ($1, $2, $3, $4, false)`,
+          [nome, email, hashedPassword, dataNascimento],
+        );
+      }
+      await gravarCodigo(client, email, codigo);
+      return true;
+    });
+
+    if (!aceito) {
       return res.status(409).json({
         error:
           'Não foi possível concluir o cadastro com este e-mail. Motivos possíveis: ele já pertence a uma conta ativa. Tente fazer login ou recuperar a senha.',
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 1. PRIMEIRO cria ou atualiza o usuário pendente na tabela `users`
-    if (existente.rows[0]) {
-      await pool.query(
-        'UPDATE users SET nome = $1, password_hash = $2, data_nascimento = $3 WHERE email = $4',
-        [nome, hashedPassword, dataNascimento, email],
-      );
-    } else {
-      await pool.query(
-        `INSERT INTO users (nome, email, password_hash, data_nascimento, email_verificado)
-         VALUES ($1, $2, $3, $4, false)`,
-        [nome, email, hashedPassword, dataNascimento],
-      );
-    }
-
-    // 2. AGORA QUE O REGISTRO EXISTE EM `users`, envia o código via SMTP e salva em `verificacoes_email`
-    const enviadoPeloSmtp = await emitirCodigo(email);
-
-    if (!enviadoPeloSmtp) {
+    try {
+      await enviarCodigo(email, codigo);
+    } catch (erroSmtp) {
+      console.error('[SMTP Error] Falha ao entregar o código de verificação:', erroSmtp);
       return res.status(400).json({
         error:
           'Não foi possível entregar o código para este e-mail. Verifique se o endereço foi digitado corretamente.',
