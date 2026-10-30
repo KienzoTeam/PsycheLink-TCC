@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
+import bcrypt from 'bcrypt';
 import { app } from '../src/app';
+import { HASH_REFERENCIA } from '../src/lib/hashReferencia';
 import { criarCliente, criarPaciente, iniciar, limpar } from './ajuda';
 
 let servidor: Awaited<ReturnType<typeof iniciar>>;
@@ -29,5 +31,19 @@ describe('POST /auth/login (app)', () => {
     assert.equal(me.status, 200);
     assert.deepEqual(usuario, await me.json());
     assert.equal(usuario.nome, 'Paciente do Login');
+  });
+
+  it('e-mail inexistente também passa pelo bcrypt (tempo não revela a conta)', async (t) => {
+    const compare = t.mock.method(bcrypt, 'compare');
+    const cliente = criarCliente(servidor.url);
+
+    const res = await cliente.requisitar('POST', '/auth/login', {
+      corpo: { email: `sem-conta-${Date.now()}@teste.com`, password: 'qualquer-senha' },
+    });
+
+    assert.equal(res.status, 400);
+    assert.equal((await res.json()).error, 'E-mail ou senha inválidos.');
+    assert.equal(compare.mock.callCount(), 1);
+    assert.equal(compare.mock.calls[0].arguments[1], HASH_REFERENCIA);
   });
 });
