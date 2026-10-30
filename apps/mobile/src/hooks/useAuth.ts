@@ -111,6 +111,8 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
 };
 
 const limparSessao = async () => {
+  // Avança antes de apagar: resposta que saiu antes da limpeza não traz o perfil de volta.
+  novaVersaoSessao();
   await removerTokenSeguro();
   usuarioCompartilhado = null;
   carregandoUsuarioCompartilhado = false;
@@ -389,7 +391,6 @@ export function useAuth() {
     }
 
     resetarRascunho();
-    novaVersaoSessao();
     await limparSessao();
   };
 
