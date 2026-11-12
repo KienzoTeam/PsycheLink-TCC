@@ -191,8 +191,11 @@ function gerarCheckins(p: Perfil) {
       diario: comDiario ? criptografar(DIARIO[i % DIARIO.length]!) : null,
       // Parte dos textos fica só com o paciente: o diário exige o consentimento e a marcação em cada registro.
       compartilhado: comDiario && i % 2 === 0,
+      hidratacao: sorteio() < 0.6,
       exercicio: sorteio() < 0.45,
       meditacao: sorteio() < 0.3,
+      limiteTelas: sorteio() < 0.35,
+      contatoSocial: sorteio() < 0.55,
       medicacao: sorteio() < 0.8,
     };
   });
@@ -319,12 +322,15 @@ async function semear(db: Client) {
     );
     const porDia = new Map(registros.map((r) => [r.dias, r]));
     await db.query(
-      `INSERT INTO habito (checkin_id, exercicio, meditacao, medicacao)
-       SELECT * FROM unnest($1::int[], $2::boolean[], $3::boolean[], $4::boolean[])`,
+      `INSERT INTO habito (checkin_id, hidratacao, exercicio, meditacao, limite_telas, contato_social, medicacao)
+       SELECT * FROM unnest($1::int[], $2::boolean[], $3::boolean[], $4::boolean[], $5::boolean[], $6::boolean[], $7::boolean[])`,
       [
         inseridos.rows.map((r) => r.id),
+        inseridos.rows.map((r) => porDia.get(r.dias)!.hidratacao),
         inseridos.rows.map((r) => porDia.get(r.dias)!.exercicio),
         inseridos.rows.map((r) => porDia.get(r.dias)!.meditacao),
+        inseridos.rows.map((r) => porDia.get(r.dias)!.limiteTelas),
+        inseridos.rows.map((r) => porDia.get(r.dias)!.contatoSocial),
         inseridos.rows.map((r) => porDia.get(r.dias)!.medicacao),
       ],
     );

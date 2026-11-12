@@ -1,5 +1,6 @@
 import type { PoolClient } from 'pg';
 import { CHECKIN_HORARIO, emocoesDe, QUALIDADE_SONO_REVERSO } from './checkins';
+import { type Habitos, HABITOS, HABITOS_JSON } from './habitos';
 import type { Consentimentos } from './vinculo';
 
 export type LinhaDetalhe = {
@@ -14,9 +15,7 @@ export type LinhaDetalhe = {
   contexto_gatilho: string | null;
   diario_livre: string | null;
   diario_compartilhado: boolean;
-  exercicio: boolean | null; // null quando não há registro em `habito`
-  meditacao: boolean | null;
-  medicacao: boolean | null;
+  habitos: Habitos | null; // null quando não há registro em `habito`
 };
 
 const faixaDoDia = (horario: string) => {
@@ -43,7 +42,7 @@ export async function checkinsDoPeriodo(
             c.horas_sono, c.qualidade_sono,
             c.emocao_predominante, c.contexto_gatilho,
             c.diario_livre, c.diario_compartilhado,
-            h.exercicio, h.meditacao, h.medicacao
+            ${HABITOS_JSON} AS habitos
        FROM checkin_diario c
        LEFT JOIN habito h ON h.checkin_id = c.id
       WHERE c.paciente_id = $1
@@ -88,19 +87,12 @@ export function resumirCheckins(rows: LinhaDetalhe[], consent: Consentimentos) {
     .sort((a, b) => b.quantidade - a.quantidade)
     .slice(0, 5);
 
-  let habitos: null | {
-    diasRegistrados: number;
-    exercicio: number;
-    meditacao: number;
-    medicacao: number;
-  } = null;
+  let habitos: null | Record<string, number> = null;
   if (consent.habitos) {
-    const comHabito = rows.filter((l) => l.exercicio !== null);
+    const comHabito = rows.flatMap((l) => (l.habitos ? [l.habitos] : []));
     habitos = {
       diasRegistrados: comHabito.length,
-      exercicio: comHabito.filter((l) => l.exercicio).length,
-      meditacao: comHabito.filter((l) => l.meditacao).length,
-      medicacao: comHabito.filter((l) => l.medicacao).length,
+      ...Object.fromEntries(HABITOS.map(({ chave }) => [chave, comHabito.filter((h) => h[chave]).length])),
     };
   }
 

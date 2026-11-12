@@ -9,6 +9,7 @@ import {
 } from '../../lib/checkins';
 import { comContextoPsicologo } from '../../lib/contextoseguro';
 import { codificarCursor, cursorDe } from '../../lib/cursor';
+import { type Habitos, HABITOS_JSON } from '../../lib/habitos';
 import { dia, periodoValido } from '../../lib/periodo';
 import { idDe, lerOuNegar, limite, rota } from '../../lib/rota';
 
@@ -143,13 +144,12 @@ type LinhaDetalhe = LinhaLista & {
   compartilha_habitos: boolean;
   compartilha_escalas: boolean;
   compartilha_diario: boolean;
-  exercicio: boolean | null;
-  meditacao: boolean | null;
-  medicacao: boolean | null;
+  intensidade_emocao: number | null;
+  habitos: Habitos | null; // null quando não há registro em `habito`
 };
 
-// Registro completo, conforme o consentimento. O diário exige consentimento de diário
-// e a marcação de compartilhamento no próprio check-in.
+// Registro completo, conforme o consentimento. O diário sai quando o check-in está marcado
+// como compartilhado; compartilha_diario só guarda o valor inicial do interruptor no app.
 checkins.get(
   '/:id',
   limite(60),
@@ -165,9 +165,9 @@ checkins.get(
                 c.intensidade_humor, c.intensidade_ansiedade,
                 c.horas_sono, c.qualidade_sono,
                 c.emocao_predominante, c.contexto_gatilho,
-                c.diario_livre, c.diario_compartilhado,
+                c.diario_livre, c.diario_compartilhado, c.intensidade_emocao,
                 co.compartilha_habitos, co.compartilha_escalas, co.compartilha_diario,
-                h.exercicio, h.meditacao, h.medicacao
+                ${HABITOS_JSON} AS habitos
            FROM checkin_diario c
            JOIN vinculo v ON v.paciente_id = c.paciente_id
                          AND v.psicologo_id = $1 AND v.status = 'ativo'
@@ -204,10 +204,8 @@ checkins.get(
           l.compartilha_habitos && l.qualidade_sono !== null
             ? (QUALIDADE_SONO_REVERSO[l.qualidade_sono] ?? null)
             : null,
-        habitos:
-          l.compartilha_habitos && l.exercicio !== null
-            ? { exercicio: l.exercicio, meditacao: l.meditacao, medicacao: l.medicacao }
-            : null,
+        habitos: l.compartilha_habitos ? l.habitos : null,
+        intensidadeEmocao: l.intensidade_emocao,
         diario:
           l.diario_compartilhado ? lerSeguro(l.diario_livre) : null,
       },

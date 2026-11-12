@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { HABITOS } from './lib/habitos';
 
 
 function parseDataNascimento(valor: string): string | null {
@@ -39,6 +40,8 @@ export const registroSchema = z.object({
 export type DadosRegistro = z.infer<typeof registroSchema>;
 
 
+type HabitoId = (typeof HABITOS)[number]['id'];
+
 export const checkinSchema = z.object({
   emocoes: z.array(z.string()).min(1, 'Selecione ao menos uma emoção.'),
   intensidade: z.number().int().min(1).max(10).optional(),
@@ -47,9 +50,10 @@ export const checkinSchema = z.object({
   horasSono: z.number().min(0).max(24),
   qualidadeSono: z.enum(['Ruim', 'Regular', 'Boa']).nullable(),
   contextos: z.array(z.string()),
-  habitos: z.array(z.string()), 
+  habitos: z.array(z.enum(HABITOS.map((h) => h.id) as [HabitoId, ...HabitoId[]])),
   notas: z.string().max(2000).optional(),
-  // Opt-in por check-in: o psicólogo só lê o diário com isto e o consentimento de diário.
+  // Opt-in por check-in: o psicólogo lê o texto quando isto é verdadeiro (compartilha_diario
+  // é só o valor inicial do interruptor no app).
   diarioCompartilhado: z.boolean().optional().default(false),
 });
 
