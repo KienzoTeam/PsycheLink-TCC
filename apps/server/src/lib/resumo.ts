@@ -87,12 +87,14 @@ export function resumirCheckins(rows: LinhaDetalhe[], consent: Consentimentos) {
     .sort((a, b) => b.quantidade - a.quantidade)
     .slice(0, 5);
 
-  let habitos: null | Record<string, number> = null;
+  let habitos: null | ({ diasRegistrados: number } & Record<keyof Habitos, number>) = null;
   if (consent.habitos) {
     const comHabito = rows.flatMap((l) => (l.habitos ? [l.habitos] : []));
     habitos = {
       diasRegistrados: comHabito.length,
-      ...Object.fromEntries(HABITOS.map(({ chave }) => [chave, comHabito.filter((h) => h[chave]).length])),
+      ...(Object.fromEntries(
+        HABITOS.map(({ chave }) => [chave, comHabito.filter((h) => h[chave]).length]),
+      ) as Record<keyof Habitos, number>),
     };
   }
 

@@ -189,7 +189,7 @@ function gerarCheckins(p: Perfil) {
       qualidade: sono >= 7.5 ? 3 : sono >= 6.5 ? 2 : 1,
       gatilho: gatilhos.length ? criptografar([...new Set(gatilhos)].join(', ')) : null,
       diario: comDiario ? criptografar(DIARIO[i % DIARIO.length]!) : null,
-      // Parte dos textos fica só com o paciente: o diário exige o consentimento e a marcação em cada registro.
+      // Parte dos textos fica só com o paciente: o psicólogo lê o diário quando o registro é marcado como compartilhado.
       compartilhado: comDiario && i % 2 === 0,
       hidratacao: sorteio() < 0.6,
       exercicio: sorteio() < 0.45,
