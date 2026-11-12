@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { checkinSchema } from '../schemas';
+import { HABITOS } from '../lib/habitos';
 import { verificarToken } from './auth';
 import { criptografar, criptografarOuNulo, descriptografar } from '../lib/criptografia';
 import { comContextoPaciente } from '../lib/contextoseguro';
@@ -176,12 +177,13 @@ checkin.post(['/', '/checkins'], limite(20), verificarToken, async (req, res) =>
     const pacienteId = await obterOuCriarPacienteId(req.user!.id);
 
     
-    const { rows } = (await comContextoPaciente(pacienteId, (client) =>
-      client.query(
+    const { rows } = await comContextoPaciente(pacienteId, async (client) => {
+      const inserido = await client.query<CheckinPostResultRow>(
         `INSERT INTO checkin_diario
            (paciente_id, emocao_predominante, intensidade_humor, intensidade_ansiedade,
-            horas_sono, qualidade_sono, contexto_gatilho, diario_livre, diario_compartilhado)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            horas_sono, qualidade_sono, contexto_gatilho, diario_livre, diario_compartilhado,
+            intensidade_emocao)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING id, data, criado_em`,
         [
           pacienteId,
@@ -193,9 +195,19 @@ checkin.post(['/', '/checkins'], limite(20), verificarToken, async (req, res) =>
           contextoGatilho,
           diarioLivre,
           diarioLivre !== null && dados.diarioCompartilhado,
+          dados.intensidade ?? null,
         ],
-      ),
-    )) as { rows: CheckinPostResultRow[] };
+      );
+
+      // Quem passou pela etapa de hábitos sem marcar nenhum também gera a linha.
+      const marcados = new Set<string>(dados.habitos);
+      await client.query(
+        `INSERT INTO habito (checkin_id, ${HABITOS.map((h) => h.coluna).join(', ')})
+         VALUES ($1, ${HABITOS.map((_, i) => `$${i + 2}`).join(', ')})`,
+        [inserido.rows[0].id, ...HABITOS.map((h) => marcados.has(h.id))],
+      );
+      return inserido;
+    });
 
     return res.status(201).json({ checkin: rows[0] });
   } catch (err: any) {

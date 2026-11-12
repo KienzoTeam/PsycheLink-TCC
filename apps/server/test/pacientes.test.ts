@@ -466,7 +466,15 @@ describe('GET /psicologo/checkins/:id', () => {
       gatilhos: null,
       sonoHoras: 7,
       qualidadeSono: 'Regular',
-      habitos: { exercicio: true, meditacao: false, medicacao: false },
+      habitos: {
+        hidratacao: false,
+        exercicio: true,
+        meditacao: false,
+        limiteTelas: false,
+        contatoSocial: false,
+        medicacao: false,
+      },
+      intensidadeEmocao: null,
       diario: 'texto do diário da Ana',
     });
     assert.deepEqual(corpo.consentimentos, { humor: true, habitos: true, escalas: false, diario: true });
