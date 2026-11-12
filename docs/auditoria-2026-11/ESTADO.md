@@ -59,7 +59,7 @@ Depois de reiniciar a máquina: `podman start psychelink-pg-teste`. O lote A4 tr
 | A1 Trava da suíte, CI, testes do check-in | #34 | Revisado e com CI verde (234 testes, 0 falhas). Aguarda revisão do grupo e merge |
 | A2 + B3 Seis hábitos e intensidade gravados | #35 (empilhado no #34) | Revisado e com CI verde (242 testes, migration `0008` do zero). Depois do merge, rodar `npm run migrar` no banco da equipe |
 | B1 Sessão e SOS no app | #36 (empilhado no #34) | Revisado (1 rodada de correção) e com CI verde. Falta o roteiro manual no Expo Go |
-| A4 + A5 E-mail pelo Brevo, `/health`, arquivos de deploy e guia | — | Plano aprovado em 12/11. Tarefa 1 (Brevo, `/health`) revisada e aprovada; tarefa 2 (Dockerfile, docker-compose, vercel.json, `docs/deploy.md`) em implementação. Depende do teste do Brevo pelo grupo |
+| A4 + A5 E-mail pelo Brevo, `/health`, arquivos de deploy e guia | #37 (empilhado no #34) | Revisado (1 rodada de correção) e com CI verde (245 testes). Publicar é do grupo, seguindo `docs/deploy.md`; começa pelo teste do Brevo |
 
 Migrations reservadas: `0008` (lote A2). A próxima livre é a `0009`; os lotes A7 e A11 também criam migrations e precisam combinar o número antes.
 
