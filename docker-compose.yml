@@ -1,0 +1,29 @@
+# Plano B da demo: tudo no notebook, sem Neon, Render nem Vercel. Passo a passo em docs/deploy.md ("Plano B").
+# As variáveis vêm de apps/server/.env.compose (fora do git): o banco lê as POSTGRES_* e a API lê o resto.
+services:
+  banco:
+    image: postgres:18
+    env_file: apps/server/.env.compose
+    volumes:
+      # Postgres 18 guarda os dados em /var/lib/postgresql/18/docker: o volume vai na pasta de cima.
+      - dados:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: apps/server
+    env_file: apps/server/.env.compose
+    # Só o próprio notebook acessa a API. Para o celular alcançá-la, veja o guia.
+    ports:
+      - '127.0.0.1:3000:3000'
+    # PID 1 do Node ignora o SIGTERM; com init o `down` não espera 10 s.
+    init: true
+    depends_on:
+      banco:
+        condition: service_healthy
+
+volumes:
+  dados:
