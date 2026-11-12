@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { app } from './app';
+import { pool } from './db';
 import { remetente, transporteDeEmail } from './lib/mailer';
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ENCRYPTION_KEY) {
@@ -24,4 +25,9 @@ if (transporte === 'Brevo' && !/^[^\s@<>"]+@[^\s@<>"]+$/.test(remetente().email)
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+const servidor = app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+
+// O Node como PID 1 do contêiner ignora o SIGTERM, e cada reinício no Render esperaria o prazo até o SIGKILL.
+process.on('SIGTERM', () => {
+  servidor.close(() => void pool.end().finally(() => process.exit(0)));
+});

@@ -121,6 +121,24 @@ describe('falhas do fetch no envio pelo Brevo', () => {
     }
   });
 
+  it('timeout do AbortSignal (DOMException) também vira EBREVO, com o nome TimeoutError', async (t) => {
+    const anterior = salvarAmbiente();
+    t.mock.method(globalThis, 'fetch', async () => {
+      throw new DOMException('x', 'TimeoutError');
+    });
+    try {
+      const { enviarCodigo } = comBrevo();
+      await assert.rejects(enviarCodigo('a@b.test', 123456), (erro: Error & { code?: string; responseCode?: number }) => {
+        assert.equal(erro.code, 'EBREVO');
+        assert.equal(erro.responseCode, undefined);
+        assert.match(erro.message, /TimeoutError/);
+        return true;
+      });
+    } finally {
+      definirAmbiente(anterior);
+    }
+  });
+
   it('cancela o corpo da resposta, em 2xx e fora dele', async (t) => {
     const anterior = salvarAmbiente();
     try {

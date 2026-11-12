@@ -1,5 +1,6 @@
 # Plano B da demo: tudo no notebook, sem Neon, Render nem Vercel. Passo a passo em docs/deploy.md ("Plano B").
 # As variáveis vêm de apps/server/.env.compose (fora do git): o banco lê as POSTGRES_* e a API lê o resto.
+# Os dois serviços leem o arquivo inteiro (a API vê POSTGRES_PASSWORD, o banco vê JWT_SECRET): aceitável só porque tudo é local.
 services:
   banco:
     image: postgres:18
@@ -19,8 +20,6 @@ services:
     # Só o próprio notebook acessa a API. Para o celular alcançá-la, veja o guia.
     ports:
       - '127.0.0.1:3000:3000'
-    # PID 1 do Node ignora o SIGTERM; com init o `down` não espera 10 s.
-    init: true
     depends_on:
       banco:
         condition: service_healthy

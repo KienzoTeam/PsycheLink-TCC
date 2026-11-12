@@ -56,29 +56,31 @@ O Render gratuito bloqueia as portas de e-mail comuns (SMTP), então a API envia
 
 ## 2. Neon (banco da demo)
 
-A demo usa um banco **novo e vazio**, numa branch separada, para nenhum dado da equipe ir para a demo. Branch é uma cópia do projeto que você pode mexer sem afetar a original.
+A demo usa um banco **novo e vazio**, numa branch separada, e nada da equipe fica acessível a ela. Branch é uma cópia do projeto que você pode mexer sem afetar a original.
 
 1. No console do Neon, abra o projeto da equipe, **Branches** na barra lateral, **New branch**.
    - **Parent branch:** a principal (o padrão).
    - **Name:** `demo`.
-   - Dados: deixe **Current data** (o padrão). A branch leva uma cópia dos bancos da principal, mas a API só vai usar o banco novo do passo seguinte. Apague a branch `demo` depois da banca.
+   - Dados: deixe **Current data** (o padrão). A branch nasce com uma cópia dos bancos da principal; o passo 3 apaga essas cópias.
    - **Desmarque "Automatically delete branch after"**. Ele vem marcado com 1 dia e apagaria a demo sozinho.
    - Clique em **Create**.
 2. No menu de branches, no alto da barra lateral, selecione `demo`. Em **Databases**, clique em **Add database**, nome `psychelink_demo`, dono `neondb_owner`, **Create**.
-3. Pegue a URL do dono para migrar. Clique em **Connect** e escolha: branch `demo`, database `psychelink_demo`, role `neondb_owner`, e **desligue** "Connection pooling" (a migração usa conexão direta). Copie a URL.
-4. Crie o arquivo `apps/server/.env.demo` com uma linha só (o Git ignora arquivos `.env*`; troque `sslmode=require` por `sslmode=verify-full` se a URL vier assim):
+3. **Apagar os bancos da equipe copiados para a `demo`.** O papel que a API vai usar (`psychelink_app`) tem permissão nesses bancos copiados, e a URL da API poderia alcançá-los só trocando o nome do banco no final. Ainda em **Databases**, com a branch **`demo`** selecionada no alto da barra lateral, clique no ícone de lixeira de cada banco que **não** seja `psychelink_demo` (normalmente só o `neondb`) e confirme em **Delete**. **Confira o nome da branch antes de cada exclusão:** apagar na branch principal destrói os dados da equipe, e não tem desfazer. Confira o resultado: a lista de **Databases** da `demo` mostra só `psychelink_demo`.
+4. **Trocar a senha do dono.** A branch herda os papéis **e as senhas** da principal, então a senha do dono da equipe valeria na demo. Com a branch `demo` selecionada, abra **Roles**, menu do `neondb_owner`, **Reset password**, **Reset**, e guarde a senha gerada (gerenciador de senhas).
+5. Pegue a URL do dono para migrar. Clique em **Connect** e escolha: branch `demo`, database `psychelink_demo`, role `neondb_owner`, e **desligue** "Connection pooling" (a migração usa conexão direta). Copie a URL: ela já traz a senha nova.
+6. Crie o arquivo `apps/server/.env.demo` com uma linha só (o Git ignora arquivos `.env*`; troque `sslmode=require` por `sslmode=verify-full` se a URL vier assim):
    ```
    DATABASE_URL_DIRETA="<URL do dono, banco psychelink_demo>"
    ```
-5. Crie as tabelas, dentro de `apps/server`:
+7. Crie as tabelas, dentro de `apps/server`:
    ```bash
    npx tsx --env-file=.env.demo scripts/migrar.ts
    ```
    Saem sete linhas `000N_...sql: aplicada`. Não use `npm run migrar` aqui: ele lê o `.env` do banco da equipe.
-6. **Trocar a senha do `psychelink_app`.** É o papel (usuário do banco) que a API usa; ele só tem as permissões de que a aplicação precisa. A branch herda os papéis **e as senhas** da principal, então a senha da equipe também valeria na demo: troque-a. Com a branch `demo` selecionada, abra **Roles**, menu do `psychelink_app`, **Reset password**, **Reset**, e copie a senha gerada. O fundamento de por que a API não usa o dono está em `apps/server/docs/rls.md`.
-7. Pegue a URL que a API vai usar: **Connect**, branch `demo`, database `psychelink_demo`, role `psychelink_app`, "Connection pooling" **ligado** (o endereço terá `-pooler`). Ela vai para o Render como `DATABASE_URL`. Confira que a URL tem `/psychelink_demo?` antes dos parâmetros e que traz `sslmode=verify-full` (se vier `sslmode=require`, troque): com `verify-full` o certificado do servidor é verificado.
+8. **Trocar a senha do `psychelink_app`.** É o papel (usuário do banco) que a API usa; ele só tem as permissões de que a aplicação precisa. Mesma lógica do passo 4: a senha herdada é a da equipe. Com a branch `demo` selecionada, abra **Roles**, menu do `psychelink_app`, **Reset password**, **Reset**, e copie a senha gerada. O fundamento de por que a API não usa o dono está em `apps/server/docs/rls.md`.
+9. Pegue a URL que a API vai usar: **Connect**, branch `demo`, database `psychelink_demo`, role `psychelink_app`, "Connection pooling" **ligado** (o endereço terá `-pooler`). Ela vai para o Render como `DATABASE_URL`. Confira que a URL tem `/psychelink_demo?` antes dos parâmetros e que traz `sslmode=verify-full` (se vier `sslmode=require`, troque): com `verify-full` o certificado do servidor é verificado.
 
-O banco da demo começa vazio. O seed com contas de e-mail real é do lote A5 (o seed de hoje só escreve no banco de testes e usa contas `@psychelink.test`, que não recebem código). Para testar, cadastre-se pelo painel ou pelo app.
+O banco da demo começa vazio. O seed com contas de e-mail real é do lote A5 (o seed de hoje só escreve no banco de testes e usa contas `@psychelink.test`, que não recebem código). Para testar, cadastre-se pelo painel ou pelo app. Depois da banca, apague a branch `demo`.
 
 ## 3. Render (API)
 
@@ -95,17 +97,16 @@ O banco da demo começa vazio. O seed com contas de e-mail real é do lote A5 (o
 
    | Variável | Valor |
    |---|---|
-   | `DATABASE_URL` | URL do passo 2.7 (`psychelink_app`, `-pooler`, banco `psychelink_demo`) |
+   | `DATABASE_URL` | URL do passo 2.9 (`psychelink_app`, `-pooler`, banco `psychelink_demo`) |
    | `JWT_SECRET` | segredo novo (seção 0) |
    | `ENCRYPTION_KEY` | chave nova, 32 bytes em base64 (seção 0) |
    | `EMAIL_PEPPER` | segredo novo |
    | `BREVO_API_KEY` | chave do passo 1.3 |
    | `EMAIL_FROM` | `PsycheLink <e-mail do remetente verificado>`, ou só o e-mail |
    | `NODE_ENV` | `production` |
-   | `VALIDAR_MX` | `true` (confere se o domínio do e-mail recebe e-mail) |
    | `WEB_ORIGINS` | `https://psychelink-web.vercel.app` (provisório; confirme no passo 5) |
    | `ALLOWED_ORIGINS` | o mesmo valor de `WEB_ORIGINS` |
-   | `TRUST_PROXY` | `2` (provisório; meça no passo 6) |
+   | `TRUST_PROXY` | `1` (provisório; meça na seção 6) |
 
    O Render define a porta sozinho (`PORT`, 10000) e o servidor a lê: não precisa criá-la.
 5. **Health Check Path:** em **Advanced** na criação, ou depois em Settings, **Health Checks**, **Edit**: `/health`. É a rota que o Render chama para saber se a API está viva.
@@ -124,7 +125,7 @@ Cada mudança de variável reinicia o serviço (**Save and deploy**).
    npx vercel login
    npx vercel --prod
    ```
-   O `login` abre o navegador ou pede um e-mail. Na primeira vez, o `vercel --prod` pergunta qual conta (`Which team?`: a pessoal), qual projeto (`Which project?`: **Create a new project**) e o nome (`Name?`: `psychelink-web`). Em seguida mostra o que detectou (Vite) e pergunta `Customize settings?`: responda `N`. Ele cria a pasta `.vercel` aqui; **não faça commit dela**. Se alguma pergunta vier diferente, escolha o equivalente: projeto novo, nome `psychelink-web`, configurações padrão.
+   O `login` abre o navegador ou pede um e-mail. Na primeira vez, o `vercel --prod` pergunta qual conta (`Which team?`: a pessoal), qual projeto (`Which project?`: **Create a new project**) e o nome (`Name?`: `psychelink-web`). Em seguida mostra o que detectou (Vite) e pergunta `Customize settings?`: responda `N`. Ele cria a pasta `.vercel` aqui (o `apps/web/.gitignore` já a ignora). Se alguma pergunta vier diferente, escolha o equivalente: projeto novo, nome `psychelink-web`, configurações padrão.
 4. **Descobrir o endereço do painel.** No site do Vercel, abra o projeto `psychelink-web`, **Settings**, **Domains**: o domínio de produção (algo como `https://psychelink-web.vercel.app`) é o endereço do painel e não muda entre deploys. Não use o endereço longo que o terminal imprime ao fim do deploy: ele é de uma versão específica e, com a proteção padrão do Vercel, pede login. Se o domínio de produção também pedir login do Vercel, em **Settings**, **Deployment Protection**, escolha **Standard Protection**.
 5. **Conferir.**
    - `curl https://psychelink-web.vercel.app/api/health` deve responder `{"ok":true}`: o repasse de `/api` até o Render funciona.
@@ -139,12 +140,12 @@ O Render aceita escritas do painel só vindas de origens listadas. Volte ao Rend
 
 O pedido passa por Vercel e Render antes de chegar na API. A API só enxerga o IP real de quem pediu se souber **quantos intermediários** confiar (`TRUST_PROXY`). O IP é usado no limite de tentativas (rate limit) e no registro das sessões. Com o número errado:
 - baixo demais: todo mundo parece ter o IP do intermediário, o limite junta todos os usuários num IP só e a demo recebe erro 429;
-- alto demais: a API aceita um IP forjado por quem manda o cabeçalho.
+- alto demais: a API passa a aceitar um IP forjado por quem manda o cabeçalho `X-Forwarded-For`, e o limite de tentativas pode ser burlado.
 
 Meça antes de fixar:
 1. Entre no painel pelo endereço do Vercel e abra **Minha área**, **Sessões**. A sessão atual mostra `IP ...`.
 2. Veja o IP público de quem está testando: `curl https://api64.ipify.org` (esse endereço devolve o IPv6 quando a rede tem; use `https://api.ipify.org` para IPv4).
-3. Se os dois forem iguais, o número está certo. Se não, mude `TRUST_PROXY` no Render (tente 1, 2 e 3), espere reiniciar, entre de novo (para criar uma sessão nova) e compare.
+3. Comece em `1`. Se os dois IPs forem diferentes, suba **um número de cada vez** (2, depois 3) no Render, espere reiniciar, entre de novo (para criar uma sessão nova) e compare. **Fique com o primeiro valor em que o IP da sessão é o seu.** Não pare num valor maior só porque também "bate": com o número acima do necessário a API devolve o IP mais à esquerda do cabeçalho, que ainda é o seu quando você testa, mas é o que um atacante consegue forjar.
 4. Refaça a medição na rede da banca (hotspot) no dia anterior.
 
 ## 7. App do celular
@@ -196,7 +197,6 @@ O `docker-compose.yml` da raiz sobe um Postgres e a API em contêineres, sem Neo
    JWT_SECRET=<segredo novo>
    EMAIL_PEPPER=<segredo novo>
    ENCRYPTION_KEY=<chave nova, 32 bytes em base64>
-   VALIDAR_MX=false
    WEB_ORIGINS=http://localhost:5173
    ALLOWED_ORIGINS=http://localhost:5173
    ```
@@ -213,7 +213,7 @@ O `docker-compose.yml` da raiz sobe um Postgres e a API em contêineres, sem Neo
    (Antes dessas duas etapas o `/health` responde 503: a API ainda não consegue entrar no banco. É o mesmo roteiro de `apps/server/docs/rls.md`.)
 4. Confira: `curl http://127.0.0.1:3000/health` responde `{"ok":true}`.
 5. Painel: `cd apps/web && npm ci && npm run dev`, e abra `http://localhost:5173`.
-6. Celular: a API só atende o próprio notebook (`127.0.0.1`). Para o celular alcançá-la na mesma rede, em `docker-compose.yml` troque `'127.0.0.1:3000:3000'` por `'3000:3000'` e rode `docker compose up -d` de novo. O app em modo local acha o IP do notebook sozinho. Faça isso só em rede sua (hotspot): a porta fica aberta para a rede.
+6. Celular: a API só atende o próprio notebook (`127.0.0.1`). Para o celular alcançá-la na mesma rede, em `docker-compose.yml` troque `'127.0.0.1:3000:3000'` por `'3000:3000'` e rode `docker compose up -d` de novo. O app em modo local acha o IP do notebook sozinho. Faça isso só em rede sua (hotspot): a porta fica aberta para a rede. Quando terminar, desfaça a troca com `git checkout docker-compose.yml` (para não commitar a porta aberta) e rode `docker compose up -d` de novo.
 7. Parar: `docker compose down` (guarda o banco). `docker compose down -v` apaga o banco.
 
 O seed de contas de demonstração (lote A5) vai usar este mesmo roteiro.
@@ -222,7 +222,7 @@ O seed de contas de demonstração (lote A5) vai usar este mesmo roteiro.
 
 | Sintoma | Causa provável |
 |---|---|
-| `/health` no Render responde 503 | A API não entra no banco: confira `DATABASE_URL` (papel `psychelink_app`, senha nova, banco `psychelink_demo`, `-pooler`) e se o passo 2.6 foi feito |
+| `/health` no Render responde 503 | A API não entra no banco: confira `DATABASE_URL` (papel `psychelink_app`, senha nova, banco `psychelink_demo`, `-pooler`) e se o passo 2.8 foi feito |
 | `/health` demora no primeiro acesso | Render e Neon acordando (cerca de 1 minuto): é esperado, por isso o ping da banca |
 | Cadastro ou login no painel dá 403 | `WEB_ORIGINS` não é exatamente o endereço do painel (seção 5) |
 | Erro 429 para todo mundo | `TRUST_PROXY` baixo demais (seção 6) |
