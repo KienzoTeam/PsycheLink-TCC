@@ -58,7 +58,9 @@ Depois de reiniciar a máquina: `podman start psychelink-pg-teste`. O lote A4 tr
 |---|---|---|
 | A1 Trava da suíte, CI, testes do check-in | #34 | Revisado e com CI verde (234 testes, 0 falhas). Aguarda revisão do grupo e merge |
 | A2 + B3 Seis hábitos e intensidade gravados | #35 (empilhado no #34) | Revisado e com CI verde (242 testes, migration `0008` do zero). Depois do merge, rodar `npm run migrar` no banco da equipe |
-| B1 Sessão e SOS no app | — | Em implementação |
+| B1 Sessão e SOS no app | #36 (empilhado no #34) | Revisado (1 rodada de correção) e com CI verde. Falta o roteiro manual no Expo Go |
+
+Migrations reservadas: `0008` (lote A2). A próxima livre é a `0009`; os lotes A7 e A11 também criam migrations e precisam combinar o número antes.
 
 Ordem de merge: #34 primeiro, **com merge commit** (não squash), porque #35 e B1 estão empilhados nele; depois #35.
 
