@@ -36,12 +36,12 @@ Por que o painel passa pelo Vercel para falar com a API: o login do painel usa c
 
 ## 1. Brevo (e-mail)
 
-O Render gratuito bloqueia as portas de e-mail comuns (SMTP), então a API envia e-mail pela API web do Brevo. O servidor usa o Brevo quando existe a variável `BREVO_API_KEY`.
+O Render gratuito bloqueia as portas de e-mail comuns (SMTP), então a API envia e-mail pela API web do Brevo. O servidor usa o Brevo quando existe a variável `BREVO_API_KEY`. O Brevo muda o desenho do site de tempos em tempos: se um nome de menu abaixo não existir, procure o equivalente (o caminho da chave de API, passo 3, está na documentação oficial; o do remetente, passo 2, não foi conferido).
 
 1. Abra o site do Brevo e clique em **Sign up free**. Use o e-mail do grupo, confirme o e-mail e preencha o formulário do perfil (nome, empresa ou instituição, endereço). O Brevo às vezes revisa contas novas antes de liberar envios; se aparecer aviso de conta em análise, comece este passo cedo.
 2. **Verificar o remetente.** Clique no seu nome no canto superior direito, depois em **Senders, Domains & Dedicated IPs**, aba **Senders**, botão **Add a sender**. Preencha o nome (`PsycheLink`) e o e-mail do grupo. O Brevo manda uma mensagem de confirmação para esse e-mail: abra e confirme.
    - O Brevo só envia de remetente verificado. Como o grupo não tem domínio próprio, o remetente é um Gmail. Se o Brevo aceita isso é o que o teste do passo 4 confirma.
-3. **Gerar a chave de API.** Menu do seu nome, **SMTP & API**, aba **API Keys**, botão **Generate a new API key**. Dê o nome `psychelink-demo` e copie a chave na hora (ela aparece uma vez só). Guarde-a como segredo. Ela vai para o Render como `BREVO_API_KEY`.
+3. **Gerar a chave de API.** Menu do seu nome, **SMTP & API**, aba **API keys**, botão **Generate a new API key**. Dê o nome `psychelink-demo`, clique em **Generate** e copie a chave na hora (ela aparece uma vez só). Guarde-a como segredo. Ela vai para o Render como `BREVO_API_KEY`.
 4. **Testar o envio** para um e-mail que não seja o do dono da conta Brevo (peça a outra pessoa do grupo). No terminal:
    ```bash
    echo "Cole a chave do Brevo e tecle Enter (ela não aparece na tela):"; read -rs CHAVE_BREVO
@@ -51,7 +51,7 @@ O Render gratuito bloqueia as portas de e-mail comuns (SMTP), então a API envia
    ```
    - `HTTP 201` e um `messageId`: o Brevo aceitou. Confirme que a mensagem **chegou** na caixa da outra pessoa (olhe também o spam). Aceitar não garante entregar.
    - `HTTP 400` falando do remetente: o e-mail do `sender` não está verificado (volte ao passo 2).
-   - `HTTP 401`: a chave está errada. Se a chave está certa e o erro continua, veja se há restrição de IP na conta (menu **Security**, **Authorised IPs**) e desligue-a: o IP do Render muda.
+   - `HTTP 401`: a chave está errada. Se a chave está certa e o erro continua, veja nas configurações de segurança da conta se há restrição de IPs autorizados e desligue-a: o IP do Render muda.
    - Se o Brevo recusa Gmail como remetente, ou o e-mail nunca chega: avise o grupo e siga para o plano B (seção 9).
 
 ## 2. Neon (banco da demo)
@@ -61,7 +61,7 @@ A demo usa um banco **novo e vazio**, numa branch separada, para nenhum dado da 
 1. No console do Neon, abra o projeto da equipe, **Branches** na barra lateral, **New branch**.
    - **Parent branch:** a principal (o padrão).
    - **Name:** `demo`.
-   - Dados: escolha **Schema only** (copia só a estrutura, sem dados). Se a opção não estiver disponível, deixe **Current data**: o banco novo do passo seguinte isola a demo do mesmo jeito.
+   - Dados: deixe **Current data** (o padrão). A branch leva uma cópia dos bancos da principal, mas a API só vai usar o banco novo do passo seguinte. Apague a branch `demo` depois da banca.
    - **Desmarque "Automatically delete branch after"**. Ele vem marcado com 1 dia e apagaria a demo sozinho.
    - Clique em **Create**.
 2. No menu de branches, no alto da barra lateral, selecione `demo`. Em **Databases**, clique em **Add database**, nome `psychelink_demo`, dono `neondb_owner`, **Create**.
@@ -76,7 +76,7 @@ A demo usa um banco **novo e vazio**, numa branch separada, para nenhum dado da 
    ```
    Saem sete linhas `000N_...sql: aplicada`. Não use `npm run migrar` aqui: ele lê o `.env` do banco da equipe.
 6. **Trocar a senha do `psychelink_app`.** É o papel (usuário do banco) que a API usa; ele só tem as permissões de que a aplicação precisa. A branch herda os papéis **e as senhas** da principal, então a senha da equipe também valeria na demo: troque-a. Com a branch `demo` selecionada, abra **Roles**, menu do `psychelink_app`, **Reset password**, **Reset**, e copie a senha gerada. O fundamento de por que a API não usa o dono está em `apps/server/docs/rls.md`.
-7. Pegue a URL que a API vai usar: **Connect**, branch `demo`, database `psychelink_demo`, role `psychelink_app`, "Connection pooling" **ligado** (o endereço terá `-pooler`). Ela vai para o Render como `DATABASE_URL`. Confira que a URL termina em `/psychelink_demo?...`.
+7. Pegue a URL que a API vai usar: **Connect**, branch `demo`, database `psychelink_demo`, role `psychelink_app`, "Connection pooling" **ligado** (o endereço terá `-pooler`). Ela vai para o Render como `DATABASE_URL`. Confira que a URL tem `/psychelink_demo?` antes dos parâmetros e que traz `sslmode=verify-full` (se vier `sslmode=require`, troque): com `verify-full` o certificado do servidor é verificado.
 
 O banco da demo começa vazio. O seed com contas de e-mail real é do lote A5 (o seed de hoje só escreve no banco de testes e usa contas `@psychelink.test`, que não recebem código). Para testar, cadastre-se pelo painel ou pelo app.
 
@@ -124,8 +124,8 @@ Cada mudança de variável reinicia o serviço (**Save and deploy**).
    npx vercel login
    npx vercel --prod
    ```
-   O `login` abre o navegador ou pede um e-mail. Na primeira vez, o `vercel --prod` faz perguntas: confirme o deploy (`Y`), escolha a conta pessoal, **não** vincule a projeto existente, nome do projeto `psychelink-web`, diretório `./`, e aceite o que ele detectar (Vite). Ele cria a pasta `.vercel` aqui; **não faça commit dela**.
-4. Ao terminar, o terminal mostra dois endereços. Use o marcado como **Aliased** (algo como `https://psychelink-web.vercel.app`): ele não muda entre deploys. O outro endereço é de uma versão específica e fica protegido por login do Vercel.
+   O `login` abre o navegador ou pede um e-mail. Na primeira vez, o `vercel --prod` pergunta qual conta (`Which team?`: a pessoal), qual projeto (`Which project?`: **Create a new project**) e o nome (`Name?`: `psychelink-web`). Em seguida mostra o que detectou (Vite) e pergunta `Customize settings?`: responda `N`. Ele cria a pasta `.vercel` aqui; **não faça commit dela**. Se alguma pergunta vier diferente, escolha o equivalente: projeto novo, nome `psychelink-web`, configurações padrão.
+4. **Descobrir o endereço do painel.** No site do Vercel, abra o projeto `psychelink-web`, **Settings**, **Domains**: o domínio de produção (algo como `https://psychelink-web.vercel.app`) é o endereço do painel e não muda entre deploys. Não use o endereço longo que o terminal imprime ao fim do deploy: ele é de uma versão específica e, com a proteção padrão do Vercel, pede login. Se o domínio de produção também pedir login do Vercel, em **Settings**, **Deployment Protection**, escolha **Standard Protection**.
 5. **Conferir.**
    - `curl https://psychelink-web.vercel.app/api/health` deve responder `{"ok":true}`: o repasse de `/api` até o Render funciona.
    - Abra o endereço no navegador: a tela de acesso do painel aparece.
@@ -133,7 +133,7 @@ Cada mudança de variável reinicia o serviço (**Save and deploy**).
 
 ## 5. Fechar o círculo: origens da API
 
-O Render aceita escritas do painel só vindas de origens listadas. Volte ao Render, **Environment**, e confira que `WEB_ORIGINS` e `ALLOWED_ORIGINS` são exatamente o endereço **Aliased** do passo 4.4: com `https://`, sem barra no final. Se o Vercel deu outro nome ao projeto, corrija agora e use **Save and deploy**. Sintoma de valor errado: o cadastro ou o login no painel responde 403.
+O Render aceita escritas do painel só vindas de origens listadas. Volte ao Render, **Environment**, e confira que `WEB_ORIGINS` e `ALLOWED_ORIGINS` são exatamente o domínio de produção do passo 4.4: com `https://`, sem barra no final. Se o Vercel deu outro nome ao projeto, corrija agora e use **Save and deploy**. Sintoma de valor errado: o cadastro ou o login no painel responde 403.
 
 ## 6. `TRUST_PROXY` (o IP de cada pessoa)
 
@@ -155,7 +155,7 @@ O app passa pelos mesmos intermediários do painel. No arquivo `apps/mobile/.env
 EXPO_PUBLIC_API_URL=https://psychelink-web.vercel.app/api
 ```
 
-(com o seu endereço **Aliased**). O valor é lido ao montar o app: reinicie com `npx expo start -c` na pasta `apps/mobile`. Para voltar ao servidor local, apague a linha.
+(com o seu domínio de produção do Vercel). O Expo lê o `.env` sozinho e troca o valor no código ao montar o app: depois de salvar, recarregue o app (no Expo Go, agite o aparelho e toque em **Reload**). Para voltar ao servidor local, apague a linha.
 
 ## 8. Verificação do marco
 
