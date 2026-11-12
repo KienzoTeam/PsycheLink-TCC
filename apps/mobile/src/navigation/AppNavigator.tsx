@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { View } from 'react-native';
 import { DarkTheme, DefaultTheme, NavigationContainer, Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -47,18 +48,21 @@ export default function AppNavigator() {
   const { sessao } = useAuth();
 
   // Transições e fundos do stack acompanham o nosso tema (sem flash claro no escuro).
-  const navigationTheme: Theme = {
-    ...(isDark ? DarkTheme : DefaultTheme),
-    colors: {
-      ...(isDark ? DarkTheme : DefaultTheme).colors,
-      primary: theme.colors.primary,
-      background: theme.colors.background,
-      card: theme.colors.surface,
-      text: theme.colors.onBackground,
-      border: theme.colors.outline,
-      notification: theme.colors.error,
-    },
-  };
+  const navigationTheme = useMemo<Theme>(
+    () => ({
+      ...(isDark ? DarkTheme : DefaultTheme),
+      colors: {
+        ...(isDark ? DarkTheme : DefaultTheme).colors,
+        primary: theme.colors.primary,
+        background: theme.colors.background,
+        card: theme.colors.surface,
+        text: theme.colors.onBackground,
+        border: theme.colors.outline,
+        notification: theme.colors.error,
+      },
+    }),
+    [theme, isDark],
+  );
 
   // Token ainda sendo lido do armazenamento: só o fundo, sem piscar o Login.
   if (sessao === 'lendo') {
@@ -86,11 +90,9 @@ export default function AppNavigator() {
             <Stack.Screen name="VerificarCodigo" component={VerificarCodigo} />
             <Stack.Screen name="NovaSenha" component={NovaSenha} />
             {/* SOS sem login, com cabeçalho nativo (título e seta de voltar). */}
-            <Stack.Screen
-              name="SOSPublico"
-              component={SOS}
-              options={{ headerShown: true, title: 'SOS' }}
-            />
+            <Stack.Screen name="SOSPublico" options={{ headerShown: true, title: 'SOS' }}>
+              {() => <SOS comCabecalho />}
+            </Stack.Screen>
           </>
         )}
       </Stack.Navigator>
