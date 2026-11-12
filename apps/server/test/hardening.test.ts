@@ -21,6 +21,35 @@ describe('Cache-Control', () => {
   });
 });
 
+describe('/health', () => {
+  it('responde 200 { ok: true } com o banco no ar, sem cache', async () => {
+    const servidor = await iniciar(app);
+    try {
+      const res = await fetch(servidor.url + '/health');
+      assert.equal(res.status, 200);
+      assert.deepEqual(await res.json(), { ok: true });
+      assert.equal(res.headers.get('cache-control'), 'no-store');
+    } finally {
+      servidor.fechar();
+    }
+  });
+
+  it('responde 503 { ok: false } com o banco fora', async (t) => {
+    t.mock.method(pool, 'query', async () => {
+      throw new Error('banco fora');
+    });
+    const servidor = await iniciar(app);
+    try {
+      const res = await fetch(servidor.url + '/health');
+      assert.equal(res.status, 503);
+      assert.deepEqual(await res.json(), { ok: false });
+      assert.equal(res.headers.get('cache-control'), 'no-store');
+    } finally {
+      servidor.fechar();
+    }
+  });
+});
+
 describe('CORS', () => {
   const origemNaResposta = async (instancia: typeof app, origem: string) => {
     const servidor = await iniciar(instancia);
