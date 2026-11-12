@@ -31,7 +31,8 @@ export const obterTokenSeguro = async (): Promise<string | null> => {
   if (Platform.OS === 'web') return localStorage.getItem(TOKEN_KEY);
   if (emMemoria !== undefined) return emMemoria;
 
-  const salvo = await SecureStore.getItemAsync(TOKEN_KEY);
+  // Leitura que falha vale como sem sessão: o espelho nunca fica em undefined (o app ficaria preso em 'lendo').
+  const salvo = await SecureStore.getItemAsync(TOKEN_KEY).catch(() => null);
   // Um login ou logout durante a leitura já definiu o espelho: ele vale mais que o lido.
   if (emMemoria === undefined) emMemoria = salvo;
   return emMemoria;

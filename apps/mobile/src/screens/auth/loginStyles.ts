@@ -41,6 +41,21 @@ export const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
 
+  botaoSOS: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 48,
+    marginTop: 24,
+    paddingHorizontal: 16,
+  },
+
+  botaoSOSTexto: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
   footer: {
     marginTop: 24,
     textAlign: 'center',

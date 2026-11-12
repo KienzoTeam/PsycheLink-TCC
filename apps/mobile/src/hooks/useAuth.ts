@@ -9,8 +9,7 @@ import {
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
 import { limparContatos } from '../lib/contatosConfianca';
-import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,} from '../lib/authToken';
-let avisoFalhaRestauracaoEmitido = false;
+import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,tokenEmMemoria,} from '../lib/authToken';
 
 export type UsuarioAutenticado = {
   id: number;
@@ -22,6 +21,15 @@ export type UsuarioAutenticado = {
 let usuarioCompartilhado: UsuarioAutenticado | null = null;
 let carregandoUsuarioCompartilhado = false;
 let sessaoInicializada = false;
+let restaurando = false;
+
+type EstadoSessao = 'lendo' | 'ativa' | 'ausente';
+
+// Deriva do espelho do token: undefined = ainda não lido, null = sem token, texto = sessão.
+const lerSessao = (): EstadoSessao => {
+  const token = tokenEmMemoria();
+  return token === undefined ? 'lendo' : token ? 'ativa' : 'ausente';
+};
 
 const ouvintesSessao = new Set<() => void>();
 
@@ -74,10 +82,12 @@ const buscarUsuarioSalvo = async (): Promise<UsuarioAutenticado> => {
 };
 
 const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
-  if (sessaoInicializada) {
+  // Uma restauração por vez: a Home monta assim que a sessão vira 'ativa', com o /auth/me ainda em voo.
+  if (sessaoInicializada || restaurando) {
     return usuarioCompartilhado;
   }
 
+  restaurando = true;
   try {
     const token = await obterTokenSeguro();
 
@@ -97,28 +107,28 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
       return null;
     }
 
+    // Rede ou servidor fora: a sessão segue ativa e o /auth/me é tentado de novo na próxima montagem.
     console.warn('Erro ao restaurar sessão:', error?.message);
-
-    if (!avisoFalhaRestauracaoEmitido) {
-      avisoFalhaRestauracaoEmitido = true;
-      Alert.alert(
-        'Não foi possível reconectar',
-        'Sem problemas — é só entrar novamente para continuar.',
-      );
-    }
-
     return null;
+  } finally {
+    restaurando = false;
   }
 };
 
 const limparSessao = async () => {
   // Avança antes de apagar: resposta que saiu antes da limpeza não traz o perfil de volta.
   novaVersaoSessao();
-  await removerTokenSeguro();
-  usuarioCompartilhado = null;
-  carregandoUsuarioCompartilhado = false;
-  sessaoInicializada = true;
-  notificarSessao();
+  try {
+    await removerTokenSeguro();
+  } finally {
+    // Mesmo que apagar do armazenamento falhe, o app precisa sair da sessão.
+    // Sessão que expira também não deixa o rascunho (texto do diário) para o próximo usuário do aparelho.
+    resetarRascunho();
+    usuarioCompartilhado = null;
+    carregandoUsuarioCompartilhado = false;
+    sessaoInicializada = true;
+    notificarSessao();
+  }
 };
 registrarAoSessaoExpirar(limparSessao);
 
@@ -126,11 +136,13 @@ export function useAuth() {
   const [carregando, setCarregando] = useState(false);
   const [usuario, setUsuarioLocal] = useState<UsuarioAutenticado | null>(usuarioCompartilhado);
   const [carregandoUsuario, setCarregandoUsuarioLocal] = useState(carregandoUsuarioCompartilhado);
+  const [sessao, setSessaoLocal] = useState(lerSessao);
 
   useEffect(() => {
     const sincronizarEstado = () => {
       setUsuarioLocal(usuarioCompartilhado);
       setCarregandoUsuarioLocal(carregandoUsuarioCompartilhado);
+      setSessaoLocal(lerSessao());
     };
 
     ouvintesSessao.add(sincronizarEstado);
@@ -164,7 +176,6 @@ export function useAuth() {
   const login = async (
     email: string,
     senha: string,
-    onSuccess: () => void,
     onEmailNaoVerificado?: () => void,
   ) => {
     if (!email.trim()) {
@@ -192,7 +203,6 @@ export function useAuth() {
       await salvarTokenSeguro(token);
       atualizarUsuarioCompartilhado(usuario);
       sessaoInicializada = true;
-      onSuccess();
     } catch (error: any) {
       if (
         error.response?.status === 403 &&
@@ -391,7 +401,6 @@ export function useAuth() {
       console.warn('Não foi possível notificar o servidor do logout:', error?.message);
     }
 
-    resetarRascunho();
     // Só no "Sair" explícito: a sessão que expira sozinha não apaga os contatos de crise do paciente.
     await limparContatos();
     await limparSessao();
@@ -410,5 +419,6 @@ export function useAuth() {
     carregando,
     carregandoUsuario,
     usuario,
+    sessao,
   };
 }

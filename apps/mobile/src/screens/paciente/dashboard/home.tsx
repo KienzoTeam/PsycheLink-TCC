@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'rea
 import Animated, { useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-import { CommonActions, CompositeNavigationProp, useFocusEffect, useNavigation } from '@react-navigation/native';
+import { CompositeNavigationProp, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../../theme/ThemeContext';
 import { gradienteMarca } from '../../../theme';
@@ -115,9 +115,6 @@ export default function Home() {
   const sairDaConta = async () => {
     setSheetContaAberta(false);
     await logout();
-    navigation.dispatch(
-      CommonActions.reset({ index: 0, routes: [{ name: 'Login' }] })
-    );
   };
 
   const nome = usuario?.nome?.trim() || 'Usuário';
