@@ -31,23 +31,35 @@ export const transporteDeEmail = () => {
   return process.env.NODE_ENV === 'production' ? 'nenhum' : 'console de dev';
 };
 
+// EMAIL_FROM é "Nome <email>", com aspas opcionais no nome; sem o nome, vale o endereço sozinho.
+export const remetente = () => {
+  const from = (process.env.EMAIL_FROM ?? '').trim();
+  const partes = /^(.*?)\s*<(.+)>$/.exec(from);
+  const name = partes?.[1].trim().replace(/^"(.*)"$/, '$1').trim();
+  const email = (partes ? partes[2] : from).trim();
+  return name ? { name, email } : { email };
+};
+
 async function enviar(para: string, assunto: string, texto: string, html: string): Promise<void> {
   if (chaveBrevo) {
-    // EMAIL_FROM é "Nome <email>"; sem o nome, vale o endereço sozinho.
-    const from = process.env.EMAIL_FROM ?? '';
-    const partes = /^(.*?)\s*<(.+)>$/.exec(from);
     const resposta = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: { 'api-key': chaveBrevo, 'content-type': 'application/json', accept: 'application/json' },
       body: JSON.stringify({
-        sender: partes ? { name: partes[1], email: partes[2] } : { email: from },
+        sender: remetente(),
         to: [{ email: para }],
         subject: assunto,
         htmlContent: html,
       }),
       signal: AbortSignal.timeout(15_000),
+    }).catch((erro: unknown) => {
+      // Rede e timeout: a mensagem e a causa do erro original podem trazer a URL ou o destinatário; só o nome segue.
+      throw Object.assign(new Error(`Brevo inacessível (${erro instanceof Error ? erro.name : 'Error'})`), {
+        code: 'EBREVO',
+      });
     });
-    // Só o status vai no erro: o corpo e o destinatário não podem chegar ao log.
+    // O corpo nunca é lido nem logado; cancelar libera a conexão. Só o status vai no erro.
+    await resposta.body?.cancel();
     if (!resposta.ok) {
       throw Object.assign(new Error(`Brevo respondeu ${resposta.status}`), {
         code: 'EBREVO',

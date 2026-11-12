@@ -10,6 +10,9 @@ export const pool = new Pool({
   // Sonda TCP na ociosa: NAT/roteador não descarta a conexão em silêncio (a query seguinte travaria).
   keepAlive: true,
   keepAliveInitialDelayMillis: 30_000,
+  // O padrão do pg espera para sempre por conexão (banco fora ou Neon acordando). Vale para toda rota,
+  // /health inclusive: com 10 s ela responde 503 antes de os clientes (15 s) desistirem.
+  connectionTimeoutMillis: 10_000,
 });
 
 // Conexão ociosa derrubada pelo servidor (autosuspend do Neon, rede) emite 'error' no pool; sem ouvinte

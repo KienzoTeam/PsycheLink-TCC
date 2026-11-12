@@ -95,6 +95,79 @@ describe('envio pela API do Brevo', () => {
   });
 });
 
+describe('falhas do fetch no envio pelo Brevo', () => {
+  const comBrevo = () => carregarMailer({ BREVO_API_KEY: 'chave-de-teste', EMAIL_FROM: 'PsycheLink <no-reply@psychelink.test>' });
+
+  it('erro de rede ou timeout vira EBREVO sem responseCode, só com o nome do erro original', async (t) => {
+    const anterior = salvarAmbiente();
+    t.mock.method(globalThis, 'fetch', async () => {
+      throw Object.assign(new TypeError('fetch failed a@b.test https://api.brevo.com/v3/smtp/email'), {
+        cause: new Error('getaddrinfo ENOTFOUND api.brevo.com'),
+      });
+    });
+    try {
+      const { enviarCodigo, resumoErroSmtp } = comBrevo();
+      await assert.rejects(enviarCodigo('a@b.test', 123456), (erro: Error & { code?: string; responseCode?: number }) => {
+        assert.equal(erro.code, 'EBREVO');
+        assert.equal(erro.responseCode, undefined);
+        assert.equal(erro.cause, undefined);
+        assert.match(erro.message, /TypeError/);
+        assert.doesNotMatch(erro.message, /fetch failed|a@b\.test|brevo\.com|ENOTFOUND/);
+        assert.deepEqual(resumoErroSmtp(erro), { code: 'EBREVO', responseCode: undefined });
+        return true;
+      });
+    } finally {
+      definirAmbiente(anterior);
+    }
+  });
+
+  it('cancela o corpo da resposta, em 2xx e fora dele', async (t) => {
+    const anterior = salvarAmbiente();
+    try {
+      const { enviarCodigo } = comBrevo();
+      for (const status of [201, 401]) {
+        const resposta = Response.json({ message: 'corpo-do-provedor' }, { status });
+        const cancelar = t.mock.method(resposta.body!, 'cancel');
+        t.mock.method(globalThis, 'fetch', async () => resposta);
+        await enviarCodigo('a@b.test', 123456).catch(() => {});
+        assert.equal(cancelar.mock.callCount(), 1, `status ${status}`);
+        t.mock.restoreAll();
+      }
+    } finally {
+      definirAmbiente(anterior);
+    }
+  });
+});
+
+describe('remetente', () => {
+  const remetente = (from: string | undefined) => carregarMailer({ EMAIL_FROM: from }).remetente();
+
+  it('lê "Nome <email>", com ou sem aspas no nome, e o endereço sozinho', () => {
+    const anterior = salvarAmbiente();
+    try {
+      assert.deepEqual(remetente('Nome <a@b.c>'), { name: 'Nome', email: 'a@b.c' });
+      assert.deepEqual(remetente('"Nome" <a@b.c>'), { name: 'Nome', email: 'a@b.c' });
+      assert.deepEqual(remetente('"Nome Composto" <a@b.c>'), { name: 'Nome Composto', email: 'a@b.c' });
+      assert.deepEqual(remetente('a@b.c'), { email: 'a@b.c' });
+    } finally {
+      definirAmbiente(anterior);
+    }
+  });
+
+  it('ignora espaços nas pontas e omite o nome quando ele fica vazio', () => {
+    const anterior = salvarAmbiente();
+    try {
+      assert.deepEqual(remetente('  Nome <a@b.c>  '), { name: 'Nome', email: 'a@b.c' });
+      assert.deepEqual(remetente('a@b.c  '), { email: 'a@b.c' });
+      assert.deepEqual(remetente('<a@b.c>'), { email: 'a@b.c' });
+      assert.deepEqual(remetente('"" <a@b.c>'), { email: 'a@b.c' });
+      assert.deepEqual(remetente(undefined), { email: '' });
+    } finally {
+      definirAmbiente(anterior);
+    }
+  });
+});
+
 describe('transporteDeEmail', () => {
   it('escolhe Brevo, SMTP, console de dev ou nenhum', () => {
     const anterior = salvarAmbiente();
