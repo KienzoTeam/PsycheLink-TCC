@@ -59,6 +59,7 @@ Depois de reiniciar a máquina: `podman start psychelink-pg-teste`. O lote A4 tr
 | A1 Trava da suíte, CI, testes do check-in | #34 | Revisado e com CI verde (234 testes, 0 falhas). Aguarda revisão do grupo e merge |
 | A2 + B3 Seis hábitos e intensidade gravados | #35 (empilhado no #34) | Revisado e com CI verde (242 testes, migration `0008` do zero). Depois do merge, rodar `npm run migrar` no banco da equipe |
 | B1 Sessão e SOS no app | #36 (empilhado no #34) | Revisado (1 rodada de correção) e com CI verde. Falta o roteiro manual no Expo Go |
+| A4 + A5 E-mail pelo Brevo, `/health`, arquivos de deploy e guia | — | Plano aprovado em 12/11. Tarefa 1 (Brevo, `/health`) revisada e aprovada; tarefa 2 (Dockerfile, docker-compose, vercel.json, `docs/deploy.md`) em implementação. Depende do teste do Brevo pelo grupo |
 
 Migrations reservadas: `0008` (lote A2). A próxima livre é a `0009`; os lotes A7 e A11 também criam migrations e precisam combinar o número antes.
 
@@ -67,6 +68,13 @@ Ordem de merge: #34 primeiro, **com merge commit** (não squash), porque #35 e B
 Dia do check-in: a coluna `data` usa `CURRENT_DATE` do banco (UTC), então um check-in feito depois das 21h de Brasília cai no dia seguinte. A correção (`America/Sao_Paulo`) entra no lote A3, junto com o resumo do paciente.
 
 Pendências menores do A1, para lotes futuros: o `tsc` do server não checa `test/` (o `tsconfig.json` só inclui `src/`); `test/auth.test.ts` imprime um aviso do express-rate-limit (corrigir no lote A6).
+
+## Portões de viabilidade
+
+| Portão | Resultado | Detalhe |
+|---|---|---|
+| Prisma | **Passa, com condição** (12/11) | Prisma 7.10.1 em CommonJS, `tsc` limpo, 234/234 testes sem editar nenhum, RLS vale para o Prisma (sem contexto lê 0 anotações). Exige `transactionOptions` 15000/10000 (o padrão 2000/5000 derruba a rota com conexão lenta). Pendente: responder depois de 6 minutos ocioso no Neon real; vira o primeiro passo do plano do piloto (A9), no banco de demo do A4. Branch descartável `spike/prisma` |
+| NativeWind | Em preparação | Branch descartável `spike/nativewind`; o aluno confere no Expo Go em 13/11 |
 
 ## Próximos passos
 
