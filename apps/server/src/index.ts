@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { app } from './app';
-import { transporteDeEmail } from './lib/mailer';
+import { remetente, transporteDeEmail } from './lib/mailer';
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ENCRYPTION_KEY) {
   console.error(
@@ -16,6 +16,11 @@ if (transporte === 'nenhum') {
   );
 } else {
   console.log(`Envio de e-mail: ${transporte}`);
+}
+if (transporte === 'Brevo' && !/^[^\s@<>"]+@[^\s@<>"]+$/.test(remetente().email)) {
+  console.error(
+    'EMAIL_FROM ausente ou sem e-mail válido (use Nome <email> ou só o e-mail, sem aspas em volta do valor): o Brevo recusará todos os envios.',
+  );
 }
 
 const PORT = process.env.PORT || 3000;
