@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, TextInput, TextInputInstance } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/AppNavigator";
@@ -27,10 +28,6 @@ export default function Login() {
     login(
       email,
       senha,
-      () => {
-        // Sessão iniciada: limpa a pilha para o back não voltar ao Login.
-        navigation.reset({ index: 0, routes: [{ name: "Main" }] });
-      },
       // Conta pendente de confirmação: vai direto para a tela do código OTP.
       () => {
         navigation.navigate("VerificarCodigo", {
@@ -108,6 +105,18 @@ export default function Login() {
           variant="outline"
         />
       </View>
+
+      <TouchableOpacity
+        style={styles.botaoSOS}
+        onPress={() => navigation.navigate("SOSPublico")}
+        accessibilityRole="button"
+        accessibilityLabel="Abrir o SOS: ligar para o CVV e ver contatos de confiança"
+      >
+        <Feather name="alert-circle" size={20} color={theme.colors.error} />
+        <Text style={[styles.botaoSOSTexto, { color: theme.colors.error }]} maxFontSizeMultiplier={1.4}>
+          Preciso de ajuda agora
+        </Text>
+      </TouchableOpacity>
 
       <Text style={[styles.footer, { color: theme.colors.subtext1 }]}>
         Ao continuar, você concorda com nossos Termos de Uso e Política de

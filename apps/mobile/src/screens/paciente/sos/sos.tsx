@@ -113,11 +113,6 @@ export default function SOS() {
   const ligarPara = useCallback(async (numero: string) => {
     const url = `tel:${numero}`;
     try {
-      const suportado = await Linking.canOpenURL(url);
-      if (!suportado) {
-        Alert.alert('Não foi possível ligar', 'Este dispositivo não suporta chamadas diretas.');
-        return;
-      }
       await Linking.openURL(url);
     } catch {
       Alert.alert('Não foi possível ligar', 'Tente discar manualmente: ' + numero);
