@@ -74,7 +74,7 @@ Pendências menores do A1, para lotes futuros: o `tsc` do server não checa `tes
 | Portão | Resultado | Detalhe |
 |---|---|---|
 | Prisma | **Passa, com condição** (12/11) | Prisma 7.10.1 em CommonJS, `tsc` limpo, 234/234 testes sem editar nenhum, RLS vale para o Prisma (sem contexto lê 0 anotações). Exige `transactionOptions` 15000/10000 (o padrão 2000/5000 derruba a rota com conexão lenta). Pendente: responder depois de 6 minutos ocioso no Neon real; vira o primeiro passo do plano do piloto (A9), no banco de demo do A4. Branch descartável `spike/prisma` |
-| NativeWind | Em preparação | Branch descartável `spike/nativewind`; o aluno confere no Expo Go em 13/11 |
+| NativeWind | **Passa nos critérios automáticos** (12/11); falta o aparelho | NativeWind 5 RC (Tailwind 4) na primeira tentativa: `tsc` limpo, bundle Android gerado, Metro serve o manifesto, e num teste sem tela a troca de tema (sistema, claro, escuro) muda as cores. A RC se declara "não para produção" e não lista o SDK 58. Falta o aluno conferir no Expo Go em 13/11: tela convertida igual, troca de tema, slider animando, telas não convertidas iguais. Converter todas as telas do paciente levaria 40 a 60 h; o lote B11 fica em até 3 telas. Branch descartável `spike/nativewind` |
 
 ## Próximos passos
 
