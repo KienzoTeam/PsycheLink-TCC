@@ -90,6 +90,8 @@ const restaurarSessaoSalva = async (): Promise<UsuarioAutenticado | null> => {
   restaurando = true;
   try {
     const token = await obterTokenSeguro();
+    // O espelho acabou de sair de undefined: avisa para a sessão sair de 'lendo'.
+    notificarSessao();
 
     if (!token) {
       atualizarUsuarioCompartilhado(null);
@@ -120,15 +122,16 @@ const limparSessao = async () => {
   novaVersaoSessao();
   try {
     await removerTokenSeguro();
-  } finally {
+  } catch (erro: any) {
     // Mesmo que apagar do armazenamento falhe, o app precisa sair da sessão.
-    // Sessão que expira também não deixa o rascunho (texto do diário) para o próximo usuário do aparelho.
-    resetarRascunho();
-    usuarioCompartilhado = null;
-    carregandoUsuarioCompartilhado = false;
-    sessaoInicializada = true;
-    notificarSessao();
+    console.warn('Falha ao apagar o token:', erro?.message);
   }
+  // Sessão que expira também não deixa o rascunho (texto do diário) para o próximo usuário do aparelho.
+  resetarRascunho();
+  usuarioCompartilhado = null;
+  carregandoUsuarioCompartilhado = false;
+  sessaoInicializada = true;
+  notificarSessao();
 };
 registrarAoSessaoExpirar(limparSessao);
 
