@@ -65,6 +65,12 @@ Migrations reservadas: `0008` (lote A2). A próxima livre é a `0009`; os lotes 
 
 Ordem de merge: #34 primeiro, **com merge commit** (não squash), porque #35 e B1 estão empilhados nele; depois #35.
 
+Achados altos da revisão do server e onde entram (o plano manda alto para a frente da fila):
+- **LGPD-02** (textos legais do app prometem menus, e-mails, chat, TLS 1.3 e uma "Ltda." que não existem): lote novo **L1 Textos legais**, só texto em `apps/mobile/src/constants/documentos.ts` e `consentimento.tsx`. O grupo aprova a redação antes; a tabela linha a linha está em `setores/server-conformidade.md`.
+- **FUSO-01** (check-in depois das 21h cai no dia seguinte): no lote A3, que passa a incluir também `dashboard.ts`, `pacientes.ts` e `lib/resumo.ts`.
+- **CAD-01** (cadastro pendente de psicólogo bloqueia o mesmo e-mail como paciente): no mesmo PR do A6, ou antes dele.
+- **DES-02** (queda de conexão no meio de uma transação derruba o processo) e **K-02** (`/checkin` sem `no-store`): entram no PR #37.
+
 Dia do check-in: a coluna `data` usa `CURRENT_DATE` do banco (UTC), então um check-in feito depois das 21h de Brasília cai no dia seguinte. A correção (`America/Sao_Paulo`) entra no lote A3, junto com o resumo do paciente.
 
 Pendências menores do A1, para lotes futuros: o `tsc` do server não checa `test/` (o `tsconfig.json` só inclui `src/`); `test/auth.test.ts` imprime um aviso do express-rate-limit (corrigir no lote A6).

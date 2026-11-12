@@ -22,7 +22,7 @@ Se o ajuste não for autorizado, o grupo apresenta as diferenças oralmente como
 
 | Item | Hoje | Proposta |
 |---|---|---|
-| F7 Chat | Requisito do paciente | Trabalho futuro. Decisão do grupo em 22/10: o chat aumentaria muito a complexidade e não daria para apresentar funcionando (ata em `docs/`) |
+| F7 Chat | Requisito do paciente | Trabalho futuro. Decisão do grupo em 22/10: o chat aumentaria muito a complexidade e não daria para apresentar funcionando (ata em `docs/decisoes/2026-10-22-chat-e-notificacoes.md`) |
 | F10 Notificações do paciente | Lembretes 09:00 e 21:00, relatório semanal, aviso de mensagem | Fica o lembrete diário de check-in, local no aparelho (lote B7). Relatório semanal e aviso de mensagem viram trabalho futuro |
 | F15 Recomendar exercícios | Requisito do psicólogo | Trabalho futuro |
 | F18, F19, F20, NF19.1, NF20.1 | Push ao psicólogo e ao paciente em até 60 s | Trabalho futuro (push remoto exige servidor de push e build próprio do app) |
