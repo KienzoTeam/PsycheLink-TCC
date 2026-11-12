@@ -246,6 +246,7 @@ describe('POST /checkin', () => {
       assert.deepEqual(Object.keys(resumo.habitos), Object.keys(contagens));
       const relatorio = await obter(`/psicologo/relatorios/pacientes/${pacienteId}?${periodo}`);
       assert.deepEqual(relatorio.habitos, contagens);
+      assert.deepEqual(Object.keys(relatorio.habitos), Object.keys(contagens));
 
       const detalhe = await obter(`/psicologo/checkins/${checkin.id}`);
       assert.deepEqual(detalhe.checkin.habitos, {
