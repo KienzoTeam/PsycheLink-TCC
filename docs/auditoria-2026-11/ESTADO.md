@@ -57,6 +57,10 @@ Depois de reiniciar a máquina: `podman start psychelink-pg-teste`. O lote A4 tr
 | Lote | PR | Estado |
 |---|---|---|
 | A1 Trava da suíte, CI, testes do check-in | #34 | Revisado e com CI verde (234 testes, 0 falhas). Aguarda revisão do grupo e merge |
+| A2 + B3 Seis hábitos e intensidade gravados | #35 (empilhado no #34) | Revisado e com CI verde (242 testes, migration `0008` do zero). Depois do merge, rodar `npm run migrar` no banco da equipe |
+| B1 Sessão e SOS no app | — | Em implementação |
+
+Ordem de merge: #34 primeiro, **com merge commit** (não squash), porque #35 e B1 estão empilhados nele; depois #35.
 
 Dia do check-in: a coluna `data` usa `CURRENT_DATE` do banco (UTC), então um check-in feito depois das 21h de Brasília cai no dia seguinte. A correção (`America/Sao_Paulo`) entra no lote A3, junto com o resumo do paciente.
 
@@ -65,7 +69,7 @@ Pendências menores do A1, para lotes futuros: o `tsc` do server não checa `tes
 ## Próximos passos
 
 1. Opcional: alguém do grupo roda `npx neonctl auth` nesta máquina, para medir o fuso e o cold start reais do Neon.
-2. Lote A2 (hábitos gravados, com B3) e lote B1 (sessão e SOS no app).
+2. Lote B1 (sessão e SOS no app); depois A4 (API publicada enviando e-mail, prazo 17/11).
 3. Portões de viabilidade de Prisma e NativeWind, em branches descartáveis.
 4. Revisão multiagente do server; depois mobile e web.
 5. Levar `PROPOSTA-DOCUMENTOS.md` à orientadora até 16/11.
