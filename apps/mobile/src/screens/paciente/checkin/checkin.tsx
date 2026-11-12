@@ -54,8 +54,9 @@ const habitos = [
   { id: 'hidratacao', label: 'Hidratação', icone: 'droplet' },
   { id: 'exercicio', label: 'Exercício', icone: 'activity' },
   { id: 'meditacao', label: 'Meditação', icone: 'wind' },
-  { id: 'telas', label: 'Tempo de telas', icone: 'smartphone' },
+  { id: 'telas', label: 'Limite de telas', icone: 'smartphone' },
   { id: 'social', label: 'Contato social', icone: 'users' },
+  { id: 'medicacao', label: 'Medicação', icone: 'plus-square' },
 ];
 
 // Arraste na thread de UI (Gesture Handler + Reanimated): o trilho acompanha o dedo sem esperar o JS.

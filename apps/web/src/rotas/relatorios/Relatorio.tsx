@@ -18,7 +18,7 @@ import {
   plural,
 } from '../../lib/formatar';
 import type { RelatorioBuscado, RelatorioGeral, RelatorioPaciente } from '../../lib/psicologoApi';
-import { AVISO_ESCALA, emocaoDe, FAIXAS_HORARIO, rotuloEmocao, STATUS_APLICACAO } from '../../lib/rotulos';
+import { AVISO_ESCALA, emocaoDe, FAIXAS_HORARIO, HABITOS, rotuloEmocao, STATUS_APLICACAO } from '../../lib/rotulos';
 import { Evolucao, porEscala } from '../escalas/Evolucao';
 import css from './Relatorio.module.css';
 
@@ -224,11 +224,12 @@ function Individual({ dados }: { dados: RelatorioPaciente }) {
         {habitos && habitos.diasRegistrados > 0 ? (
           <Barras
             maximo={habitos.diasRegistrados}
-            itens={[
-              { chave: 'exercicio', rotulo: 'Exercício', valor: habitos.exercicio },
-              { chave: 'meditacao', rotulo: 'Meditação', valor: habitos.meditacao },
-              { chave: 'medicacao', rotulo: 'Medicação', valor: habitos.medicacao },
-            ].map((h) => ({ ...h, texto: `${h.valor} de ${plural(habitos.diasRegistrados, 'dia', 'dias')}` }))}
+            itens={HABITOS.map(({ chave, rotulo }) => ({
+              chave,
+              rotulo,
+              valor: habitos[chave],
+              texto: `${habitos[chave]} de ${plural(habitos.diasRegistrados, 'dia', 'dias')}`,
+            }))}
           />
         ) : (
           <p className={css.apoio}>Nenhum hábito registrado neste período.</p>

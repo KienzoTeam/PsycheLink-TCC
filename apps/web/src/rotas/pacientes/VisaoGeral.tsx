@@ -9,7 +9,7 @@ import { Disclaimer } from '../../components/ui/Disclaimer';
 import { formatarDataCurta, formatarDia, formatarNumero, formatarVariacao, plural } from '../../lib/formatar';
 import { diasDoPeriodo, MAX_DIAS_PERIODO, periodoAnterior } from '../../lib/periodo';
 import type { ResumoPaciente, ResumoPeriodo } from '../../lib/psicologoApi';
-import { corDaEmocao, FAIXAS_HORARIO, rotuloEmocao } from '../../lib/rotulos';
+import { corDaEmocao, FAIXAS_HORARIO, HABITOS, rotuloEmocao } from '../../lib/rotulos';
 import pagina from '../Pagina.module.css';
 import { GraficoBarrasHorizontais, GraficoColunas, GraficoHumorAnsiedade, LegendaSeries } from './Graficos';
 import css from './VisaoGeral.module.css';
@@ -47,25 +47,20 @@ const media = (valor: number | null, unidade = '') => (valor === null ? 'Sem dad
 const trecho = (p: Periodo) => `${formatarDia(p.start.toString())} a ${formatarDia(p.end.toString())}`;
 
 function Habitos({ habitos }: { habitos: NonNullable<ResumoPaciente['habitos']> }) {
-  const itens = [
-    { rotulo: 'Exercício', dias: habitos.exercicio },
-    { rotulo: 'Meditação', dias: habitos.meditacao },
-    { rotulo: 'Medicação', dias: habitos.medicacao },
-  ];
   if (habitos.diasRegistrados === 0) return <p className={pagina.apoio}>Nenhum hábito registrado neste período.</p>;
   return (
     <ul className={css.habitos}>
-      {itens.map(({ rotulo, dias }) => (
-        <li key={rotulo}>
+      {HABITOS.map(({ chave, rotulo }) => (
+        <li key={chave}>
           <p className={css.habito}>
             <span>{rotulo}</span>
             <span>
-              {dias} de {plural(habitos.diasRegistrados, 'dia registrado', 'dias registrados')}
+              {habitos[chave]} de {plural(habitos.diasRegistrados, 'dia registrado', 'dias registrados')}
             </span>
           </p>
           {/* Largura da barra = dias com o hábito sobre dias registrados: única medida dinâmica, por custom property. */}
           <span aria-hidden className={css.trilho}>
-            <span className={css.preenchido} style={{ '--proporcao': dias / habitos.diasRegistrados } as CSSProperties} />
+            <span className={css.preenchido} style={{ '--proporcao': habitos[chave] / habitos.diasRegistrados } as CSSProperties} />
           </span>
         </li>
       ))}

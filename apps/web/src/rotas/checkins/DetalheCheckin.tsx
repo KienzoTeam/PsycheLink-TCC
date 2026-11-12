@@ -7,7 +7,7 @@ import { EstadoErro } from '../../components/ui/EstadoErro';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { formatarNumero } from '../../lib/formatar';
 import { buscarCheckin } from '../../lib/psicologoApi';
-import { rotuloGatilho } from '../../lib/rotulos';
+import { HABITOS, rotuloGatilho } from '../../lib/rotulos';
 import css from './DetalheCheckin.module.css';
 
 const intensidade = (valor: number | null) => (valor === null ? 'Sem dado' : `${valor} de 10`);
@@ -32,6 +32,7 @@ export function DetalheCheckin({ id }: { id: number }) {
   }
 
   const { checkin: c, consentimentos } = consulta.data;
+  const { habitos } = c;
   return (
     <div className={css.detalhe}>
       <section className={css.bloco}>
@@ -44,6 +45,10 @@ export function DetalheCheckin({ id }: { id: number }) {
           <div>
             <dt>Ansiedade</dt>
             <dd>{intensidade(c.ansiedade)}</dd>
+          </div>
+          <div>
+            <dt>Intensidade da emoção</dt>
+            <dd>{intensidade(c.intensidadeEmocao)}</dd>
           </div>
         </dl>
         <Emocoes emocoes={c.emocoes} />
@@ -75,20 +80,14 @@ export function DetalheCheckin({ id }: { id: number }) {
                 <dd>{c.qualidadeSono ?? 'Sem dado'}</dd>
               </div>
             </dl>
-            {c.habitos ? (
+            {habitos ? (
               <dl className={css.pares}>
-                <div>
-                  <dt>Exercício</dt>
-                  <dd>{simNao(c.habitos.exercicio)}</dd>
-                </div>
-                <div>
-                  <dt>Meditação</dt>
-                  <dd>{simNao(c.habitos.meditacao)}</dd>
-                </div>
-                <div>
-                  <dt>Medicação</dt>
-                  <dd>{simNao(c.habitos.medicacao)}</dd>
-                </div>
+                {HABITOS.map(({ chave, rotulo }) => (
+                  <div key={chave}>
+                    <dt>{rotulo}</dt>
+                    <dd>{simNao(habitos[chave])}</dd>
+                  </div>
+                ))}
               </dl>
             ) : (
               <p className={css.nota}>Nenhum hábito registrado neste dia.</p>

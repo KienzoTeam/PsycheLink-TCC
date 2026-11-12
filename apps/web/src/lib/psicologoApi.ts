@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { ChaveHabito } from './rotulos';
 
 export type Psicologo = {
   id: number;
@@ -85,7 +86,7 @@ export type ResumoPaciente = {
   periodoDias: number;
   registros: RegistroResumo[];
   frequenciaEmocional: { emocao: string; quantidade: number }[];
-  habitos: { diasRegistrados: number; exercicio: number; meditacao: number; medicacao: number } | null;
+  habitos: ({ diasRegistrados: number } & Record<ChaveHabito, number>) | null;
   diario: { data: string; texto: string }[];
   distribuicaoHorario: Record<FaixaHorario, number> | null;
   comparacao: { atual: ResumoPeriodo; anterior: ResumoPeriodo } | null;
@@ -144,11 +145,12 @@ export type DetalheCheckin = {
     horario: string | null;
     humor: number | null;
     ansiedade: number | null;
+    intensidadeEmocao: number | null;
     emocoes: string[] | null;
     gatilhos: string[] | null;
     sonoHoras: number | null;
     qualidadeSono: string | null;
-    habitos: { exercicio: boolean; meditacao: boolean; medicacao: boolean } | null;
+    habitos: Record<ChaveHabito, boolean> | null;
     diario: string | null;
   };
   consentimentos: Consentimentos;
