@@ -58,6 +58,8 @@ Depois de reiniciar a máquina: `podman start psychelink-pg-teste`. O lote A4 tr
 |---|---|---|
 | A1 Trava da suíte, CI, testes do check-in | #34 | Revisado e com CI verde (234 testes, 0 falhas). Aguarda revisão do grupo e merge |
 
+Dia do check-in: a coluna `data` usa `CURRENT_DATE` do banco (UTC), então um check-in feito depois das 21h de Brasília cai no dia seguinte. A correção (`America/Sao_Paulo`) entra no lote A3, junto com o resumo do paciente.
+
 Pendências menores do A1, para lotes futuros: o `tsc` do server não checa `test/` (o `tsconfig.json` só inclui `src/`); `test/auth.test.ts` imprime um aviso do express-rate-limit (corrigir no lote A6).
 
 ## Próximos passos
