@@ -95,3 +95,4 @@ As da tabela "Pendências do grupo" do plano. A primeira vence em 16/11: pergunt
 | 10/11 | Levantamento com 22 agentes de leitura; decisões do grupo sobre Prisma, Tailwind, NativeWind, escopo, tipografia e regras de produto |
 | 11/11 | Uma crítica independente mostrou que a primeira versão do plano não cabia no prazo e tinha dois bloqueios (o Render gratuito bloqueia as portas de SMTP; a revisão humana é o gargalo). O plano foi refeito como fila com linha de corte e aprovado. Fase 0 iniciada |
 | 12/11 | Sessão passou a rodar em Opus com Fable de consultor, para poupar limite. Lote A1 pronto (PR #34). `PROPOSTA-DOCUMENTOS.md` escrito |
+| 12/11 | Revisão multiagente do server (5 setores, verificação adversarial, crítico): 68 achados, 1 refutado. Resultado em `RELATORIO.md`, `BACKLOG.md` (38 linhas altas e médias, nenhuma crítica), `setores/server-*.md` e nos arquivos `01` a `05`. Web e mobile ficam para as próximas revisões |
