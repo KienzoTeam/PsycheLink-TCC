@@ -1,6 +1,6 @@
 # Estado da execução do plano
 
-Atualizado em 11/11/2026. O plano está em [`PLANO.md`](PLANO.md); o levantamento que o fundamenta, em [`levantamento/INDICE.md`](levantamento/INDICE.md).
+Atualizado em 12/11/2026. O plano está em [`PLANO.md`](PLANO.md); o levantamento que o fundamenta, em [`levantamento/INDICE.md`](levantamento/INDICE.md).
 
 ## Fase 0: Preparação
 
@@ -9,7 +9,7 @@ Atualizado em 11/11/2026. O plano está em [`PLANO.md`](PLANO.md); o levantament
 | Árvore limpa | Feito. `apps/server/src/db.ts` restaurado (tinha ` qimport` na linha 1); `npm ci` nos 3 apps |
 | Levantamento versionado | Feito nesta branch (`docs/auditoria-2026-11`) |
 | Banco de teste | Feito de outro jeito: Postgres 18 local em contêiner, banco vazio `psychelink_teste`, migrado do zero (ver "Como rodar a suíte"). A branch Neon ficou opcional: serve só para medir o fuso e o cold start reais do Neon, e depende de `npx neonctl auth` |
-| Trava da suíte (`apps/server/test/ajuda.ts`) | Em andamento; é o primeiro commit do lote A1 |
+| Trava da suíte (`apps/server/test/ajuda.ts`) | Feito no lote A1 (PR #34) |
 | Baseline | Feito, abaixo |
 
 ## Baseline medido em 11/11 (commit `0864143`)
@@ -52,13 +52,21 @@ npm test
 
 Depois de reiniciar a máquina: `podman start psychelink-pg-teste`. O lote A4 troca o passo 1 por um `docker-compose.yml`.
 
+## Lotes
+
+| Lote | PR | Estado |
+|---|---|---|
+| A1 Trava da suíte, CI, testes do check-in | #34 | Revisado e com CI verde (234 testes, 0 falhas). Aguarda revisão do grupo e merge |
+
+Pendências menores do A1, para lotes futuros: o `tsc` do server não checa `test/` (o `tsconfig.json` só inclui `src/`); `test/auth.test.ts` imprime um aviso do express-rate-limit (corrigir no lote A6).
+
 ## Próximos passos
 
 1. Opcional: alguém do grupo roda `npx neonctl auth` nesta máquina, para medir o fuso e o cold start reais do Neon.
-2. Lote A1 (trava da suíte, CI, testes do check-in que já funciona) e lote B1 (sessão e SOS no app).
+2. Lote A2 (hábitos gravados, com B3) e lote B1 (sessão e SOS no app).
 3. Portões de viabilidade de Prisma e NativeWind, em branches descartáveis.
 4. Revisão multiagente do server; depois mobile e web.
-5. `PROPOSTA-DOCUMENTOS.md` até 13/11, para levar à orientadora.
+5. Levar `PROPOSTA-DOCUMENTOS.md` à orientadora até 16/11.
 
 ## Pendências do grupo
 
@@ -70,3 +78,4 @@ As da tabela "Pendências do grupo" do plano. A primeira vence em 16/11: pergunt
 |---|---|
 | 10/11 | Levantamento com 22 agentes de leitura; decisões do grupo sobre Prisma, Tailwind, NativeWind, escopo, tipografia e regras de produto |
 | 11/11 | Uma crítica independente mostrou que a primeira versão do plano não cabia no prazo e tinha dois bloqueios (o Render gratuito bloqueia as portas de SMTP; a revisão humana é o gargalo). O plano foi refeito como fila com linha de corte e aprovado. Fase 0 iniciada |
+| 12/11 | Sessão passou a rodar em Opus com Fable de consultor, para poupar limite. Lote A1 pronto (PR #34). `PROPOSTA-DOCUMENTOS.md` escrito |

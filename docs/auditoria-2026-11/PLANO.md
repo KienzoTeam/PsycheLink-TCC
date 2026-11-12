@@ -31,7 +31,7 @@ Resultado esperado em 05/12: sistema estável e demonstrável, casos de teste co
 | Regras | App recusa conta de psicólogo. Novo psicólogo vê só dados a partir do vínculo. Desligar o diário avisa que bloqueia tudo e oferece "só os próximos". O pedido de histórico anterior com aceite do paciente é o primeiro item abaixo da linha de corte |
 | shadcn/MUI | Não adotar: não entregam M3 Expressive; manter react-aria-components |
 | Testes | Branch Neon nova e descartável, com banco vazio |
-| Modelos | Fable 5.2: segurança, corretude, verificação adversarial. Opus 5.5 xhigh: desempenho, conformidade. Opus 5.5 high: complexidade, UI/UX, operação. Sonnet 5.5 xhigh: implementação |
+| Modelos | Desde 12/11, por causa do limite de uso: sessão em Opus 5.5 com Fable 5.2 de consultor. Subagentes: Opus 5.5 xhigh em segurança, corretude e verificação adversarial; Opus 5.5 high nos demais setores e na revisão de lote; Sonnet 5.5 xhigh implementa |
 | Mobile | Testado no Expo Go. Não há build local nesta máquina (JDK 27, sem Android SDK): nada depende dele |
 | Deploy e demo | Só o banco está no Neon; demo indefinida: preparar ambiente ao vivo e vídeo de reserva |
 | Documentos | Alterar depende da orientadora: nada conta com isso |
