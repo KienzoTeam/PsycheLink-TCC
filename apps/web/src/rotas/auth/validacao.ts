@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import type { FieldErrors, FieldValues, Resolver } from 'react-hook-form';
 
+// Sem JIT: o zod testaria `new Function` para validar mais rápido, e a CSP (sem 'unsafe-eval') bloqueia
+// e registra uma violação no console. Para formulários deste tamanho a diferença não aparece.
+z.config({ jitless: true });
+
 export type Valores = {
   nome: string;
   email: string;
