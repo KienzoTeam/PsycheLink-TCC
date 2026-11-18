@@ -3,7 +3,7 @@ import { after, before, describe, it } from 'node:test';
 import bcrypt from 'bcrypt';
 import { app } from '../src/app';
 import { HASH_REFERENCIA } from '../src/lib/hashReferencia';
-import { criarCliente, criarPaciente, iniciar, limpar } from './ajuda';
+import { criarCliente, criarPaciente, criarPsicologo, iniciar, limpar } from './ajuda';
 
 let servidor: Awaited<ReturnType<typeof iniciar>>;
 before(async () => {
@@ -45,5 +45,27 @@ describe('POST /auth/login (app)', () => {
     assert.equal((await res.json()).error, 'E-mail ou senha inválidos.');
     assert.equal(compare.mock.callCount(), 1);
     assert.equal(compare.mock.calls[0].arguments[1], HASH_REFERENCIA);
+  });
+
+  it('recusa conta de psicólogo: o app é só do paciente e o painel exige 2FA', async () => {
+    const psicologo = await criarPsicologo();
+    const res = await criarCliente(servidor.url).requisitar('POST', '/auth/login', {
+      corpo: { email: psicologo.email, password: psicologo.senha },
+    });
+
+    assert.equal(res.status, 403);
+    const corpo = await res.json();
+    assert.equal(corpo.codigo, 'CONTA_PSICOLOGO');
+    assert.equal(corpo.token, undefined);
+  });
+
+  it('psicólogo com a senha errada recebe o mesmo 400 de qualquer conta', async () => {
+    const psicologo = await criarPsicologo();
+    const res = await criarCliente(servidor.url).requisitar('POST', '/auth/login', {
+      corpo: { email: psicologo.email, password: 'senha-errada-123' },
+    });
+
+    assert.equal(res.status, 400);
+    assert.equal((await res.json()).error, 'E-mail ou senha inválidos.');
   });
 });

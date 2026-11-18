@@ -391,13 +391,24 @@ auth.post('/login', limite(10), async (req, res) => {
 
   try {
     const user = await pool.query(
-      'SELECT id, nome, email, data_nascimento, password_hash, email_verificado FROM users WHERE email = $1',
+      `SELECT id, nome, email, data_nascimento, password_hash, email_verificado,
+              EXISTS (SELECT 1 FROM psicologo p WHERE p.user_id = users.id) AS psicologo
+         FROM users WHERE email = $1`,
       [email],
     );
     // Compara mesmo sem conta, para o tempo não revelar se o e-mail existe.
     const valido = await bcrypt.compare(password, user.rows[0]?.password_hash ?? HASH_REFERENCIA);
     if (!user.rows[0] || !valido) {
       return res.status(400).json({ error: 'E-mail ou senha inválidos.' });
+    }
+
+    // Só depois da senha certa, então não revela a conta. O psicólogo entra pelo painel web, que exige 2FA;
+    // por aqui ganharia um token sem 2FA e um perfil de paciente.
+    if (user.rows[0].psicologo) {
+      return res.status(403).json({
+        codigo: 'CONTA_PSICOLOGO',
+        error: 'Esta é uma conta de psicólogo. Use o painel web do PsycheLink.',
+      });
     }
 
     if (!user.rows[0].email_verificado) {
