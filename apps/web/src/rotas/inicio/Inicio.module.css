@@ -26,7 +26,16 @@
   text-wrap: pretty;
 }
 
+/* O cartão e o anel do sparkline leem --cor-cartao; os dados passam à cor do texto sobre o container. */
+.vinculados .legenda {
+  color: inherit;
+}
+
 .vinculados {
+  --cor-cartao: var(--cor-container-primaria);
+  --dados-2: var(--cor-sobre-container-primaria);
+  --dados-5: var(--cor-sobre-container-primaria);
+  color: var(--cor-sobre-container-primaria);
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;

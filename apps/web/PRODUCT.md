@@ -42,7 +42,7 @@ O paciente controla o que o psicólogo vê, categoria por categoria, e a interfa
 ## Brand Commitments
 
 - Nome: PsycheLink. Logo: a árvore com raízes em forma de cérebro do app mobile (`apps/mobile/src/assets/Psychelink.png`, copiada para `public/`). Slogan **provisório**: "O acompanhamento entre as sessões." (o wireframe traz "[Algum slogan]"); aguarda confirmação da equipe.
-- Sistema visual: Material 3 Expressive sobre Catppuccin Latte (claro) e Mocha (escuro), alinhado ao app mobile. Tipografia Roboto Flex, ícones lucide-react.
+- Sistema visual: Material 3 Expressive sobre Catppuccin Latte (claro) e Mocha (escuro), alinhado ao app mobile. Tipografia Google Sans Flex na interface (Cormorant Garamond + Outfit só na identidade visual), ícones lucide-react.
 - Telas fiéis ao wireframe `TCC_PsycheLink/wireframe incompleto.png`.
 
 ## Evidence on Hand

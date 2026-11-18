@@ -34,27 +34,27 @@ colors:
   outline-variant-dark: "#45475a"
 typography:
   display-large:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "clamp(2.5rem, 1.4rem + 4.4vw, 3.5625rem)"
     fontWeight: 400
     lineHeight: 1.125
   headline-medium:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "1.75rem"
     fontWeight: 400
     lineHeight: "2.25rem"
   title-medium:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 500
     lineHeight: "1.5rem"
   body-large:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: "1.5rem"
   label-large:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 500
     lineHeight: "1.25rem"
@@ -116,7 +116,7 @@ Leitura do antislop: *painel clínico de gestão (Operate) para psicólogos, lin
 - Dados sem valência: rampa de um tom e cores de emoção fixas, sempre com rótulo.
 - Vermelho só para erro de sistema.
 - Molas em CSS puro (`linear()`), sem biblioteca de animação.
-- Roboto Flex variável, self-hosted (nenhuma chamada ao Google).
+- Google Sans Flex variável, self-hosted (nenhuma chamada ao Google).
 
 ## Colors
 
@@ -213,7 +213,7 @@ Verificação complementar: axe-core (wcag2a, wcag2aa, wcag21aa, best-practice) 
 
 ## Typography
 
-**Fonte:** Roboto Flex variável (`@fontsource-variable/roboto-flex/wdth.css`: eixos wght e wdth), com `system-ui` como reserva. Escolha: é a fonte do Material 3 e o eixo `wdth` permite a variante enfática sem trocar de família.
+**Fonte:** Google Sans Flex variável (`@fontsource-variable/google-sans-flex/wght.css`: só o eixo wght, ~52 KB no latim), com `system-ui` como reserva. Decisão do grupo (18/11): a interface segue o M3 Expressive; Cormorant Garamond + Outfit ficam só na identidade visual (logo, slides). A variante enfática do M3E muda só o peso: Medium (500), e Bold (700) em título médio/pequeno e rótulos.
 
 **Character:** neutra e legível, com a ênfase vindo de peso e largura, não de uma segunda família.
 
@@ -363,7 +363,7 @@ Verificado com `vite preview` e esse header em `/inicio`: menu, diálogos, gavet
 |---|---|
 | Catppuccin Latte/Mocha | Mesma paleta do app mobile: paciente e psicólogo reconhecem o mesmo produto. |
 | M3 Expressive | Forma e movimento comunicam estado (pressionado, ativo, aberto) sem depender de cor. |
-| Roboto Flex | Fonte do M3 com eixo `wdth` para a variante enfática; self-hosted por LGPD. |
+| Google Sans Flex | Fonte do M3 Expressive (OFL); self-hosted por LGPD e pela CSP `font-src 'self'`. |
 | lucide-react | Família Feather que o mobile já usa; aceito apesar do aviso de "ícone de biblioteca" do antislop, com ícones escolhidos por relevância (Check-ins `MapPinCheck`, Escalas `ClipboardList`, Vínculo `Link2`, Auditoria `ShieldCheck`). |
 | Cantos muito arredondados (pílula em botão, `xl` em card) | É a linguagem do M3 Expressive e do mobile. Campos, popovers e chips usam `md`/`sm`, então o raio varia por papel. |
 | Elevação tonal | Dado clínico pede tela calma; sombra só onde algo flutua. |
