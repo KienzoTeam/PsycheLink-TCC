@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Home from '../screens/paciente/dashboard/home';
 import Dados from '../screens/paciente/dashboard/dados';
-import Chat from '../screens/paciente/chat/chat';
 import SOS from '../screens/paciente/sos/sos';
 import BemEstar from '../screens/paciente/BemEstar/BemEstar';
 import Escalas from '../screens/paciente/escalas/escalas';
@@ -17,7 +16,6 @@ import type { RootStackParamList } from './AppNavigator';
 export type MainTabParamList = {
   Home: undefined;
   Dados: undefined;
-  Chat: undefined;
   Escalas: undefined;
   BemEstar: undefined;
   SOS: undefined;
@@ -26,7 +24,6 @@ export type MainTabParamList = {
 const ABAS = [
   { nome: 'Home', rotulo: 'Início', icone: 'home' },
   { nome: 'Dados', rotulo: 'Dados', icone: 'bar-chart-2' },
-  { nome: 'Chat', rotulo: 'Chat', icone: 'message-circle' },
   { nome: 'Escalas', rotulo: 'Escalas', icone: 'clipboard' },
   { nome: 'Bem Estar', rotulo: 'Bem Estar', icone: 'star' },
   { nome: 'SOS', rotulo: 'SOS', icone: 'alert-circle' },
@@ -36,7 +33,6 @@ const ABAS = [
 // estado (Escalas também quando `ativa` muda).
 const HomePagina = memo(Home);
 const DadosPagina = memo(Dados);
-const ChatPagina = memo(Chat);
 const EscalasPagina = memo(Escalas);
 const BemEstarPagina = memo(BemEstar);
 const SOSPagina = memo(SOS);
@@ -83,17 +79,14 @@ export default function MainTabNavigator({ navigation, route }: NativeStackScree
         <View key="dados" style={{ flex: 1 }}>
           {montadas.has(1) && <DadosPagina />}
         </View>
-        <View key="chat" style={{ flex: 1 }}>
-          {montadas.has(2) && <ChatPagina />}
-        </View>
         <View key="escalas" style={{ flex: 1 }}>
-          {montadas.has(3) && <EscalasPagina ativa={ABAS[ativo].nome === 'Escalas'} />}
+          {montadas.has(2) && <EscalasPagina ativa={ABAS[ativo].nome === 'Escalas'} />}
         </View>
         <View key="bem-estar" style={{ flex: 1 }}>
-          {montadas.has(4) && <BemEstarPagina onVoltar={voltarParaInicio} />}
+          {montadas.has(3) && <BemEstarPagina onVoltar={voltarParaInicio} />}
         </View>
         <View key="sos" style={{ flex: 1 }}>
-          {montadas.has(5) && <SOSPagina />}
+          {montadas.has(4) && <SOSPagina />}
         </View>
       </PagerView>
 

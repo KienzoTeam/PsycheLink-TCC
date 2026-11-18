@@ -112,12 +112,9 @@ export default function SOS() {
 
   const ligarPara = useCallback(async (numero: string) => {
     const url = `tel:${numero}`;
+    // Sem canOpenURL: no Android 11+ ele responde "não" para tel: sem a intent DIAL no manifesto.
+    // O openURL já rejeita quando não há discador.
     try {
-      const suportado = await Linking.canOpenURL(url);
-      if (!suportado) {
-        Alert.alert('Não foi possível ligar', 'Este dispositivo não suporta chamadas diretas.');
-        return;
-      }
       await Linking.openURL(url);
     } catch {
       Alert.alert('Não foi possível ligar', 'Tente discar manualmente: ' + numero);
