@@ -18,3 +18,9 @@ export const pool = new Pool({
 // Conexão ociosa derrubada pelo servidor (autosuspend do Neon, rede) emite 'error' no pool; sem ouvinte
 // o processo cai. O pool já descarta o cliente: só registra.
 pool.on('error', (err) => console.error('Conexão ociosa com o banco caiu:', err.message));
+
+// Com o cliente emprestado o pg-pool tira o ouvinte acima, e um 'error' sem ouvinte derruba o Node: uma conexão
+// que cai no meio de uma transação (Neon reiniciando, rede) mataria o servidor. A query em curso já rejeita sozinha.
+pool.on('connect', (client) =>
+  client.on('error', (err) => console.error('Conexão com o banco caiu:', err.message)),
+);

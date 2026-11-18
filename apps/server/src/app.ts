@@ -34,7 +34,7 @@ app.use(express.json({ limit: '10kb' }));
 const origensPermitidas = process.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim());
 app.use(cors({ origin: origensPermitidas ?? false }));
 
-app.use(['/auth', '/psicologo', '/paciente'], (_req, res, next) => {
+app.use(['/auth', '/checkin', '/psicologo', '/paciente'], (_req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });

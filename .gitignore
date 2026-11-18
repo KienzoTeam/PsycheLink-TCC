@@ -30,3 +30,5 @@ android/
 
 # worktrees dos subagentes do Claude Code
 .claude/worktrees/
+.claude/
+

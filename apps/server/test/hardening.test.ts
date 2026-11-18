@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import { after, describe, it } from 'node:test';
+import { setTimeout as esperar } from 'node:timers/promises';
 import { app } from '../src/app';
 import { pool } from '../src/db';
+import { emTransacao } from '../src/lib/contextoseguro';
 import { enviarAvisoCadastro, enviarCodigo } from '../src/lib/mailer';
-import { carregarApp, definirAmbiente, iniciar, limpar } from './ajuda';
+import { bearer, carregarApp, criarPaciente, definirAmbiente, dono, iniciar, limpar } from './ajuda';
 
 after(limpar);
 
@@ -18,6 +20,38 @@ describe('Cache-Control', () => {
     } finally {
       servidor.fechar();
     }
+  });
+});
+
+describe('Cache-Control do check-in', () => {
+  it('é no-store em /checkin, que leva humor e emoções', async () => {
+    const paciente = await criarPaciente();
+    const servidor = await iniciar(app);
+    try {
+      const res = await fetch(servidor.url + '/checkin/painel', { headers: bearer(paciente) });
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get('cache-control'), 'no-store');
+    } finally {
+      servidor.fechar();
+    }
+  });
+});
+
+describe('conexão derrubada no meio da transação', () => {
+  it('a query rejeita, o processo continua de pé e o pool segue servindo', async (t) => {
+    const log = t.mock.method(console, 'error', () => {});
+    await assert.rejects(
+      emTransacao(async (client) => {
+        const { rows } = await client.query<{ pid: number }>('SELECT pg_backend_pid() AS pid');
+        await dono.query('SELECT pg_terminate_backend($1)', [rows[0].pid]);
+        // Deixa o 'error' do cliente emprestado chegar com ele parado: sem ouvinte ele derrubaria o processo.
+        await esperar(200);
+        await client.query('SELECT 1');
+      }),
+    );
+    assert.ok(log.mock.callCount() >= 1);
+    assert.equal(log.mock.calls[0].arguments[0], 'Conexão com o banco caiu:');
+    assert.equal((await pool.query('SELECT 1')).rowCount, 1);
   });
 });
 
