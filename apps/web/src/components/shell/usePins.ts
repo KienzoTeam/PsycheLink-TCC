@@ -7,7 +7,7 @@ function lerPins(): string[] {
   try {
     const salvo: unknown = JSON.parse(localStorage.getItem(CHAVE) ?? 'null');
     if (Array.isArray(salvo)) {
-      const validos = ITENS_NAV.filter((item) => !item.emBreve && salvo.includes(item.id)).map((item) => item.id);
+      const validos = ITENS_NAV.filter((item) => salvo.includes(item.id)).map((item) => item.id);
       if (validos.length > 0) return validos;
     }
   } catch {

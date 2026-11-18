@@ -5,19 +5,17 @@ import {
   House,
   Link2,
   MapPinCheck,
-  MessageCircle,
   ShieldCheck,
   Users,
   type LucideIcon,
 } from 'lucide-react';
 
-export type ItemNav = { id: string; rotulo: string; icone: LucideIcon; emBreve?: true };
+export type ItemNav = { id: string; rotulo: string; icone: LucideIcon };
 
 export const ITENS_NAV: readonly ItemNav[] = [
   { id: 'inicio', rotulo: 'Início', icone: House },
   { id: 'pacientes', rotulo: 'Pacientes', icone: Users },
   { id: 'checkins', rotulo: 'Check-ins', icone: MapPinCheck },
-  { id: 'chats', rotulo: 'Chats', icone: MessageCircle, emBreve: true },
   { id: 'relatorios', rotulo: 'Relatórios', icone: FileText },
   { id: 'escalas', rotulo: 'Escalas', icone: ClipboardList },
   { id: 'calendario', rotulo: 'Calendário', icone: CalendarDays },

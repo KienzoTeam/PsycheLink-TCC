@@ -9,20 +9,12 @@ import css from './Sidebar.module.css';
 function ListaNav({ itens, recolhida, aoNavegar }: { itens: readonly ItemNav[]; recolhida: boolean; aoNavegar?: () => void }) {
   return (
     <ul className={cx(css.lista, recolhida && css.trilho)}>
-      {itens.map(({ id, rotulo, icone: Icone, emBreve }) => (
+      {itens.map(({ id, rotulo, icone: Icone }) => (
         <li key={id}>
-          {emBreve ? (
-            <span className={css.item} aria-disabled="true">
-              <Icone aria-hidden />
-              {rotulo}
-              <span className={css.emBreve}>em breve</span>
-            </span>
-          ) : (
-            <NavLink to={`/${id}`} onClick={aoNavegar} className={css.item}>
-              <Icone aria-hidden />
-              {rotulo}
-            </NavLink>
-          )}
+          <NavLink to={`/${id}`} onClick={aoNavegar} className={css.item}>
+            <Icone aria-hidden />
+            {rotulo}
+          </NavLink>
         </li>
       ))}
     </ul>

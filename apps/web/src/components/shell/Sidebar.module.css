@@ -100,16 +100,6 @@ a.item:active::before {
   color: var(--cor-sobre-container-primaria);
 }
 
-.item[aria-disabled='true'] {
-  color: color-mix(in srgb, var(--cor-sobre-superficie) var(--opacidade-desabilitado-conteudo), transparent);
-  cursor: not-allowed;
-}
-
-.emBreve {
-  margin-inline-start: auto;
-  font: var(--tipo-rotulo-pequeno);
-}
-
 /* Trilho: ícone sobre rótulo, só os itens fixados. */
 .trilho .item {
   flex-direction: column;
