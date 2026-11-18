@@ -136,7 +136,7 @@ Papéis M3 sobre a paleta Catppuccin. `light-dark()` escolhe o valor pelo `color
 - **Superfície** (`#e6e9ef` claro, `#181825` escuro): barra lateral e barra do topo.
 - **Cartão** (`#ffffff` claro, `#313244` escuro): card, diálogo, menu, popover. É o container mais claro que o fundo nos dois temas.
 - **Texto** (`#4c4f69` claro, `#cdd6f4` escuro) e **texto secundário** (`#5c5f77` claro, `#bac2de` escuro).
-- **Contorno** (`#7c7f93` claro, `#7f849c` escuro): borda de campo, 3:1. **Contorno variante** (`#bcc0cc` claro, `#45475a` escuro): divisores e borda de card, decorativos.
+- **Contorno** (`#7c7f93` claro, `#7f849c` escuro): borda de campo, 3:1. **Contorno variante** (`#bcc0cc` claro, `#45475a` escuro): divisores, decorativos.
 
 ### Containers de superfície (5 níveis)
 
@@ -218,7 +218,7 @@ Verificação complementar: axe-core (wcag2a, wcag2aa, wcag21aa, best-practice) 
 **Character:** neutra e legível, com a ênfase vindo de peso e largura, não de uma segunda família.
 
 ### Hierarchy
-Cada papel M3 (display, headline, title, body, label) tem três tamanhos (grande, médio, pequeno) e uma variante enfática (`-enfatico`: mais peso e `font-stretch: semi-expanded`, 112,5% no eixo wdth). Cada token é um atalho `font`. Display usa `clamp()` para não estourar 375px. Rastreamento fica no padrão da fonte (o eixo opsz automático cuida do espaçamento em tamanhos pequenos).
+Cada papel M3 (display, headline, title, body, label) tem três tamanhos (grande, médio, pequeno) e uma variante enfática (`-enfatico`: mesmo tamanho, só o peso muda, como no M3 Expressive). Cada token é um atalho `font`. Display usa `clamp()` para não estourar 375px. Rastreamento fica no padrão da fonte.
 - **Display** (400, até 3.5625rem, 1.125): números grandes e títulos de impacto.
 - **Headline** (400, 1.5 a 2rem): título de tela (`headline-medio`) e de diálogo (`headline-pequeno`).
 - **Title** (400/500, 0.875 a 1.375rem): título de seção e de card, aba.
@@ -270,7 +270,7 @@ Em `src/components/ui/`, com react-aria-components por baixo onde há primitivo 
 - **SegmentedControl**: trilho `container-alto`, indicador primário que desliza (`SelectionIndicator` do RAC anima o `translate` com a mola).
 
 ### Superfícies e listas
-- **Card**: `cartao`, borda `contorno-variante`, `xl`, sem sombra.
+- **Card**: `cartao`, sem borda (separado do fundo pelo tom), forma `md` (12dp, o raio do card no M3), sem sombra.
 - **ListItem**: linha com título, apoio e fim; vira link (`href`), botão (`onPress`) ou texto. Divisor entre itens.
 - **Chip** (rótulo com marca de emoção) e **ChipFiltro** (alterna, mostra check quando marcado).
 - **ScrollFade**: lista rolável com véu desfocado (`backdrop-filter` com máscara) no fim, que some quando não há mais conteúdo. Não é uma linha. Área de rolagem focável por teclado.
