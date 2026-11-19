@@ -83,7 +83,8 @@
 
 .filtro[data-selected] {
   border-color: transparent;
-  border-radius: var(--forma-total);
+  /* Metade da altura, não forma-total: a mola animando 9999px para 12px passa do alvo, cai a 0 (quadrado) e volta. */
+  border-radius: calc(var(--alvo-minimo) / 2);
   background: var(--cor-container-secundaria);
   color: var(--cor-sobre-container-secundaria);
 }

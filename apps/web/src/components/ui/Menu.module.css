@@ -79,7 +79,8 @@
 .pilulas .item {
   min-width: var(--largura-menu);
   padding-inline: var(--espaco-24);
-  border-radius: var(--forma-total);
+  /* Metade da altura, não forma-total: com a mola, 9999px até forma-md passaria por 0 (quadrado). */
+  border-radius: calc(var(--alvo-minimo) / 2);
   background: var(--cor-container-primaria);
   color: var(--cor-sobre-container-primaria);
   font: var(--tipo-rotulo-grande);
