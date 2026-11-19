@@ -48,7 +48,7 @@ export function ExerciseCard({
           styles.guidedCard,
           {
             backgroundColor: theme.colors.surfaceContainer,
-            borderColor: theme.colors.outline,
+            borderColor: theme.colors.outlineVariant,
           },
         ]}
         activeOpacity={0.8}
@@ -106,7 +106,7 @@ export function ExerciseCard({
         styles.exerciseCard,
         {
           backgroundColor: theme.colors.surfaceContainer,
-          borderColor: theme.colors.outline,
+          borderColor: theme.colors.outlineVariant,
         },
       ]}
       activeOpacity={0.8}

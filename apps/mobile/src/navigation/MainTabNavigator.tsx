@@ -98,7 +98,7 @@ export default function MainTabNavigator({ navigation, route }: NativeStackScree
           styles.barra,
           {
             backgroundColor: theme.colors.surface,
-            borderTopColor: theme.colors.outline,
+            borderTopColor: theme.colors.outlineVariant,
             height: 65 + insets.bottom,
             paddingBottom: 10 + insets.bottom,
           },

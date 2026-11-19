@@ -57,7 +57,7 @@ export default function AppNavigator() {
         background: theme.colors.background,
         card: theme.colors.surface,
         text: theme.colors.onBackground,
-        border: theme.colors.outline,
+        border: theme.colors.outlineVariant,
         notification: theme.colors.error,
       },
     }),

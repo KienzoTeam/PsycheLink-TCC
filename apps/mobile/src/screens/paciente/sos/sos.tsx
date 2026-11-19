@@ -401,7 +401,7 @@ export default function SOS({ comCabecalho = false }: { comCabecalho?: boolean }
         contatos.map((contato) => (
           <TouchableOpacity
             key={contato.id}
-            style={[styles.linhaContato, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline }]}
+            style={[styles.linhaContato, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
             onPress={() => abrirOpcoesContato(contato.nome, contato.telefone)}
             activeOpacity={0.7}
           >
@@ -511,7 +511,7 @@ export default function SOS({ comCabecalho = false }: { comCabecalho?: boolean }
               borderRadius: 20,
               padding: 24,
               borderWidth: 1,
-              borderColor: theme.colors.outline,
+              borderColor: theme.colors.outlineVariant,
             }}
           >
             <Text

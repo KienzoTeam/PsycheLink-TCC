@@ -135,7 +135,7 @@ export default function SheetConta({
         enablePanDownToClose
         onClose={aoFechar}
         backdropComponent={renderBackdrop}
-        handleIndicatorStyle={{ backgroundColor: theme.colors.outline }}
+        handleIndicatorStyle={{ backgroundColor: theme.colors.outlineVariant }}
         handleStyle={styles.handle}
         backgroundStyle={{ backgroundColor: theme.colors.background }}
       >
@@ -156,7 +156,7 @@ export default function SheetConta({
               styles.perfilCard,
               {
                 backgroundColor: theme.colors.surfaceContainer,
-                borderColor: theme.colors.outline,
+                borderColor: theme.colors.outlineVariant,
               },
             ]}
           >
@@ -208,7 +208,7 @@ export default function SheetConta({
             <View
               style={[
                 styles.divisor,
-                { backgroundColor: theme.colors.outline },
+                { backgroundColor: theme.colors.outlineVariant },
               ]}
             />
 
@@ -290,7 +290,7 @@ export default function SheetConta({
               styles.cardMenu,
               {
                 backgroundColor: theme.colors.surfaceContainer,
-                borderColor: theme.colors.outline,
+                borderColor: theme.colors.outlineVariant,
               },
             ]}
           >
@@ -336,7 +336,7 @@ export default function SheetConta({
                     <View
                       style={[
                         styles.divisorMenu,
-                        { backgroundColor: theme.colors.outline },
+                        { backgroundColor: theme.colors.outlineVariant },
                       ]}
                     />
                   )}
@@ -416,7 +416,7 @@ export default function SheetConta({
               styles.preferencia,
               {
                 backgroundColor: theme.colors.surfaceContainer,
-                borderColor: theme.colors.outline,
+                borderColor: theme.colors.outlineVariant,
               },
             ]}
           >

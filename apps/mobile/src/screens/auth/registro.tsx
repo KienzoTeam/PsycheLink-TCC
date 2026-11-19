@@ -99,7 +99,7 @@ export default function Registro({ navigation }: Props) {
         <View style={[styles.activeStep, { backgroundColor: theme.colors.primary }]}>
           <Text style={[styles.stepNumber, { color: theme.colors.onPrimary }]}>1</Text>
         </View>
-        <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
+        <View style={[styles.line, { backgroundColor: theme.colors.outlineVariant }]} />
         <View style={[styles.inactiveStep, { backgroundColor: theme.colors.surfaceVariant }]}>
           <Text style={[styles.stepNumber, { color: theme.colors.onSurfaceVariant }]}>2</Text>
         </View>

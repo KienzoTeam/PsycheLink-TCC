@@ -89,7 +89,7 @@ export default function ResponderEscala({ navigation, route }: Props) {
     }
   };
 
-  const cartao = { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outline };
+  const cartao = { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant };
 
   const renderItem = (escala: Aplicacao) => {
     const total = escala.itens.length;
@@ -186,7 +186,7 @@ export default function ResponderEscala({ navigation, route }: Props) {
           return (
             <TouchableOpacity
               key={i}
-              style={[styles.linhaRevisao, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.colors.outline }]}
+              style={[styles.linhaRevisao, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.colors.outlineVariant }]}
               onPress={() => {
                 setIndice(i);
                 setEditando(true);

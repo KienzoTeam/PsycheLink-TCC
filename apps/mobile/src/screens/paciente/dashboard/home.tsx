@@ -194,7 +194,7 @@ export default function Home() {
 
         <View style={styles.content}>
           <TouchableOpacity
-            style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}
+            style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}
             onPress={() => navigation.navigate('Consultas')}
             accessibilityRole="button"
             accessibilityHint="Abre a lista de consultas"
@@ -235,7 +235,7 @@ export default function Home() {
             </>
           )}
           {erroPainel && !temDados && !carregandoPainel && (
-            <View style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}>
+            <View style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}>
               <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 14, lineHeight: 20 }}>
                 Não foi possível carregar seus dados agora. Verifique sua conexão.
               </Text>
@@ -253,7 +253,7 @@ export default function Home() {
           )}
 
           <View style={styles.metricsGrid}>
-            <View style={[styles.metricCard, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}>
+            <View style={[styles.metricCard, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}>
               <Feather name="smile" size={22} color={theme.colors.primary} style={styles.metricIcon} />
               <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>Humor médio</Text>
               <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>
@@ -266,7 +266,7 @@ export default function Home() {
               )}
             </View>
 
-            <View style={[styles.metricCard, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}>
+            <View style={[styles.metricCard, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}>
               <Feather name="activity" size={22} color={theme.colors.primary} style={styles.metricIcon} />
               <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>Ansiedade</Text>
               <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>
@@ -279,7 +279,7 @@ export default function Home() {
               )}
             </View>
 
-            <View style={[styles.metricCard, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}>
+            <View style={[styles.metricCard, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}>
               <Feather name="moon" size={22} color={theme.colors.primary} style={styles.metricIcon} />
               <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>Sono</Text>
               <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>
@@ -290,7 +290,7 @@ export default function Home() {
               </Text>
             </View>
 
-            <View style={[styles.metricCard, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}>
+            <View style={[styles.metricCard, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}>
               <Feather name="trending-up" size={22} color={theme.colors.primary} style={styles.metricIcon} />
               <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>Frequência</Text>
               <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>
@@ -303,7 +303,7 @@ export default function Home() {
           </View>
 
           {emocoesExibidas.length > 0 && (
-            <View style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}>
+            <View style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}>
               <View style={styles.cardHeader}>
                 <Feather name="zap" size={18} color={theme.colors.primary} />
                 <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Emoções Recentes</Text>
@@ -319,7 +319,7 @@ export default function Home() {
           )}
 
           {temDados && painel?.percepcao && (
-            <View style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outline }]}>
+            <View style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}>
               <View style={styles.cardHeader}>
                 <Feather name="heart" size={18} color={theme.colors.primary} />
                 <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Pequenas percepções</Text>

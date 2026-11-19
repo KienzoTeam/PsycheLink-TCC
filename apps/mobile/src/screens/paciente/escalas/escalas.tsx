@@ -37,7 +37,7 @@ export default function Escalas({ ativa }: { ativa: boolean }) {
     setAtualizando(false);
   };
 
-  const cartao = { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outline };
+  const cartao = { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.outlineVariant };
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: theme.colors.background }]}>
