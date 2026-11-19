@@ -157,6 +157,7 @@ export default function Registro({ navigation }: Props) {
         placeholder="Mínimo 8 caracteres"
         value={senha}
         onChangeText={setSenha}
+        medidor
         autoComplete="new-password"
         textContentType="newPassword"
       />
