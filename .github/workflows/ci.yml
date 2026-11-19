@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tipos:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [server, web, mobile]
+    defaults:
+      run:
+        working-directory: apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: apps/${{ matrix.app }}/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  testes-server:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: ci-dono
+          POSTGRES_DB: psychelink_teste
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: apps/server
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: apps/server/package-lock.json
+      - run: npm ci
+      # Banco descartável do contêiner: as senhas ci-* não são segredo.
+      - name: Escrever .env.test
+        run: |
+          cat > .env.test <<EOF
+          DATABASE_URL="postgresql://psychelink_app:ci-app@localhost:5432/psychelink_teste"
+          DATABASE_URL_DIRETA="postgresql://postgres:ci-dono@localhost:5432/psychelink_teste"
+          JWT_SECRET="$(openssl rand -hex 32)"
+          EMAIL_PEPPER="$(openssl rand -hex 32)"
+          ENCRYPTION_KEY="$(openssl rand -base64 32)"
+          NODE_ENV="test"
+          SMTP_HOST=""
+          VALIDAR_MX="false"
+          EMAIL_FROM="PsycheLink <no-reply@psychelink.test>"
+          ALLOWED_ORIGINS="http://localhost:5173"
+          WEB_ORIGINS="http://localhost:5173"
+          PORT=3000
+          EOF
+      - run: npm run migrar:test
+      # A migration 0003 cria o papel da aplicação sem senha.
+      - name: Definir a senha do papel da aplicação
+        run: docker exec ${{ job.services.postgres.id }} psql -U postgres -d psychelink_teste -c "ALTER ROLE psychelink_app PASSWORD 'ci-app'"
+      - run: npm test
