@@ -1,13 +1,30 @@
 import { randomBytes, randomInt } from 'node:crypto';
 import { once } from 'node:events';
+import { existsSync, readFileSync } from 'node:fs';
 import type { AddressInfo } from 'node:net';
+import { join } from 'node:path';
 import { mock } from 'node:test';
+import { parseEnv } from 'node:util';
 import bcrypt from 'bcrypt';
 import type { Express } from 'express';
 import jwt from 'jsonwebtoken';
 import { Pool } from 'pg';
 import { pool } from '../src/db';
 import { criptografar } from '../src/lib/criptografia';
+import { motivoParaRecusar } from './bancoDeTeste';
+
+// A limpeza apaga auditoria e desliga um trigger: a suíte só roda contra um banco de teste. Sem .env
+// (o caso do CI) não há host da equipe a comparar. Lançar aqui chega antes de qualquer conexão.
+const arquivoEnv = join(__dirname, '..', '.env');
+const envDaEquipe = existsSync(arquivoEnv) ? parseEnv(readFileSync(arquivoEnv, 'utf8')) : {};
+const hostsDaEquipe = [envDaEquipe.DATABASE_URL, envDaEquipe.DATABASE_URL_DIRETA]
+  .filter((url): url is string => Boolean(url))
+  .map((url) => new URL(url).hostname);
+const motivo = motivoParaRecusar(
+  [process.env.DATABASE_URL, process.env.DATABASE_URL_DIRETA],
+  hostsDaEquipe,
+);
+if (motivo) throw new Error(`Suíte recusada: ${motivo}`);
 
 // A app roda como psychelink_app, que as policies de RLS limitam. Fixtures em tabelas com RLS
 // e a limpeza usam o dono (neondb_owner, com BYPASSRLS) para não depender do contexto.
