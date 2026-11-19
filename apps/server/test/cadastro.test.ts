@@ -95,6 +95,53 @@ describe('cadastro pendente refeito por outra pessoa', () => {
     assert.equal(await senhaGravada(email, 'senha-nova-123'), true);
   });
 
+  it('psicólogo pendente por engano: com a mesma senha, vira cadastro de paciente', async () => {
+    const email = novoEmail();
+    assert.equal((await cadastrarPsicologo(email, novoCrp())).status, 201);
+    assert.equal((await cadastrarPaciente(email, 'senha-forte-1')).status, 201);
+
+    const { rows } = await pool.query(
+      'SELECT 1 FROM psicologo p JOIN users u ON u.id = p.user_id WHERE u.email = $1',
+      [email],
+    );
+    assert.equal(rows.length, 0);
+    assert.equal((await confirmar(email)).status, 200);
+    const login = await criarCliente(servidor.url).requisitar('POST', '/auth/login', {
+      corpo: { email, password: 'senha-forte-1' },
+    });
+    assert.equal(login.status, 200);
+  });
+
+  it('psicólogo pendente com código válido e outra senha continua psicólogo', async () => {
+    const email = novoEmail();
+    assert.equal((await cadastrarPsicologo(email, novoCrp())).status, 201);
+    assert.equal((await cadastrarPaciente(email, 'senha-de-outro')).status, 201);
+
+    const { rows } = await pool.query(
+      'SELECT 1 FROM psicologo p JOIN users u ON u.id = p.user_id WHERE u.email = $1',
+      [email],
+    );
+    assert.equal(rows.length, 1);
+    assert.equal(await senhaGravada(email, 'senha-forte-1'), true);
+  });
+
+  it('psicólogo pendente com o código vencido libera o e-mail para o paciente', async () => {
+    const email = novoEmail();
+    assert.equal((await cadastrarPsicologo(email, novoCrp())).status, 201);
+    await pool.query(
+      "UPDATE verificacoes_email SET expira_em = now() - interval '1 second' WHERE email = $1",
+      [email],
+    );
+    assert.equal((await cadastrarPaciente(email, 'senha-nova-123')).status, 201);
+
+    const { rows } = await pool.query(
+      'SELECT 1 FROM psicologo p JOIN users u ON u.id = p.user_id WHERE u.email = $1',
+      [email],
+    );
+    assert.equal(rows.length, 0);
+    assert.equal(await senhaGravada(email, 'senha-nova-123'), true);
+  });
+
   it('vale também para o cadastro do psicólogo', async () => {
     const email = novoEmail();
     assert.equal((await cadastrarPsicologo(email, novoCrp())).status, 201);

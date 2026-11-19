@@ -100,3 +100,7 @@ export const trocaSenhaSchema = z.object({
   senhaAtual: z.string().min(1, 'Informe a senha atual.'),
   novaSenha: senhaSchema,
 });
+
+export const exclusaoContaSchema = z.object({
+  senha: z.string().min(1, 'Informe sua senha.'),
+});
