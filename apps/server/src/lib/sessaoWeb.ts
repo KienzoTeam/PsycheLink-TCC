@@ -4,6 +4,7 @@ import jwt, { type JwtPayload } from 'jsonwebtoken';
 import type { Pool, PoolClient } from 'pg';
 import { pool } from '../db';
 import { origemDe } from './auditoria';
+import { DIAS_CONFIANCA, revogarDispositivos } from './dispositivoConfiavel';
 
 // O navegador fala com /api/...; o proxy remove o prefixo antes de chegar ao Express.
 // Por isso os cookies usam o caminho externo e as rotas do Express não.
@@ -23,6 +24,14 @@ export const SESSAO_VIVA = `revogada_em IS NULL
 const opcoesComuns = { httpOnly: true, secure: true, sameSite: 'strict' } as const;
 const opcoesAcesso = { ...opcoesComuns, path: PREFIXO_API };
 const opcoesRefresh = { ...opcoesComuns, path: `${PREFIXO_API}/auth/psicologo/refresh` };
+// O navegador confiável só manda o pl_dc no login: nenhuma outra rota o vê.
+export const COOKIE_DISPOSITIVO = 'pl_dc';
+const opcoesDispositivo = { ...opcoesComuns, path: `${PREFIXO_API}/auth/psicologo/login` };
+
+export const emitirCookieDispositivo = (res: Response, token: string) =>
+  res.cookie(COOKIE_DISPOSITIVO, token, { ...opcoesDispositivo, maxAge: DIAS_CONFIANCA * 86_400_000 });
+
+export const limparCookieDispositivo = (res: Response) => res.clearCookie(COOKIE_DISPOSITIVO, opcoesDispositivo);
 
 export const novoSegredo = () => randomBytes(32).toString('base64url');
 
@@ -97,12 +106,13 @@ export async function revogarSessoes(
 }
 
 /**
- * Depois de trocar a senha, na mesma transação: revoga as sessões web (menos `manter`) e invalida
- * os desafios 2FA pendentes. O UPDATE em users vem antes e trava a linha; o 2FA trava a mesma linha
+ * Depois de trocar a senha, na mesma transação: revoga as sessões web (menos `manter`), invalida
+ * os desafios 2FA pendentes e deixa de confiar em todos os dispositivos da conta. O UPDATE em users vem antes e trava a linha; o 2FA trava a mesma linha
  * ao abrir sessão (ver /psicologo/2fa), então esta revogação já enxerga a sessão que ele abriu.
  */
 export async function derrubarAcessosWeb(client: PoolClient, userId: number, manter?: string) {
   await revogarSessoes(userId, manter, client);
+  await revogarDispositivos(userId, client);
   await client.query('UPDATE desafio_2fa SET usado_em = now() WHERE user_id = $1 AND usado_em IS NULL', [
     userId,
   ]);

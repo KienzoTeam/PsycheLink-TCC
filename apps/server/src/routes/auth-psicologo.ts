@@ -11,9 +11,12 @@ import { codigoConfere, gerarCodigo, hashCodigo } from '../lib/codigo';
 import { enviarCodigo, resumoErroSmtp } from '../lib/mailer';
 import { registrarAuditoria } from '../lib/auditoria';
 import { emTransacao } from '../lib/contextoseguro';
+import { confiarNoDispositivo, dispositivoConfiavel } from '../lib/dispositivoConfiavel';
 import {
   abrirSessao,
+  COOKIE_DISPOSITIVO,
   COOKIE_REFRESH,
+  emitirCookieDispositivo,
   emitirCookies,
   exigirSessaoWeb,
   hashesIguais,
@@ -93,6 +96,25 @@ authPsicologo.post('/psicologo/login', limite(10), async (req, res) => {
     });
   }
 
+  // Navegador confiável (pl_dc): a senha já conferiu, então abre a sessão sem código. A conferência
+  // do token e a sessão ficam na mesma transação, com a linha do usuário travada como no /2fa: uma
+  // troca de senha simultânea revoga o token antes ou alcança a sessão aberta aqui.
+  const sidConfiavel = await emTransacao(async (client) => {
+    await client.query('SELECT 1 FROM users WHERE id = $1 FOR SHARE', [conta.id]);
+    const confiavel = await dispositivoConfiavel(conta.id, lerCookie(req, COOKIE_DISPOSITIVO), client);
+    return confiavel ? abrirSessao(req, res, conta.id, client) : null;
+  });
+  if (sidConfiavel) {
+    await registrarAuditoria(req, 'login_ok', { ator, metadados: { dispositivoConfiavel: true } });
+    await registrarAuditoria(req, '2fa_ok', {
+      ator,
+      alvoTipo: 'sessao',
+      alvoId: sidConfiavel,
+      metadados: { dispositivoConfiavel: true },
+    });
+    return res.json({ ok: true });
+  }
+
   const desafioId = randomBytes(32).toString('base64url');
   const codigo = gerarCodigo();
   try {
@@ -125,7 +147,7 @@ authPsicologo.post('/psicologo/login', limite(10), async (req, res) => {
 authPsicologo.post('/psicologo/2fa', limite(20), async (req, res) => {
   const parsed = doisFatoresSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Dados inválidos.' });
-  const { desafioId, codigo } = parsed.data;
+  const { desafioId, codigo, confiar } = parsed.data;
 
   // A tentativa é consumida antes da conferência: requisições paralelas não furam o limite de 5.
   const { rows } = await pool.query<{ user_id: number; codigo_hash: string }>(
@@ -162,7 +184,9 @@ authPsicologo.post('/psicologo/2fa', limite(20), async (req, res) => {
           AND (u.sessao_invalidada_em IS NULL OR d.criado_em > u.sessao_invalidada_em)`,
       [desafioId],
     );
-    return usado.rowCount ? abrirSessao(req, res, desafio.user_id, client) : null;
+    if (!usado.rowCount) return null;
+    if (confiar) emitirCookieDispositivo(res, await confiarNoDispositivo(req, desafio.user_id, client));
+    return abrirSessao(req, res, desafio.user_id, client);
   });
   if (!sid) return res.status(400).json({ error: MSG_CODIGO_INVALIDO });
   await registrarAuditoria(req, '2fa_ok', { ator, alvoTipo: 'sessao', alvoId: sid });

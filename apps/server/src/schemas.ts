@@ -96,6 +96,7 @@ export const doisFatoresSchema = desafioSchema.extend({
     .string()
     .regex(/^\d{6}$/)
     .transform(Number),
+  confiar: z.boolean().optional(),
 });
 
 export const contaSchema = psicologoRegistroSchema.pick({ nome: true, especialidade: true });
