@@ -13,7 +13,7 @@
 }
 
 .titulo {
-  font: var(--tipo-headline-medio);
+  font: var(--tipo-headline-medio-enfatico);
   text-wrap: balance;
 }
 

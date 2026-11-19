@@ -34,27 +34,27 @@ colors:
   outline-variant-dark: "#45475a"
 typography:
   display-large:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "clamp(2.5rem, 1.4rem + 4.4vw, 3.5625rem)"
     fontWeight: 400
     lineHeight: 1.125
   headline-medium:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "1.75rem"
     fontWeight: 400
     lineHeight: "2.25rem"
   title-medium:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 500
     lineHeight: "1.5rem"
   body-large:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: "1.5rem"
   label-large:
-    fontFamily: "Roboto Flex Variable, system-ui, sans-serif"
+    fontFamily: "Google Sans Flex Variable, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 500
     lineHeight: "1.25rem"
@@ -116,7 +116,7 @@ Leitura do antislop: *painel clínico de gestão (Operate) para psicólogos, lin
 - Dados sem valência: rampa de um tom e cores de emoção fixas, sempre com rótulo.
 - Vermelho só para erro de sistema.
 - Molas em CSS puro (`linear()`), sem biblioteca de animação.
-- Roboto Flex variável, self-hosted (nenhuma chamada ao Google).
+- Google Sans Flex variável, self-hosted (nenhuma chamada ao Google).
 
 ## Colors
 
@@ -136,7 +136,7 @@ Papéis M3 sobre a paleta Catppuccin. `light-dark()` escolhe o valor pelo `color
 - **Superfície** (`#e6e9ef` claro, `#181825` escuro): barra lateral e barra do topo.
 - **Cartão** (`#ffffff` claro, `#313244` escuro): card, diálogo, menu, popover. É o container mais claro que o fundo nos dois temas.
 - **Texto** (`#4c4f69` claro, `#cdd6f4` escuro) e **texto secundário** (`#5c5f77` claro, `#bac2de` escuro).
-- **Contorno** (`#7c7f93` claro, `#7f849c` escuro): borda de campo, 3:1. **Contorno variante** (`#bcc0cc` claro, `#45475a` escuro): divisores e borda de card, decorativos.
+- **Contorno** (`#7c7f93` claro, `#7f849c` escuro): borda de campo, 3:1. **Contorno variante** (`#bcc0cc` claro, `#45475a` escuro): divisores, decorativos.
 
 ### Containers de superfície (5 níveis)
 
@@ -213,12 +213,12 @@ Verificação complementar: axe-core (wcag2a, wcag2aa, wcag21aa, best-practice) 
 
 ## Typography
 
-**Fonte:** Roboto Flex variável (`@fontsource-variable/roboto-flex/wdth.css`: eixos wght e wdth), com `system-ui` como reserva. Escolha: é a fonte do Material 3 e o eixo `wdth` permite a variante enfática sem trocar de família.
+**Fonte:** Google Sans Flex variável (`@fontsource-variable/google-sans-flex/wght.css`: só o eixo wght, ~52 KB no latim), com `system-ui` como reserva. Decisão do grupo (18/11): a interface segue o M3 Expressive; Cormorant Garamond + Outfit ficam só na identidade visual (logo, slides). A variante enfática do M3E muda só o peso: Medium (500), e Bold (700) em título médio/pequeno e rótulos.
 
 **Character:** neutra e legível, com a ênfase vindo de peso e largura, não de uma segunda família.
 
 ### Hierarchy
-Cada papel M3 (display, headline, title, body, label) tem três tamanhos (grande, médio, pequeno) e uma variante enfática (`-enfatico`: mais peso e `font-stretch: semi-expanded`, 112,5% no eixo wdth). Cada token é um atalho `font`. Display usa `clamp()` para não estourar 375px. Rastreamento fica no padrão da fonte (o eixo opsz automático cuida do espaçamento em tamanhos pequenos).
+Cada papel M3 (display, headline, title, body, label) tem três tamanhos (grande, médio, pequeno) e uma variante enfática (`-enfatico`: mesmo tamanho, só o peso muda, como no M3 Expressive). Cada token é um atalho `font`. Display usa `clamp()` para não estourar 375px. Rastreamento fica no padrão da fonte.
 - **Display** (400, até 3.5625rem, 1.125): números grandes e títulos de impacto.
 - **Headline** (400, 1.5 a 2rem): título de tela (`headline-medio`) e de diálogo (`headline-pequeno`).
 - **Title** (400/500, 0.875 a 1.375rem): título de seção e de card, aba.
@@ -270,7 +270,7 @@ Em `src/components/ui/`, com react-aria-components por baixo onde há primitivo 
 - **SegmentedControl**: trilho `container-alto`, indicador primário que desliza (`SelectionIndicator` do RAC anima o `translate` com a mola).
 
 ### Superfícies e listas
-- **Card**: `cartao`, borda `contorno-variante`, `xl`, sem sombra.
+- **Card**: `cartao`, sem borda (separado do fundo pelo tom), forma `md` (12dp, o raio do card no M3), sem sombra.
 - **ListItem**: linha com título, apoio e fim; vira link (`href`), botão (`onPress`) ou texto. Divisor entre itens.
 - **Chip** (rótulo com marca de emoção) e **ChipFiltro** (alterna, mostra check quando marcado).
 - **ScrollFade**: lista rolável com véu desfocado (`backdrop-filter` com máscara) no fim, que some quando não há mais conteúdo. Não é uma linha. Área de rolagem focável por teclado.
@@ -363,7 +363,7 @@ Verificado com `vite preview` e esse header em `/inicio`: menu, diálogos, gavet
 |---|---|
 | Catppuccin Latte/Mocha | Mesma paleta do app mobile: paciente e psicólogo reconhecem o mesmo produto. |
 | M3 Expressive | Forma e movimento comunicam estado (pressionado, ativo, aberto) sem depender de cor. |
-| Roboto Flex | Fonte do M3 com eixo `wdth` para a variante enfática; self-hosted por LGPD. |
+| Google Sans Flex | Fonte do M3 Expressive (OFL); self-hosted por LGPD e pela CSP `font-src 'self'`. |
 | lucide-react | Família Feather que o mobile já usa; aceito apesar do aviso de "ícone de biblioteca" do antislop, com ícones escolhidos por relevância (Check-ins `MapPinCheck`, Escalas `ClipboardList`, Vínculo `Link2`, Auditoria `ShieldCheck`). |
 | Cantos muito arredondados (pílula em botão, `xl` em card) | É a linguagem do M3 Expressive e do mobile. Campos, popovers e chips usam `md`/`sm`, então o raio varia por papel. |
 | Elevação tonal | Dado clínico pede tela calma; sombra só onde algo flutua. |

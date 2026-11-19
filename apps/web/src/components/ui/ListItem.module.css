@@ -73,7 +73,6 @@ a.linha,
 .apoio {
   font: var(--tipo-corpo-medio);
   color: var(--cor-sobre-superficie-variante);
-  font-variant-numeric: var(--numeros-tabulares);
 }
 
 .fim {
