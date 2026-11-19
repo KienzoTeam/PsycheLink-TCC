@@ -333,13 +333,13 @@ Espacial pode passar do alvo (overshoot), efeitos nunca. `prefers-reduced-motion
 
 Dev (`index.html`, meta): precisa de `'unsafe-inline'` em script e estilo (preâmbulo do React Refresh e CSS injetado pelo Vite) e do WebSocket do HMR. Esse meta também vai no build; no host, o header de produção abaixo vale por cima (as políticas se somam e vence a mais restrita).
 
-Produção, header do reverse proxy (mesma origem de `/api`):
+Produção, header da Cloudflare Pages (`public/_headers`; `/api` vai ao Render pela Function em `functions/api/`, na mesma origem):
 
 ```
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'sha256-38RhXrc7EdReTKsOm23ZPOCUgniTUUcjky8QOOrQx6o='; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
 ```
 
-Verificado com `vite preview` e esse header em `/inicio`: menu, diálogos, gaveta e navegação funcionam. O react-aria injeta um `<style>` de `touch-action` no runtime, que o `style-src 'self'` bloqueia (uma mensagem no console, sem efeito: a regra equivalente está em `globais.css`). Para silenciar a mensagem, acrescente ao `style-src` o hash que o navegador informa na violação (`'sha256-...'`) e refaça-o ao atualizar o react-aria-components.
+Verificado com `vite preview` e esse header em `/inicio`: menu, diálogos, gaveta e navegação funcionam. O react-aria injeta um `<style>` de `touch-action` no runtime, que o `style-src 'self'` bloqueia (uma mensagem no console, sem efeito: a regra equivalente está em `globais.css`). O hash no `style-src` (em `public/_headers`) libera só esse `<style>` e silencia a mensagem; ao atualizar o react-aria-components, refaça-o com o valor que o navegador informar na violação.
 
 ## Do's and Don'ts
 
