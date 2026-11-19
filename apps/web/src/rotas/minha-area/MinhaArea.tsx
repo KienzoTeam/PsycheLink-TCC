@@ -292,7 +292,7 @@ function Preferencias() {
           <h3 className={css.subtitulo}>Itens fixados na barra lateral</h3>
           <p className={pagina.subtituloSecao}>A barra lateral recolhida mostra só os itens fixados. Ao menos um item fica fixado.</p>
           <div role="group" aria-label="Itens fixados na barra lateral" className={css.pins}>
-            {ITENS_NAV.filter((item) => !item.emBreve).map((item) => (
+            {ITENS_NAV.map((item) => (
               <ChipFiltro
                 key={item.id}
                 isSelected={fixados.includes(item.id)}

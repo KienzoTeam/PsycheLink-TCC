@@ -3,15 +3,15 @@ import { mensagemDeErro } from '../../lib/erros';
 import { Button } from './Button';
 import { EmptyState } from './EmptyState';
 
-type Props = { erro: unknown; onTentar: () => void; titulo?: string };
+type Props = { erro: unknown; onTentar: () => void; titulo?: string; descricao?: string };
 
-export function EstadoErro({ erro, onTentar, titulo = 'Não foi possível carregar' }: Props) {
+export function EstadoErro({ erro, onTentar, titulo = 'Não foi possível carregar', descricao }: Props) {
   return (
     <div role="alert">
       <EmptyState
         icone={<CircleAlert />}
         titulo={titulo}
-        descricao={mensagemDeErro(erro)}
+        descricao={descricao ?? mensagemDeErro(erro)}
         acao={
           <Button variante="tonal" icone={<RefreshCw />} onPress={onTentar}>
             Tentar de novo

@@ -1,9 +1,10 @@
 import { Suspense } from 'react';
-import { Navigate, Outlet } from 'react-router';
+import { Navigate, Outlet, useLocation } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { VisuallyHidden } from 'react-aria-components';
 import { Shell } from '../components/shell/Shell';
 import { EstadoErro } from '../components/ui/EstadoErro';
+import { LimiteErro } from '../components/ui/LimiteErro';
 import { Skeleton } from '../components/ui/Skeleton';
 import { semSessao } from '../lib/erros';
 import { buscarMe } from '../lib/psicologoApi';
@@ -24,6 +25,7 @@ function CarregandoTela() {
 // Só entra quem tem sessão válida e perfil de psicólogo confirmado pelo servidor.
 export function AreaProtegida() {
   const me = useQuery({ queryKey: ['psicologo', 'me'], queryFn: buscarMe, retry: false });
+  const { pathname } = useLocation();
 
   if (me.isError) {
     // Só 401/403 mandam para a entrada: servidor fora do ar ou 5xx não pode derrubar uma sessão válida.
@@ -44,9 +46,12 @@ export function AreaProtegida() {
   }
   return (
     <Shell psicologo={me.data}>
-      <Suspense fallback={<CarregandoTela />}>
-        <Outlet />
-      </Suspense>
+      {/* A chave zera o erro ao trocar de tela: a barra lateral continua usável. */}
+      <LimiteErro key={pathname}>
+        <Suspense fallback={<CarregandoTela />}>
+          <Outlet />
+        </Suspense>
+      </LimiteErro>
     </Shell>
   );
 }
