@@ -17,11 +17,12 @@ type DadosCadastro = {
   especialidade?: string;
 };
 
+// Navegador confiável: a API abre a sessão direto e responde { ok: true }, sem desafio.
 export const entrar = async (email: string, password: string) =>
-  (await api.post<DesafioDoisFatores>('/auth/psicologo/login', { email, password })).data;
+  (await api.post<DesafioDoisFatores | { ok: true }>('/auth/psicologo/login', { email, password })).data;
 
-export const confirmarDoisFatores = (desafioId: string, codigo: string) =>
-  api.post('/auth/psicologo/2fa', { desafioId, codigo });
+export const confirmarDoisFatores = (desafioId: string, codigo: string, confiar: boolean) =>
+  api.post('/auth/psicologo/2fa', { desafioId, codigo, confiar });
 
 export const reenviarDoisFatores = async (desafioId: string) =>
   new Date((await api.post<{ reenviarEm: string }>('/auth/psicologo/2fa/reenviar', { desafioId })).data.reenviarEm).getTime();

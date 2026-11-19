@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '../../components/ui/Button';
+import { Checkbox } from '../../components/ui/Checkbox';
 import { Dialog } from '../../components/ui/Dialog';
 import { OtpField } from '../../components/ui/OtpField';
 import { ESPERA_REENVIO_MS } from '../../lib/authApi';
@@ -16,8 +17,10 @@ type Props = {
   email: string;
   /** Instante (ms) em que o reenvio é liberado. */
   reenviarEm: number;
+  /** Mostra "Confiar neste navegador" (só no 2FA do login). */
+  opcaoConfiar?: boolean;
   /** Rejeitar mostra a mensagem e limpa as caixas; resolver significa que o chamador seguiu em frente. */
-  onConfirmar: (codigo: string) => Promise<void>;
+  onConfirmar: (codigo: string, confiar: boolean) => Promise<void>;
   /** Devolve o instante (ms) em que um novo reenvio será liberado. */
   onReenviar: () => Promise<number>;
 };
@@ -27,8 +30,9 @@ function formatarRestante(ms: number) {
   return `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
 }
 
-function Corpo({ instrucao, email, reenviarEm, onConfirmar, onReenviar }: Omit<Props, 'isOpen' | 'onOpenChange' | 'titulo'>) {
+function Corpo({ instrucao, email, reenviarEm, opcaoConfiar, onConfirmar, onReenviar }: Omit<Props, 'isOpen' | 'onOpenChange' | 'titulo'>) {
   const [codigo, setCodigo] = useState('');
+  const [confiar, setConfiar] = useState(false);
   const [erro, setErro] = useState<string>();
   const [aviso, setAviso] = useState<string>();
   const [enviando, setEnviando] = useState(false);
@@ -60,7 +64,7 @@ function Corpo({ instrucao, email, reenviarEm, onConfirmar, onReenviar }: Omit<P
     setErro(undefined);
     setAviso(undefined);
     try {
-      await onConfirmar(valor);
+      await onConfirmar(valor, confiar);
     } catch (falha) {
       setErro(mensagemDeErro(falha));
       reiniciarCaixas();
@@ -90,6 +94,12 @@ function Corpo({ instrucao, email, reenviarEm, onConfirmar, onReenviar }: Omit<P
   return (
     <div className={css.corpo}>
       <p>{instrucao}</p>
+      {/* Antes das caixas: o código confirma sozinho no 6º dígito. */}
+      {opcaoConfiar && (
+        <Checkbox isSelected={confiar} onChange={setConfiar}>
+          Confiar neste navegador por 30 dias
+        </Checkbox>
+      )}
       <OtpField
         key={rodada}
         autoFocus

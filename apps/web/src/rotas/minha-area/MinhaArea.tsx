@@ -25,6 +25,7 @@ import {
   buscarMe,
   encerrarOutrasSessoes,
   excluirConta,
+  esquecerNavegadores,
   listarSessoes,
   trocarSenha,
   type Psicologo,
@@ -220,7 +221,18 @@ function Sessoes() {
     },
   });
 
-  const outras = (sessoes.data ?? []).filter((s) => !s.atual).length;
+  const esquecer = useMutation({
+    mutationFn: esquecerNavegadores,
+    onSuccess: async (quantidade) => {
+      notificar({ titulo: `${plural(quantidade, 'navegador volta', 'navegadores voltam')} a pedir o código` });
+      await cliente.invalidateQueries({ queryKey: ['sessoes'] });
+    },
+    onError: (erro) =>
+      notificar({ titulo: 'Não foi possível esquecer os navegadores', descricao: mensagemDeErro(erro), tipo: 'erro' }),
+  });
+
+  const outras = (sessoes.data?.sessoes ?? []).filter((s) => !s.atual).length;
+  const confiaveis = sessoes.data?.dispositivosConfiaveis ?? 0;
 
   return (
     <Card>
@@ -244,7 +256,7 @@ function Sessoes() {
           <EstadoErro erro={sessoes.error} onTentar={() => void sessoes.refetch()} titulo="Não foi possível carregar as sessões" />
         ) : (
           <ul>
-            {sessoes.data.map((s) => (
+            {sessoes.data.sessoes.map((s) => (
               <ListItem
                 key={s.id}
                 titulo={resumirDispositivo(s.userAgent)}
@@ -253,6 +265,16 @@ function Sessoes() {
               />
             ))}
           </ul>
+        )}
+        {confiaveis > 0 && (
+          <div className={pagina.cabecalho}>
+            <p className={pagina.subtituloSecao}>
+              {`${plural(confiaveis, 'navegador confiável entra', 'navegadores confiáveis entram')} só com a senha, sem o código por e-mail.`}
+            </p>
+            <Button variante="text" isPending={esquecer.isPending} onPress={() => esquecer.mutate()}>
+              Esquecer navegadores confiáveis
+            </Button>
+          </div>
         )}
       </div>
       <Dialog

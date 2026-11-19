@@ -404,7 +404,11 @@ export const trocarSenha = (senhaAtual: string, novaSenha: string) =>
 
 export const excluirConta = (senha: string) => api.post('/psicologo/me/excluir', { senha });
 
-export const listarSessoes = async () => (await api.get<{ sessoes: Sessao[] }>('/psicologo/me/sessoes')).data.sessoes;
+export const listarSessoes = async () =>
+  (await api.get<{ sessoes: Sessao[]; dispositivosConfiaveis: number }>('/psicologo/me/sessoes')).data;
+
+export const esquecerNavegadores = async () =>
+  (await api.post<{ esquecidos: number }>('/psicologo/me/dispositivos/esquecer')).data.esquecidos;
 
 export const encerrarOutrasSessoes = async () =>
   (await api.post<{ encerradas: number }>('/psicologo/me/sessoes/encerrar-outras')).data.encerradas;
