@@ -71,7 +71,8 @@ function extrairTelefone(obj: any): string | null {
   return null;
 }
 
-export default function SOS() {
+// comCabecalho: no SOS sem login o cabeçalho nativo já cobre a barra de status e não há barra de abas.
+export default function SOS({ comCabecalho = false }: { comCabecalho?: boolean }) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [respirandoAberto, setRespirandoAberto] = useState(false);
@@ -112,12 +113,9 @@ export default function SOS() {
 
   const ligarPara = useCallback(async (numero: string) => {
     const url = `tel:${numero}`;
+    // Sem canOpenURL: no Android 11+ ele responde "não" para tel: sem a intent DIAL no manifesto.
+    // O openURL já rejeita quando não há discador.
     try {
-      const suportado = await Linking.canOpenURL(url);
-      if (!suportado) {
-        Alert.alert('Não foi possível ligar', 'Este dispositivo não suporta chamadas diretas.');
-        return;
-      }
       await Linking.openURL(url);
     } catch {
       Alert.alert('Não foi possível ligar', 'Tente discar manualmente: ' + numero);
@@ -316,7 +314,12 @@ export default function SOS() {
   return (
     <ScrollView
       style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={[styles.container, { paddingTop: insets.top + 16 }]}
+      contentContainerStyle={[
+        styles.container,
+        comCabecalho
+          ? { paddingTop: 16, paddingBottom: 40 + insets.bottom }
+          : { paddingTop: insets.top + 16 },
+      ]}
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.cartaoSeguranca, { backgroundColor: theme.colors.primary }]}>

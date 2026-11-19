@@ -22,16 +22,26 @@ export const salvarTokenSeguro = async (token: string) => {
   }
 
   // Só com o aparelho desbloqueado e sem ir para backup/outro aparelho (o padrão migra no backup do iOS).
-  await SecureStore.setItemAsync(TOKEN_KEY, token, {
-    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-  });
+  try {
+    await SecureStore.setItemAsync(TOKEN_KEY, token, {
+      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    });
+  } catch (erro) {
+    // Sem gravar, o login falhou: o espelho não pode ficar com um token que ninguém foi avisado.
+    emMemoria = null;
+    throw erro;
+  }
 };
 
 export const obterTokenSeguro = async (): Promise<string | null> => {
   if (Platform.OS === 'web') return localStorage.getItem(TOKEN_KEY);
   if (emMemoria !== undefined) return emMemoria;
 
-  const salvo = await SecureStore.getItemAsync(TOKEN_KEY);
+  // Leitura que falha vale como sem sessão: o espelho nunca fica em undefined (o app ficaria preso em 'lendo').
+  const salvo = await SecureStore.getItemAsync(TOKEN_KEY).catch((erro) => {
+    console.warn('Falha ao ler o token:', erro?.message);
+    return null;
+  });
   // Um login ou logout durante a leitura já definiu o espelho: ele vale mais que o lido.
   if (emMemoria === undefined) emMemoria = salvo;
   return emMemoria;

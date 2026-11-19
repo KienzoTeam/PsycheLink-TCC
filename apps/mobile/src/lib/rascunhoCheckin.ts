@@ -1,6 +1,6 @@
 /**
  * Rascunho do check-in em nível de módulo: sobrevive a background kill
- * dentro da sessão, morre junto com a sessão (logout chama resetarRascunho).
+ * dentro da sessão, morre junto com a sessão (limparSessao chama resetarRascunho).
  * Sem persistência em disco — protótipo.
  */
 export type RascunhoCheckin = {
