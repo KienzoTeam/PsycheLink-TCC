@@ -48,7 +48,7 @@
   flex: 1 1 0;
 }
 
-/* Seta no véu: deixa explícito que há mais destinos ao rolar. */
+/* Seta nos véus: deixa explícito que há mais destinos ao rolar (para baixo no fim, para cima no topo). */
 .rolagem [data-visivel='true']::after {
   content: '';
   position: absolute;
@@ -60,6 +60,11 @@
   border-block-end: var(--largura-borda-forte) solid var(--cor-sobre-superficie-variante);
   translate: -50% 0;
   rotate: 45deg;
+}
+
+.rolagem [data-lado='inicio'][data-visivel='true']::after {
+  inset-block: var(--espaco-8) auto;
+  rotate: -135deg;
 }
 
 /* M3: 4dp entre os itens do trilho recolhido. */

@@ -28,6 +28,14 @@
   transition: opacity var(--duracao-efeitos-padrao) var(--mola-efeitos-padrao);
 }
 
+/* Mesmo véu, espelhado no topo: há conteúdo acima. */
+.inicio {
+  inset-block: 0 auto;
+  background: linear-gradient(to top, transparent, var(--cor-cartao));
+  mask-image: linear-gradient(to top, transparent, black);
+  -webkit-mask-image: linear-gradient(to top, transparent, black);
+}
+
 .veu[data-visivel='true'] {
   opacity: 1;
 }
