@@ -7,12 +7,15 @@ import { checkin } from './routes/checkin';
 import { paciente } from './routes/paciente';
 import { psicologo } from './routes/psicologo';
 import { pool } from './db';
+import { ipDaPages } from './lib/ipDaPages';
 import { exigirOrigem } from './lib/sessaoWeb';
 
 export const app = express();
 
 // Número de proxies confiáveis à frente do servidor; sem isso o rate limit usa o IP do proxy.
 app.set('trust proxy', Number(process.env.TRUST_PROXY) || false);
+
+app.use(ipDaPages);
 
 // Cabeçalhos de segurança padrão (X-Content-Type-Options, sem X-Powered-By, etc.)
 app.use(helmet());
