@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { IconButton } from './IconButton';
+import { MedidorSenha } from './MedidorSenha';
 import { TextField, type CampoProps } from './TextField';
 
-export function PasswordField(props: Omit<CampoProps, 'type'>) {
+// `medidor`: só em senha nova (cadastro, troca, redefinição), nunca no login.
+export function PasswordField({ medidor, ...props }: Omit<CampoProps, 'type'> & { medidor?: boolean }) {
   const [visivel, setVisivel] = useState(false);
-  return (
+  const campo = (
     <TextField
       {...props}
       type={visivel ? 'text' : 'password'}
@@ -17,5 +19,12 @@ export function PasswordField(props: Omit<CampoProps, 'type'>) {
         />
       }
     />
+  );
+  if (!medidor) return campo;
+  return (
+    <div>
+      {campo}
+      <MedidorSenha senha={props.value ?? ''} />
+    </div>
   );
 }

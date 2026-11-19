@@ -6,11 +6,12 @@ type Props<T extends FieldValues> = Omit<CampoProps, 'name' | 'value' | 'onChang
   control: Control<T>;
   nome: Path<T>;
   senha?: boolean;
+  medidor?: boolean;
   formatar?: (valor: string) => string;
 };
 
 // Liga um campo do design system ao react-hook-form; o inputRef permite focar o primeiro campo inválido.
-export function CampoForm<T extends FieldValues>({ control, nome, senha, formatar, ...resto }: Props<T>) {
+export function CampoForm<T extends FieldValues>({ control, nome, senha, medidor, formatar, ...resto }: Props<T>) {
   const { field, fieldState } = useController({ control, name: nome });
   const props = {
     ...resto,
@@ -21,5 +22,5 @@ export function CampoForm<T extends FieldValues>({ control, nome, senha, formata
     inputRef: field.ref,
     erro: fieldState.error?.message,
   };
-  return senha ? <PasswordField {...props} /> : <TextField {...props} />;
+  return senha ? <PasswordField {...props} medidor={medidor} /> : <TextField {...props} />;
 }

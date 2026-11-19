@@ -1,0 +1,43 @@
+.medidor {
+  --cor-medidor: var(--cor-primaria);
+  display: grid;
+  gap: var(--espaco-4);
+  margin-block-start: var(--espaco-8);
+}
+
+.medidor[data-nivel='0'],
+.medidor[data-nivel='1'] {
+  --cor-medidor: var(--cor-erro);
+}
+
+.medidor[data-nivel='2'] {
+  --cor-medidor: var(--cor-terciaria);
+}
+
+.trilho {
+  block-size: 4px;
+  border-radius: var(--forma-total);
+  background: var(--cor-container-alto);
+  overflow: hidden;
+}
+
+/* Largura mexe com mola espacial; cor com mola de efeitos (sem passar do ponto). */
+.barra {
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--cor-medidor);
+  transition:
+    inline-size var(--duracao-espacial-padrao) var(--mola-espacial-padrao),
+    background-color var(--duracao-efeitos-padrao) var(--mola-efeitos-padrao);
+}
+
+.texto {
+  margin: 0;
+  font: var(--tipo-corpo-pequeno);
+  color: var(--cor-sobre-superficie-variante);
+}
+
+.texto strong {
+  font: var(--tipo-corpo-pequeno-enfatico);
+  color: var(--cor-medidor);
+}

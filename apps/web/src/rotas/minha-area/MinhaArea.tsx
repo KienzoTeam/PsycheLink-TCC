@@ -142,6 +142,7 @@ function TrocaSenha() {
         />
         <PasswordField
           rotulo="Nova senha"
+          medidor
           value={nova}
           onChange={setNova}
           autoComplete="new-password"
