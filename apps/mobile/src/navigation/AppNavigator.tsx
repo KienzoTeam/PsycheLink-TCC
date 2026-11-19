@@ -25,7 +25,8 @@ export type RootStackParamList = {
   Vinculacao: undefined;
   Main: { aba?: 'Home' | 'SOS' } | undefined;
   EsqueciSenha: undefined;
-  VerificarCodigo: { email: string; modo: 'cadastro' | 'recuperacao' };
+  // No modo 'login', email é o mascarado que a API devolve (2FA).
+  VerificarCodigo: { email: string; modo: 'cadastro' | 'recuperacao' } | { email: string; modo: 'login'; desafioId: string };
   NovaSenha: { token: string };
   Checkin: undefined;
   BemEstar: undefined;

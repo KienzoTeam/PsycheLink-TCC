@@ -34,6 +34,10 @@ export default function Login() {
           email: email.trim(),
           modo: "cadastro"
         });
+      },
+      // 2FA: a senha conferiu e o código foi para o e-mail.
+      ({ desafioId, emailMascarado }) => {
+        navigation.navigate("VerificarCodigo", { email: emailMascarado, modo: "login", desafioId });
       }
     );
   };
