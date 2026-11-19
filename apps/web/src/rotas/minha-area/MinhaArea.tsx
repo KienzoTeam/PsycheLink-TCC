@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { isAxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { VisuallyHidden } from 'react-aria-components';
@@ -26,6 +26,7 @@ import {
   atualizarMe,
   buscarMe,
   encerrarOutrasSessoes,
+  excluirConta,
   listarSessoes,
   trocarSenha,
   type Psicologo,
@@ -308,6 +309,80 @@ function Preferencias() {
   );
 }
 
+// Só quem nunca teve vínculo exclui (o servidor confere e responde 409): o registro clínico fica guardado.
+function ExcluirConta() {
+  const cliente = useQueryClient();
+  const navigate = useNavigate();
+  const [aberto, setAberto] = useState(false);
+  const [senha, setSenha] = useState('');
+
+  const excluir = useMutation({
+    mutationFn: () => excluirConta(senha),
+    onSuccess: () => {
+      cliente.clear();
+      navigate('/', { replace: true });
+      notificar({ titulo: 'Conta excluída' });
+    },
+  });
+
+  function fechar() {
+    setAberto(false);
+    setSenha('');
+    excluir.reset();
+  }
+
+  function enviar(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (senha) excluir.mutate();
+  }
+
+  return (
+    <Card>
+      <div className={css.formulario}>
+        <h2 className={pagina.tituloSecao}>Excluir conta</h2>
+        <p className={pagina.subtituloSecao}>
+          Para quem criou a conta de psicólogo por engano. Só é possível enquanto a conta nunca teve pacientes vinculados: depois
+          disso, os registros clínicos precisam ser guardados.
+        </p>
+        <div>
+          <Button variante="outlined" onPress={() => setAberto(true)}>
+            Excluir conta
+          </Button>
+        </div>
+      </div>
+      <Dialog
+        titulo="Excluir a conta?"
+        isOpen={aberto}
+        onOpenChange={(abrir) => (abrir ? setAberto(true) : fechar())}
+        acoes={
+          <>
+            <Button variante="text" onPress={fechar}>
+              Cancelar
+            </Button>
+            <Button type="submit" form="form-excluir-conta" isDisabled={!senha} isPending={excluir.isPending}>
+              Excluir
+            </Button>
+          </>
+        }
+      >
+        <form id="form-excluir-conta" onSubmit={enviar} noValidate className={css.formulario}>
+          <p>A conta, o perfil e os códigos de vínculo são apagados. Isso não pode ser desfeito.</p>
+          <PasswordField
+            rotulo="Sua senha"
+            value={senha}
+            onChange={(valor) => {
+              setSenha(valor);
+              excluir.reset();
+            }}
+            autoComplete="current-password"
+          />
+          {excluir.isError && <AvisoErro>{mensagemDeErro(excluir.error, 'Não foi possível excluir a conta.')}</AvisoErro>}
+        </form>
+      </Dialog>
+    </Card>
+  );
+}
+
 export default function MinhaArea() {
   const sair = useSair();
   const [params, setParams] = useSearchParams();
@@ -334,7 +409,10 @@ export default function MinhaArea() {
             id: 'perfil',
             rotulo: 'Perfil',
             painel: me.data ? (
-              <PerfilConta key={me.data.id} psicologo={me.data} />
+              <div className={css.pilha}>
+                <PerfilConta key={me.data.id} psicologo={me.data} />
+                <ExcluirConta />
+              </div>
             ) : me.isError ? (
               <EstadoErro erro={me.error} onTentar={() => void me.refetch()} titulo="Não foi possível carregar o perfil" />
             ) : (

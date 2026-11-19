@@ -28,3 +28,8 @@
   height: var(--tamanho-icone-pequeno);
   margin-block-start: var(--espaco-4);
 }
+
+.pilha {
+  display: grid;
+  gap: var(--espaco-24);
+}

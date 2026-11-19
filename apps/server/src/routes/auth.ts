@@ -160,7 +160,7 @@ auth.post('/registro', limite(10), async (req, res) => {
     const aceito = await emTransacao(async (client) => {
       await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [email]);
       const { rows } = await client.query(
-        `SELECT u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo,
+        `SELECT u.id, u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo,
                 EXISTS (SELECT 1 FROM psicologo p WHERE p.user_id = u.id) AS psicologo
            FROM users u LEFT JOIN verificacoes_email v ON v.email = u.email
           WHERE u.email = $1`,
@@ -170,14 +170,17 @@ auth.post('/registro', limite(10), async (req, res) => {
 
       // Enquanto o código de um cadastro pendente vale, só quem sabe a senha dele pode refazê-lo:
       // senão um terceiro troca a senha e o dono do e-mail confirma a conta com a senha do outro.
-      // Conta de psicólogo nunca passa pelo cadastro de paciente (evita perfil misto).
+      // Vale igual para o pendente de psicólogo: quem se cadastrou como psicólogo por engano refaz
+      // como paciente. Psicólogo com e-mail confirmado nunca passa por aqui (evita perfil misto).
       if (
         conta?.email_verificado ||
-        conta?.psicologo ||
         (conta?.codigo_ativo && !(await bcrypt.compare(password, conta.password_hash)))
       ) {
         return false;
       }
+
+      // Pendente nunca entrou no painel (o login exige e-mail confirmado): não há vínculo nem código a perder.
+      if (conta?.psicologo) await client.query('DELETE FROM psicologo WHERE user_id = $1', [conta.id]);
 
       if (conta) {
         await client.query(
@@ -391,13 +394,26 @@ auth.post('/login', limite(10), async (req, res) => {
 
   try {
     const user = await pool.query(
-      'SELECT id, nome, email, data_nascimento, password_hash, email_verificado FROM users WHERE email = $1',
+      `SELECT id, nome, email, data_nascimento, password_hash, email_verificado,
+              EXISTS (SELECT 1 FROM psicologo p WHERE p.user_id = users.id) AS psicologo
+         FROM users WHERE email = $1`,
       [email],
     );
     // Compara mesmo sem conta, para o tempo não revelar se o e-mail existe.
     const valido = await bcrypt.compare(password, user.rows[0]?.password_hash ?? HASH_REFERENCIA);
     if (!user.rows[0] || !valido) {
       return res.status(400).json({ error: 'E-mail ou senha inválidos.' });
+    }
+
+    // Só depois da senha certa, então não revela a conta. O psicólogo entra pelo painel web, que exige 2FA;
+    // por aqui ganharia um token sem 2FA e um perfil de paciente.
+    if (user.rows[0].psicologo) {
+      return res.status(403).json({
+        codigo: 'CONTA_PSICOLOGO',
+        error: user.rows[0].email_verificado
+          ? 'Esta é uma conta de psicólogo. Use o painel web do PsycheLink.'
+          : 'Este e-mail tem um cadastro de psicólogo não confirmado. Se foi engano, crie a conta de paciente de novo com ele.',
+      });
     }
 
     if (!user.rows[0].email_verificado) {

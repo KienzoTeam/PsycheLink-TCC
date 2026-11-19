@@ -4,8 +4,8 @@ import { pool } from '../../db';
 import { registrarAuditoria } from '../../lib/auditoria';
 import { emTransacao } from '../../lib/contextoseguro';
 import { limite, rota } from '../../lib/rota';
-import { derrubarAcessosWeb, revogarSessoes, SESSAO_VIVA } from '../../lib/sessaoWeb';
-import { contaSchema, trocaSenhaSchema } from '../../schemas';
+import { derrubarAcessosWeb, limparCookies, revogarSessoes, SESSAO_VIVA } from '../../lib/sessaoWeb';
+import { contaSchema, exclusaoContaSchema, trocaSenhaSchema } from '../../schemas';
 
 export const conta = Router();
 
@@ -110,5 +110,53 @@ conta.post(
     const encerradas = await revogarSessoes(req.user!.id, res.locals.sessaoId);
     await registrarAuditoria(req, 'sessoes_encerradas', { metadados: { quantidade: encerradas } });
     return res.json({ encerradas });
+  }),
+);
+
+// Excluir a conta só vale para quem nunca teve vínculo: as FKs apagam em cascata vínculos, consultas,
+// escalas e anotações, e registro clínico não pode sumir (CFP). Encerrado também conta.
+conta.post(
+  '/me/excluir',
+  limite(5),
+  rota(async (req, res) => {
+    const parsed = exclusaoContaSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Dados inválidos.' });
+    }
+
+    const { rows } = await pool.query<{ password_hash: string }>(
+      'SELECT password_hash FROM users WHERE id = $1',
+      [req.user!.id],
+    );
+    // 400 e não 401: o front renova a sessão em todo 401.
+    if (!(await bcrypt.compare(parsed.data.senha, rows[0].password_hash))) {
+      return res.status(400).json({ error: 'Senha incorreta.' });
+    }
+
+    const psicologoId: number = res.locals.psicologoId;
+    const excluida = await emTransacao(async (client) => {
+      // FOR UPDATE: o INSERT de um vínculo novo (código resgatado agora) espera por este lock
+      // e depois falha na FK, em vez de nascer e ser apagado junto com a conta.
+      await client.query('SELECT 1 FROM psicologo WHERE id = $1 FOR UPDATE', [psicologoId]);
+      const vinculo = await client.query('SELECT 1 FROM vinculo WHERE psicologo_id = $1 LIMIT 1', [psicologoId]);
+      if (vinculo.rows.length > 0) return false;
+      await client.query('DELETE FROM users WHERE id = $1', [req.user!.id]);
+      return true;
+    });
+
+    if (!excluida) {
+      return res.status(409).json({
+        codigo: 'CONTA_COM_VINCULO',
+        error: 'Esta conta já teve pacientes vinculados e não pode ser excluída: os registros clínicos precisam ser guardados.',
+      });
+    }
+
+    // Sem ator: o usuário acabou de ser apagado e a FK não aceitaria o id.
+    await registrarAuditoria(req, 'conta_excluida', {
+      ator: null,
+      metadados: { userId: req.user!.id, psicologoId },
+    });
+    limparCookies(res);
+    return res.json({ ok: true });
   }),
 );
