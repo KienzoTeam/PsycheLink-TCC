@@ -149,3 +149,18 @@ describe('cadastro pendente refeito por outra pessoa', () => {
     assert.equal(await senhaGravada(email, 'senha-forte-1'), true);
   });
 });
+
+describe('senha fraca', () => {
+  it('cadastro de paciente e de psicólogo recusa senha comum com o motivo, sem criar conta', async () => {
+    for (const cadastrar of [
+      (email: string) => cadastrarPaciente(email, 'Senha@123'),
+      (email: string) => cadastrarPsicologo(email, novoCrp(), '12345678'),
+    ]) {
+      const email = novoEmail();
+      const res = await cadastrar(email);
+      assert.equal(res.status, 400);
+      assert.match(JSON.stringify(await res.json()), /Senha fácil de adivinhar/);
+      assert.equal((await pool.query('SELECT 1 FROM users WHERE email = $1', [email])).rowCount, 0);
+    }
+  });
+});
