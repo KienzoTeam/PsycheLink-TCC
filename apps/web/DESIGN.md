@@ -112,7 +112,7 @@ A base é Material 3 Expressive mapeado em Catppuccin: Latte no claro, Mocha no 
 Leitura do antislop: *painel clínico de gestão (Operate) para psicólogos, linguagem M3 Expressive sobre Catppuccin, dial ENERGY 2 / RHYTHM 2 / MOTION 2.*
 
 **Key Characteristics:**
-- Elevação tonal. Sombra só no FAB e em sobreposições.
+- Elevação tonal. Sombra só nas pílulas do menu da conta e em sobreposições.
 - Dados sem valência: rampa de um tom e cores de emoção fixas, sempre com rótulo.
 - Vermelho só para erro de sistema.
 - Molas em CSS puro (`linear()`), sem biblioteca de animação.
@@ -233,14 +233,14 @@ Métricas usam `font-variant-numeric: tabular-nums` (`--numeros-tabulares`).
 - **Shell:** barra lateral sticky + conteúdo (`--largura-conteudo` de 75rem, centralizado). Abaixo de 820px a barra vira gaveta modal e entra uma barra do topo com o botão "Menu" rotulado.
 - **Breakpoint:** `819.98px` vive em um único lugar, `useCompacto()` em `src/lib/useCompacto.ts` (usado pelo Shell e pela tela de entrada); o CSS lê o resultado por `data-compacto`. É a única exceção a "número só em token", porque media query não lê custom property.
 - **Alvos:** 44px mínimo (`--alvo-minimo`). Sem rolagem horizontal em 375px; listas largas (abas) rolam dentro do próprio contêiner.
-- **FAB:** fixo no canto inferior direito com `env(safe-area-inset-*)`; o conteúdo reserva espaço no fim para ele nunca cobrir o último item.
+- **Conta:** no rodapé do menu lateral (e da gaveta no celular): avatar com as iniciais e, aberto, o nome. Não há botão flutuante cobrindo o conteúdo.
 - **Landmarks:** link "Ir para o conteúdo", `<nav aria-label="Principal">`, `<main id="conteudo">`.
 
 ## Elevation & Depth
 
 Tonal. A hierarquia vem dos containers de superfície, não de sombra.
 
-- **Sombra do FAB** (`--sombra-fab`): o botão de perfil e as pílulas do FAB menu.
+- **Sombra do FAB** (`--sombra-fab`): as pílulas do menu da conta.
 - **Sombra de sobreposição** (`--sombra-overlay`): diálogo, menu, popover, gaveta, toast.
 - Todo o resto fica plano.
 
@@ -251,7 +251,7 @@ Tonal. A hierarquia vem dos containers de superfície, não de sombra.
 Escala M3: `none 0`, `xs 4`, `sm 8`, `md 12`, `lg 16`, `lg+ 20`, `xl 28`, `xl+ 32`, `2xl 48`, `full`.
 
 - Cards e diálogos: `xl` (28). Campos e popovers: `md` (12). Chips estáticos: `sm` (8).
-- **Shape morph:** botão, FAB e chip de filtro vão de pílula para `md` no press (`border-radius` com mola espacial rápida). O repouso usa metade da altura em vez de `full`, porque a interpolação de 9999px para 12px não seria visível.
+- **Shape morph:** botão e chip de filtro vão de pílula para `md` no press (`border-radius` com mola espacial rápida). O repouso usa metade da altura em vez de `full`, porque a interpolação de 9999px para 12px não seria visível.
 - **Item ativo da navegação** vira pílula (raio = metade da altura do item).
 
 ## Components
@@ -305,10 +305,10 @@ Todas carregam sob demanda (`React.lazy` + `Suspense` em `AreaProtegida`), e o r
 - **Calendário**: Dia, Semana e Mês (`?visao`, `?dia`), anterior, próximo e Hoje, tudo em America/Sao_Paulo. Dia e semana são uma grade de horas (07h às 21h, que cresce para caber consulta fora da faixa) rolável; em telas estreitas a semana rola na horizontal dentro do contêiner e começa em hoje. A posição de cada bloco vem de custom properties (`--inicio`, `--duracao`, `--faixa`), que o React aplica pelo CSSOM e por isso passam no CSP estrito. Canceladas e remarcadas ficam esmaecidas sem opacidade: sem preenchimento, contorno tracejado e texto secundário, para manter o contraste. O mês usa o `Calendar` do react-aria (setas, PageUp e PageDown, Enter abre o dia) com a contagem de consultas que acontecem. Criar e remarcar compartilham os campos de data, início e duração (15 a 240 minutos, de 5 em 5); o conflito (409) aparece no próprio diálogo, sem fechá-lo.
 - **Relatórios**: Geral ou Paciente, período, "Incluir anotações privadas" (desligado, com explicação), prévia na tela e "Exportar PDF". O botão abre a nova aba no clique (antes de esperar o servidor, para o navegador não bloquear), registra a exportação (`POST /exportacoes`, que devolve o número) e leva a `/relatorios/imprimir`, que carrega os dados e chama `window.print()`. A mesma folha (`Relatorio.tsx`) serve à prévia e à impressão. Na impressão: A4 com 15mm de margem, tema claro forçado nessa aba (sem salvar a preferência), cabeçalho corrido e rodapé (Disclaimer e "Documento confidencial") repetidos em toda página por uma tabela de layout (`role="presentation"`, o único jeito de o Chromium repetir `thead` e `tfoot`), seções que não se partem e série diária e anotações em página nova.
 - **Auditoria**: tabela (data e hora, ação em texto humano do servidor, paciente, quem: Você ou Paciente, detalhes) com filtros na URL (`?acao`, `?pacienteId`, `?de`, `?ate`) e "Carregar mais". Os detalhes saem de uma lista fechada de chaves dos metadados; o IP só aparece em eventos de conta e sessão.
-- **Minha área**: abas Perfil (nome e especialidade editáveis; e-mail e CRP somente leitura), Senha (8 a 72, confirmação; depois do sucesso o aviso de que as outras sessões foram encerradas), Sessões (navegador e sistema resumidos do user-agent, IP, último uso, "Esta sessão", "Encerrar outras sessões" com confirmação) e Preferências (tema e itens fixados, os mesmos controles do FAB: `useTema` e `usePins`, que agora é um estado único). O FAB leva a `?aba=preferencias` (Configurações) e a `/minha-area` (Meu perfil). "Sair" também mora no topo da tela.
+- **Minha área**: abas Perfil (nome e especialidade editáveis; e-mail e CRP somente leitura), Senha (8 a 72, confirmação; depois do sucesso o aviso de que as outras sessões foram encerradas), Sessões (navegador e sistema resumidos do user-agent, IP, último uso, "Esta sessão", "Encerrar outras sessões" com confirmação) e Preferências (tema, o mesmo `useTema` do menu da conta). O menu da conta leva a `?aba=preferencias` (Configurações) e a `/minha-area` (Meu perfil). "Sair" também mora no topo da tela.
 
 ### Navegação (Shell)
-- **Sidebar** colapsável (toggle com `PanelLeftClose`/`PanelLeftOpen` no lugar de `<|` e `|>`). Recolhida: só os itens fixados (padrão Início, Pacientes, Escalas, Calendário), ícone sobre rótulo. Expandida: Início, Pacientes, Check-ins, Chats (desabilitado, "em breve"), Relatórios, Escalas, Calendário, Vínculo, Auditoria.
+- **Sidebar** colapsável (toggle com `PanelLeftClose`/`PanelLeftOpen` no lugar de `<|` e `|>`). Recolhida (trilho do M3): todos os destinos, ícone sobre rótulo, pílula ativa de 32×56dp só no ícone, 4dp entre itens. Expandida: Início, Pacientes, Check-ins, Relatórios, Escalas, Calendário, Vínculo, Auditoria. A conta fica no rodapé.
 - **FAB de perfil**: iniciais do nome; abre o FAB menu vertical de pílulas (alternativa 1 do wireframe) com Configurações e Meu perfil (ambos levam à Minha área), Tema (Sistema, Claro, Escuro, num diálogo rápido) e Sair. Pins ficam em `localStorage` (`psychelink_web_pins`) e o tema em `psychelink_web_tema`; nada mais.
 
 ## Motion

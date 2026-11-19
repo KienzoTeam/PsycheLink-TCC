@@ -37,7 +37,7 @@ O paciente controla o que o psicólogo vê, categoria por categoria, e a interfa
 - Pearson sempre com N e a nota "correlação não indica causa".
 - Disclaimer fixo nos resumos: "Gerado por estatística descritiva. Interpretação clínica é responsabilidade exclusiva do psicólogo."
 - Fora desta rodada: chat (visível como "em breve"), marketplace, push, recomendação de exercícios, TOTP e Passkeys, lembretes.
-- Nada sensível em localStorage (só tema e itens fixados da barra lateral). Proibido `dangerouslySetInnerHTML`.
+- Nada sensível em localStorage (só o tema). Proibido `dangerouslySetInnerHTML`.
 
 ## Brand Commitments
 

@@ -4,14 +4,12 @@ import { isAxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { VisuallyHidden } from 'react-aria-components';
 import { Info, LogOut } from 'lucide-react';
-import { ITENS_NAV } from '../../components/shell/itensNav';
 import { SeletorTema } from '../../components/shell/SeletorTema';
-import { usePins } from '../../components/shell/usePins';
 import { useSair } from '../../components/shell/useSair';
 import { AvisoErro } from '../../components/ui/AvisoErro';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { Chip, ChipFiltro } from '../../components/ui/Chip';
+import { Chip } from '../../components/ui/Chip';
 import { Dialog } from '../../components/ui/Dialog';
 import { EstadoErro } from '../../components/ui/EstadoErro';
 import { ListItem } from '../../components/ui/ListItem';
@@ -278,7 +276,6 @@ function Sessoes() {
 }
 
 function Preferencias() {
-  const { fixados, alternar } = usePins();
   return (
     <Card>
       <div className={css.formulario}>
@@ -286,22 +283,6 @@ function Preferencias() {
         <div className={pagina.secao}>
           <h3 className={css.subtitulo}>Tema</h3>
           <SeletorTema />
-        </div>
-        <div className={pagina.secao}>
-          <h3 className={css.subtitulo}>Itens fixados na barra lateral</h3>
-          <p className={pagina.subtituloSecao}>A barra lateral recolhida mostra só os itens fixados. Ao menos um item fica fixado.</p>
-          <div role="group" aria-label="Itens fixados na barra lateral" className={css.pins}>
-            {ITENS_NAV.map((item) => (
-              <ChipFiltro
-                key={item.id}
-                isSelected={fixados.includes(item.id)}
-                isDisabled={fixados.length === 1 && fixados.includes(item.id)}
-                onChange={() => alternar(item.id)}
-              >
-                {item.rotulo}
-              </ChipFiltro>
-            ))}
-          </div>
         </div>
       </div>
     </Card>

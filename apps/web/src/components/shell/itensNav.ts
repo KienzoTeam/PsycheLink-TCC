@@ -22,5 +22,3 @@ export const ITENS_NAV: readonly ItemNav[] = [
   { id: 'vinculo', rotulo: 'Vínculo', icone: Link2 },
   { id: 'auditoria', rotulo: 'Auditoria', icone: ShieldCheck },
 ];
-
-export const PINS_PADRAO = ['inicio', 'pacientes', 'escalas', 'calendario'];
