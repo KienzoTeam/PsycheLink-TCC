@@ -6,6 +6,7 @@ import { authPsicologo } from './routes/auth-psicologo';
 import { checkin } from './routes/checkin';
 import { paciente } from './routes/paciente';
 import { psicologo } from './routes/psicologo';
+import { pool } from './db';
 import { exigirOrigem } from './lib/sessaoWeb';
 
 export const app = express();
@@ -15,6 +16,17 @@ app.set('trust proxy', Number(process.env.TRUST_PROXY) || false);
 
 // Cabeçalhos de segurança padrão (X-Content-Type-Options, sem X-Powered-By, etc.)
 app.use(helmet());
+
+// Ping de saúde (Render, banca): sem autenticação nem rate limit.
+app.get('/health', async (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    await pool.query('SELECT 1');
+    res.json({ ok: true });
+  } catch {
+    res.status(503).json({ ok: false });
+  }
+});
 
 app.use(express.json({ limit: '10kb' }));
 
