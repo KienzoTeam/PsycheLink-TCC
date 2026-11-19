@@ -16,7 +16,7 @@ export function ScreenHeader({ title, onBack }: ScreenHeaderProps) {
     <View
       style={[
         styles.header,
-        { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.outline },
+        { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.outlineVariant },
       ]}
     >
       <TouchableOpacity

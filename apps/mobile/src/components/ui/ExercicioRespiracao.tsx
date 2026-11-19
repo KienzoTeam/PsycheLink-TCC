@@ -117,7 +117,7 @@ export default function ExercicioRespiracao({ visivel, aoFechar }: { visivel: bo
                 styles.circulo,
                 {
                   backgroundColor: theme.colors.primaryContainer,
-                  borderColor: theme.colors.outline,
+                  borderColor: theme.colors.outlineVariant,
                   transform: [{ scale: escala }],
                 },
               ]}

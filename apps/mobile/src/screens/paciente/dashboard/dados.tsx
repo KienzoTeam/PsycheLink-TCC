@@ -147,8 +147,8 @@ export default function MeusDados({ navigation }: Props) {
                     maxValue={10}
                     noOfSections={4}
                     yAxisColor="transparent"
-                    xAxisColor={theme.colors.outline}
-                    rulesColor={theme.colors.outline}
+                    xAxisColor={theme.colors.outlineVariant}
+                    rulesColor={theme.colors.outlineVariant}
                     yAxisTextStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 11 }}
                     xAxisLabelTextStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 11 }}
                     initialSpacing={16}
@@ -193,8 +193,8 @@ export default function MeusDados({ navigation }: Props) {
                   noOfSections={4}
                   yAxisTextStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}
                   xAxisLabelTextStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 11 }}
-                  xAxisColor={theme.colors.outline}
-                  rulesColor={theme.colors.outline}
+                  xAxisColor={theme.colors.outlineVariant}
+                  rulesColor={theme.colors.outlineVariant}
                   hideYAxisText={false}
                   height={180}
                 />

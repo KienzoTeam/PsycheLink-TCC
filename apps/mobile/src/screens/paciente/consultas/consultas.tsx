@@ -43,7 +43,7 @@ function ItemConsulta({ consulta }: { consulta: Consulta }) {
         estilos.item,
         {
           backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.outline,
+          borderColor: theme.colors.outlineVariant,
           borderRadius: theme.borderRadius.lg,
         },
       ]}

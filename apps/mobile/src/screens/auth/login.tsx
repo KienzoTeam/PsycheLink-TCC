@@ -53,7 +53,7 @@ export default function Login() {
       <View style={[styles.card, {
         backgroundColor: theme.colors.surfaceContainer,
         borderRadius: theme.borderRadius.xl,
-        borderColor: theme.colors.outline
+        borderColor: theme.colors.outlineVariant
       }]}>
         <CustomInput
           label="Email"
@@ -94,9 +94,9 @@ export default function Login() {
         </TouchableOpacity>
 
         <View style={styles.separatorContainer}>
-          <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
+          <View style={[styles.line, { backgroundColor: theme.colors.outlineVariant }]} />
           <Text style={[styles.separatorText, { color: theme.colors.onSurfaceVariant }]}>ou</Text>
-          <View style={[styles.line, { backgroundColor: theme.colors.outline }]} />
+          <View style={[styles.line, { backgroundColor: theme.colors.outlineVariant }]} />
         </View>
 
         <CustomButton

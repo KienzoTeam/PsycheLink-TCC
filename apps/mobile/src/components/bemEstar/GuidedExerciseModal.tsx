@@ -172,7 +172,7 @@ export function GuidedExerciseModal({
             <View
               style={[
                 styles.timerCard,
-                { backgroundColor: theme.colors.background, borderColor: theme.colors.outline },
+                { backgroundColor: theme.colors.background, borderColor: theme.colors.outlineVariant },
               ]}
             >
               <Text

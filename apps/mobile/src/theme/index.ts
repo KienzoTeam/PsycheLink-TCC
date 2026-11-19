@@ -95,7 +95,10 @@ export const theme = {
       onSurfaceVariant: palette.latte.subtext0,
       subtext1: palette.latte.subtext1,
       
-      outline: palette.latte.surface1,
+      // Borda de alvo tocável (campo, botão contornado, opção): 3:1 com o fundo.
+      outline: palette.latte.overlay2,
+      // Divisor e borda de cartão: decorativo, pode ser fraco.
+      outlineVariant: palette.latte.surface1,
     },
     spacing: {
       xs: 4,
@@ -143,7 +146,10 @@ export const theme = {
       onSurfaceVariant: palette.mocha.subtext0,
       subtext1: palette.mocha.subtext1,
       
-      outline: palette.mocha.surface1,
+      // Borda de alvo tocável (campo, botão contornado, opção): 3:1 com o fundo.
+      outline: palette.mocha.overlay1,
+      // Divisor e borda de cartão: decorativo, pode ser fraco.
+      outlineVariant: palette.mocha.surface1,
     },
     spacing: {
       xs: 4,

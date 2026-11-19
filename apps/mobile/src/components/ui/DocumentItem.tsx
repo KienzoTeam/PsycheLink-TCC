@@ -77,10 +77,10 @@ export default function DocumentItem({ titulo, conteudo, dataAtualizacao, aceito
             ]}
           >
 
-            <View style={[styles.handleBar, { backgroundColor: theme.colors.outline }]} />
+            <View style={[styles.handleBar, { backgroundColor: theme.colors.outlineVariant }]} />
 
         
-            <View style={[styles.modalHeader, { borderBottomColor: theme.colors.outline }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.colors.outlineVariant }]}>
               <View style={styles.modalHeaderLeft}>
                 <View style={[styles.modalIconContainer, { backgroundColor: theme.colors.surfaceVariant }]}>
                   <Feather name="file-text" size={18} color={theme.colors.primary} />

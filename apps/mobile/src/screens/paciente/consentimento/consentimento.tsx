@@ -178,7 +178,7 @@ export default function Consentimento({ navigation }: Props) {
 
   const estiloCartao = {
     backgroundColor: theme.colors.surfaceContainer,
-    borderColor: theme.colors.outline,
+    borderColor: theme.colors.outlineVariant,
     borderRadius: theme.borderRadius.lg,
   };
 
@@ -278,7 +278,7 @@ export default function Consentimento({ navigation }: Props) {
             <View style={[styles.cartao, estiloCartao]}>
               {CATEGORIAS.map((categoria, indice) => (
                 <React.Fragment key={categoria.chave}>
-                  {indice > 0 && <View style={[styles.divisor, { backgroundColor: theme.colors.outline }]} />}
+                  {indice > 0 && <View style={[styles.divisor, { backgroundColor: theme.colors.outlineVariant }]} />}
                   {renderLinha(categoria)}
                 </React.Fragment>
               ))}
