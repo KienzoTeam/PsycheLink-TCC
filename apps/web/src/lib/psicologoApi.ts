@@ -400,6 +400,8 @@ export const atualizarMe = async (dados: { nome: string; especialidade: string }
 export const trocarSenha = (senhaAtual: string, novaSenha: string) =>
   api.post('/psicologo/me/senha', { senhaAtual, novaSenha });
 
+export const excluirConta = (senha: string) => api.post('/psicologo/me/excluir', { senha });
+
 export const listarSessoes = async () => (await api.get<{ sessoes: Sessao[] }>('/psicologo/me/sessoes')).data.sessoes;
 
 export const encerrarOutrasSessoes = async () =>
