@@ -2,9 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Menu } from 'lucide-react';
 import { useCompacto } from '../../lib/useCompacto';
 import { Button } from '../ui/Button';
-import { FabPerfil } from './FabPerfil';
 import { Gaveta, Sidebar } from './Sidebar';
-import { usePins } from './usePins';
 import css from './Shell.module.css';
 
 type Props = { psicologo: { nome: string }; children: ReactNode };
@@ -13,7 +11,6 @@ export function Shell({ psicologo, children }: Props) {
   const compacto = useCompacto();
   const [colapsada, setColapsada] = useState(false);
   const [gavetaAberta, setGavetaAberta] = useState(false);
-  const { fixados } = usePins();
 
   return (
     <div className={css.shell} data-compacto={compacto}>
@@ -28,15 +25,14 @@ export function Shell({ psicologo, children }: Props) {
             </Button>
             <span className={css.marca}>PsycheLink</span>
           </header>
-          <Gaveta isOpen={gavetaAberta} onOpenChange={setGavetaAberta} />
+          <Gaveta isOpen={gavetaAberta} onOpenChange={setGavetaAberta} nome={psicologo.nome} />
         </>
       ) : (
-        <Sidebar colapsada={colapsada} onAlternar={() => setColapsada((atual) => !atual)} fixados={fixados} />
+        <Sidebar colapsada={colapsada} onAlternar={() => setColapsada((atual) => !atual)} nome={psicologo.nome} />
       )}
       <main id="conteudo" tabIndex={-1} className={css.conteudo}>
         {children}
       </main>
-      <FabPerfil nome={psicologo.nome} />
     </div>
   );
 }

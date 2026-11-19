@@ -8,7 +8,8 @@ import { Dialog } from '../ui/Dialog';
 import { Menu } from '../ui/Menu';
 import { SeletorTema } from './SeletorTema';
 import { useSair } from './useSair';
-import css from './FabPerfil.module.css';
+import { cx } from '../../lib/cx';
+import css from './MenuConta.module.css';
 
 const ITENS_MENU = [
   { id: 'configuracoes', rotulo: 'Configurações', icone: <Settings /> },
@@ -17,7 +18,8 @@ const ITENS_MENU = [
   { id: 'sair', rotulo: 'Sair', icone: <LogOut /> },
 ];
 
-export function FabPerfil({ nome }: { nome: string }) {
+// Rodapé do menu lateral: a conta fica junto da navegação, sem botão flutuante cobrindo o conteúdo.
+export function MenuConta({ nome, recolhida = false }: { nome: string; recolhida?: boolean }) {
   const navigate = useNavigate();
   const sair = useSair();
   const [temaAberto, setTemaAberto] = useState(false);
@@ -34,12 +36,15 @@ export function FabPerfil({ nome }: { nome: string }) {
       <Menu
         aria-label="Menu da conta"
         variante="pilulas"
-        placement="top end"
+        placement="top start"
         itens={ITENS_MENU}
         onAction={aoEscolher}
         gatilho={
-          <BotaoAria aria-label={`Menu da conta de ${nome}`} className={css.fab}>
-            {iniciais(nome)}
+          <BotaoAria aria-label={`Menu da conta de ${nome}`} className={cx(css.conta, recolhida && css.recolhida)}>
+            <span className={css.avatar} aria-hidden>
+              {iniciais(nome)}
+            </span>
+            {!recolhida && <span className={css.nome}>{nome}</span>}
           </BotaoAria>
         }
       />

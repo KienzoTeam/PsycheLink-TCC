@@ -3,7 +3,9 @@ import { Dialog, Modal, ModalOverlay } from 'react-aria-components';
 import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import { IconButton } from '../ui/IconButton';
+import { ScrollFade } from '../ui/ScrollFade';
 import { ITENS_NAV, type ItemNav } from './itensNav';
+import { MenuConta } from './MenuConta';
 import css from './Sidebar.module.css';
 
 function ListaNav({ itens, recolhida, aoNavegar }: { itens: readonly ItemNav[]; recolhida: boolean; aoNavegar?: () => void }) {
@@ -21,10 +23,9 @@ function ListaNav({ itens, recolhida, aoNavegar }: { itens: readonly ItemNav[]; 
   );
 }
 
-type PropsSidebar = { colapsada: boolean; onAlternar: () => void; fixados: readonly string[] };
+type PropsSidebar = { colapsada: boolean; onAlternar: () => void; nome: string };
 
-export function Sidebar({ colapsada, onAlternar, fixados }: PropsSidebar) {
-  const itens = colapsada ? ITENS_NAV.filter((item) => fixados.includes(item.id)) : ITENS_NAV;
+export function Sidebar({ colapsada, onAlternar, nome }: PropsSidebar) {
   return (
     <nav aria-label="Principal" className={cx(css.barra, colapsada && css.recolhida)}>
       <div className={css.topo}>
@@ -35,14 +36,18 @@ export function Sidebar({ colapsada, onAlternar, fixados }: PropsSidebar) {
           onPress={onAlternar}
         />
       </div>
-      <ListaNav itens={itens} recolhida={colapsada} />
+      {/* Em tela baixa a lista rola sozinha, com véu e seta enquanto houver destinos abaixo; a conta fica fixa. */}
+      <ScrollFade aria-label="Destinos" className={css.rolagem}>
+        <ListaNav itens={ITENS_NAV} recolhida={colapsada} />
+      </ScrollFade>
+      <MenuConta nome={nome} recolhida={colapsada} />
     </nav>
   );
 }
 
-type PropsGaveta = { isOpen: boolean; onOpenChange: (aberta: boolean) => void };
+type PropsGaveta = { isOpen: boolean; onOpenChange: (aberta: boolean) => void; nome: string };
 
-export function Gaveta({ isOpen, onOpenChange }: PropsGaveta) {
+export function Gaveta({ isOpen, onOpenChange, nome }: PropsGaveta) {
   return (
     <ModalOverlay isDismissable isOpen={isOpen} onOpenChange={onOpenChange} className={css.fundo}>
       <Modal className={css.gaveta}>
@@ -54,6 +59,7 @@ export function Gaveta({ isOpen, onOpenChange }: PropsGaveta) {
           <nav aria-label="Principal">
             <ListaNav itens={ITENS_NAV} recolhida={false} aoNavegar={() => onOpenChange(false)} />
           </nav>
+          <MenuConta nome={nome} />
         </Dialog>
       </Modal>
     </ModalOverlay>

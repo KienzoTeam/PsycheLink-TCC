@@ -8,14 +8,17 @@ type Props = {
   children: ReactNode;
 };
 
-// Lista rolável com um véu desfocado no fim enquanto houver conteúdo abaixo.
+// Lista rolável com um véu desfocado no começo e no fim enquanto houver conteúdo acima ou abaixo.
 export function ScrollFade({ className, children, ...resto }: Props) {
   const area = useRef<HTMLDivElement>(null);
+  const [temAntes, setTemAntes] = useState(false);
   const [temMais, setTemMais] = useState(false);
 
   const medir = useCallback(() => {
     const el = area.current;
-    if (el) setTemMais(el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+    if (!el) return;
+    setTemAntes(el.scrollTop > 1);
+    setTemMais(el.scrollTop + el.clientHeight < el.scrollHeight - 1);
   }, []);
 
   // Sem deps de propósito: depois de cada render o conteúdo pode ter mudado.
@@ -34,7 +37,8 @@ export function ScrollFade({ className, children, ...resto }: Props) {
       <div ref={area} role="region" tabIndex={0} onScroll={medir} className={css.area} {...resto}>
         {children}
       </div>
-      <div aria-hidden className={css.veu} data-visivel={temMais} />
+      <div aria-hidden className={cx(css.veu, css.inicio)} data-lado="inicio" data-visivel={temAntes} />
+      <div aria-hidden className={css.veu} data-lado="fim" data-visivel={temMais} />
     </div>
   );
 }

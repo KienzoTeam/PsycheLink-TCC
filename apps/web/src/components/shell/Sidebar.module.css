@@ -7,7 +7,7 @@
   width: var(--largura-barra-lateral);
   height: 100dvh;
   padding: var(--espaco-12);
-  overflow: hidden auto;
+  overflow: hidden;
   border-inline-end: var(--largura-borda) solid var(--cor-contorno-variante);
   background: var(--cor-superficie);
 }
@@ -41,8 +41,35 @@
   gap: var(--espaco-4);
 }
 
+/* Ocupa o espaço entre o topo e a conta; o véu do ScrollFade usa a cor da barra. */
+.rolagem {
+  --altura-rolagem: 100%;
+  --cor-cartao: var(--cor-superficie);
+  flex: 1 1 0;
+}
+
+/* Seta nos véus: deixa explícito que há mais destinos ao rolar (para baixo no fim, para cima no topo). */
+.rolagem [data-visivel='true']::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: var(--espaco-8);
+  width: var(--espaco-8);
+  height: var(--espaco-8);
+  border-inline-end: var(--largura-borda-forte) solid var(--cor-sobre-superficie-variante);
+  border-block-end: var(--largura-borda-forte) solid var(--cor-sobre-superficie-variante);
+  translate: -50% 0;
+  rotate: 45deg;
+}
+
+.rolagem [data-lado='inicio'][data-visivel='true']::after {
+  inset-block: var(--espaco-8) auto;
+  rotate: -135deg;
+}
+
+/* M3: 4dp entre os itens do trilho recolhido. */
 .trilho {
-  gap: var(--espaco-12);
+  gap: var(--espaco-4);
 }
 
 .item {
@@ -100,7 +127,7 @@ a.item:active::before {
   color: var(--cor-sobre-container-primaria);
 }
 
-/* Trilho: ícone sobre rótulo, só os itens fixados. */
+/* Trilho: ícone sobre rótulo, com todos os destinos. */
 .trilho .item {
   flex-direction: column;
   justify-content: center;
@@ -110,8 +137,23 @@ a.item:active::before {
   font: var(--tipo-rotulo-medio);
 }
 
+/* M3: no trilho a pílula ativa (32×56dp) envolve só o ícone; o rótulo fica embaixo, em negrito. */
+.trilho .item svg {
+  box-sizing: content-box;
+  padding: var(--espaco-4) var(--espaco-16);
+  border-radius: var(--forma-total);
+  transition: background-color var(--duracao-efeitos-padrao) var(--mola-efeitos-padrao);
+}
+
 .trilho .item[aria-current='page'] {
-  --raio-repouso: calc(var(--altura-item-trilho) / 2);
+  background: transparent;
+  color: var(--cor-sobre-superficie);
+  font: var(--tipo-rotulo-medio-enfatico);
+}
+
+.trilho .item[aria-current='page'] svg {
+  background: var(--cor-container-primaria);
+  color: var(--cor-sobre-container-primaria);
 }
 
 .fundo {
@@ -146,8 +188,11 @@ a.item:active::before {
   translate: -100% 0;
 }
 
+/* Coluna da altura da gaveta: a conta (margin-block-start: auto) desce para o rodapé. */
 .dialogo {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
   gap: var(--espaco-8);
   padding: var(--espaco-12);
   outline: none;

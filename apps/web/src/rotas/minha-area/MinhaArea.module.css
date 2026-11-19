@@ -8,12 +8,6 @@
   font: var(--tipo-titulo-medio);
 }
 
-.pins {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--espaco-8);
-}
-
 .aviso {
   display: flex;
   align-items: flex-start;

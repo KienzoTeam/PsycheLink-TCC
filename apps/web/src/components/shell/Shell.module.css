@@ -50,7 +50,7 @@
   width: min(100%, var(--largura-conteudo));
   min-width: 0;
   justify-self: center;
-  padding: var(--espaco-24) var(--espaco-24) calc(var(--tamanho-fab) + var(--espaco-48));
+  padding: var(--espaco-24) var(--espaco-24) var(--espaco-48);
   outline: none;
 }
 
