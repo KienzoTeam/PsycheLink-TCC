@@ -13,6 +13,7 @@ import { confiarNoDispositivo, dispositivoConfiavel } from '../lib/dispositivoCo
 import { HASH_REFERENCIA } from '../lib/hashReferencia';
 import { normalizarEmail } from '../lib/validarEmail';
 import { gerarCodigo, hashCodigo, codigoConfere } from '../lib/codigo';
+import type { TipoCodigo } from '../lib/emails';
 import { enviarAvisoCadastro, enviarCodigo, resumoErroSmtp } from '../lib/mailer';
 
 export const auth = Router();
@@ -77,12 +78,12 @@ export const verificarToken = async (req: Request, res: Response, next: NextFunc
  * Tenta enviar o código via SMTP de verdade.
  * Salva na tabela verificacoes_email apenas se o envio SMTP for aceito.
  */
-async function emitirCodigo(email: string, assunto?: string): Promise<void> {
+async function emitirCodigo(email: string, tipo?: TipoCodigo): Promise<void> {
   const codigo = gerarCodigo();
 
   try {
     // 1. Disparo real via SMTP
-    await enviarCodigo(email, codigo, assunto);
+    await enviarCodigo(email, codigo, tipo);
   } catch (erroSmtp) {
     console.error('[SMTP Error] Falha ao entregar o código de verificação:', resumoErroSmtp(erroSmtp));
     return;
@@ -94,8 +95,8 @@ async function emitirCodigo(email: string, assunto?: string): Promise<void> {
 
 // Reenvio e esqueci-senha respondem antes de enviar: esperar o SMTP só quando há conta revelaria
 // a conta pela demora. Falhas só são logadas, sem o e-mail.
-const emitirSemEsperar = (email: string, assunto?: string) => {
-  emitirCodigo(email, assunto).catch(() => console.error('[SMTP Error] Falha ao emitir o código.'));
+const emitirSemEsperar = (email: string, tipo?: TipoCodigo) => {
+  emitirCodigo(email, tipo).catch(() => console.error('[SMTP Error] Falha ao emitir o código.'));
 };
 
 const gravarCodigo = (db: Pool | PoolClient, email: string, codigo: number) =>
@@ -293,7 +294,7 @@ auth.post('/esqueci-senha', limite(5), async (req, res) => {
       [email],
     );
     if (alvo.rows.length > 0 && !(await cooldownAtivo(email))) {
-      emitirSemEsperar(email, 'PsycheLink · Código de redefinição de senha');
+      emitirSemEsperar(email, 'senha');
     }
     return res.json({
       message: 'Se houver uma conta ativa com este e-mail, você receberá um código.',

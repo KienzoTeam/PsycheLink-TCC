@@ -48,8 +48,9 @@ describe('envio pela API do Brevo', () => {
       const corpo = JSON.parse(String(init.body));
       assert.deepEqual(corpo.sender, { name: 'PsycheLink', email: 'no-reply@psychelink.test' });
       assert.deepEqual(corpo.to, [{ email: 'a@b.test' }]);
-      assert.equal(corpo.subject, 'PsycheLink · Confirme seu e-mail');
+      assert.equal(corpo.subject, 'PsycheLink · Confirme seu e-mail: 123456');
       assert.match(corpo.htmlContent, /123456/);
+      assert.match(corpo.textContent, /Código: 123456/);
       assert.equal(smtp.mock.callCount(), 0);
       assert.equal(log.mock.callCount(), 0);
     } finally {
