@@ -19,6 +19,18 @@ export const corDaEmocao = (texto: string) => {
   return emocao ? `var(--emocao-${emocao})` : 'var(--cor-contorno)';
 };
 
+// Os seis hábitos do check-in na ordem de exibição; `chave` é a do JSON do servidor (apps/server/src/lib/habitos.ts).
+export const HABITOS = [
+  { chave: 'hidratacao', rotulo: 'Hidratação' },
+  { chave: 'exercicio', rotulo: 'Exercício' },
+  { chave: 'meditacao', rotulo: 'Meditação' },
+  { chave: 'limiteTelas', rotulo: 'Limite de telas' },
+  { chave: 'contatoSocial', rotulo: 'Contato social' },
+  { chave: 'medicacao', rotulo: 'Medicação' },
+] as const;
+
+export type ChaveHabito = (typeof HABITOS)[number]['chave'];
+
 const GATILHOS: Record<string, string> = {
   trabalho: 'Trabalho',
   familia: 'Família',
