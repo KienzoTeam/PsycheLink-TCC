@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { Feather } from '@expo/vector-icons';
@@ -63,14 +63,17 @@ export default function MainTabNavigator({ navigation, route }: NativeStackScree
         initialPage={0}
         onPageScrollStateChanged={e => {
           // Arraste começou: monta as vizinhas antes de elas entrarem na tela.
+          // Montar é a parte pesada: em transição, não segura a cor da barra.
           if (e.nativeEvent.pageScrollState === 'dragging') {
-            setMontadas(atual => new Set([...atual, ativo - 1, ativo + 1]));
+            startTransition(() => setMontadas(atual => new Set([...atual, ativo - 1, ativo + 1])));
           }
         }}
+        // A aba acende quando a página passa da metade, sem esperar o arraste soltar.
+        onPageScroll={e => setAtivo(Math.round(e.nativeEvent.position + e.nativeEvent.offset))}
         onPageSelected={e => {
           const pagina = e.nativeEvent.position;
           setAtivo(pagina);
-          setMontadas(atual => new Set(atual).add(pagina));
+          startTransition(() => setMontadas(atual => new Set(atual).add(pagina)));
         }}
       >
         <View key="home" style={{ flex: 1 }}>
@@ -114,7 +117,10 @@ export default function MainTabNavigator({ navigation, route }: NativeStackScree
             <TouchableOpacity
               key={aba.nome}
               style={styles.aba}
-              onPress={() => pager.current?.setPage(indice)}
+              onPress={() => {
+                setAtivo(indice);
+                pager.current?.setPage(indice);
+              }}
               accessibilityRole="tab"
               accessibilityState={{ selected: ligada }}
               accessibilityLabel={aba.rotulo}
