@@ -7,7 +7,7 @@
   width: var(--largura-barra-lateral);
   height: 100dvh;
   padding: var(--espaco-12);
-  overflow: hidden auto;
+  overflow: hidden;
   border-inline-end: var(--largura-borda) solid var(--cor-contorno-variante);
   background: var(--cor-superficie);
 }
@@ -39,6 +39,27 @@
 .lista {
   display: grid;
   gap: var(--espaco-4);
+}
+
+/* Ocupa o espaço entre o topo e a conta; o véu do ScrollFade usa a cor da barra. */
+.rolagem {
+  --altura-rolagem: 100%;
+  --cor-cartao: var(--cor-superficie);
+  flex: 1 1 0;
+}
+
+/* Seta no véu: deixa explícito que há mais destinos ao rolar. */
+.rolagem [data-visivel='true']::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: var(--espaco-8);
+  width: var(--espaco-8);
+  height: var(--espaco-8);
+  border-inline-end: var(--largura-borda-forte) solid var(--cor-sobre-superficie-variante);
+  border-block-end: var(--largura-borda-forte) solid var(--cor-sobre-superficie-variante);
+  translate: -50% 0;
+  rotate: 45deg;
 }
 
 /* M3: 4dp entre os itens do trilho recolhido. */
