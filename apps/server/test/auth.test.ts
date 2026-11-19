@@ -15,22 +15,15 @@ after(async () => {
 });
 
 describe('POST /auth/login (app)', () => {
-  it('devolve o token e o mesmo perfil do GET /me', async () => {
+  it('com a senha certa envia o código e não entrega token (2FA, ver 2fa-app.test.ts)', async () => {
     const paciente = await criarPaciente('Paciente do Login');
-    const cliente = criarCliente(servidor.url);
-
-    const login = await cliente.requisitar('POST', '/auth/login', {
+    const login = await criarCliente(servidor.url).requisitar('POST', '/auth/login', {
       corpo: { email: paciente.email, password: paciente.senha },
     });
     assert.equal(login.status, 200);
-    const { token, usuario } = await login.json();
-
-    const me = await cliente.requisitar('GET', '/auth/me', {
-      cabecalhos: { authorization: `Bearer ${token}` },
-    });
-    assert.equal(me.status, 200);
-    assert.deepEqual(usuario, await me.json());
-    assert.equal(usuario.nome, 'Paciente do Login');
+    const corpo = await login.json();
+    assert.equal(typeof corpo.desafioId, 'string');
+    assert.equal(corpo.token, undefined);
   });
 
   it('e-mail inexistente também passa pelo bcrypt (tempo não revela a conta)', async (t) => {

@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import rateLimit from 'express-rate-limit';
@@ -7,11 +6,12 @@ import { pool } from '../db';
 import { desafioSchema, doisFatoresSchema, psicologoRegistroSchema } from '../schemas';
 import { HASH_REFERENCIA } from '../lib/hashReferencia';
 import { normalizarEmail } from '../lib/validarEmail';
-import { codigoConfere, gerarCodigo, hashCodigo } from '../lib/codigo';
+import { gerarCodigo, hashCodigo } from '../lib/codigo';
 import { enviarCodigo, resumoErroSmtp } from '../lib/mailer';
 import { registrarAuditoria } from '../lib/auditoria';
 import { emTransacao } from '../lib/contextoseguro';
 import { confiarNoDispositivo, dispositivoConfiavel } from '../lib/dispositivoConfiavel';
+import { conferirDesafio, criarDesafio, MSG_CODIGO_INVALIDO, reenviarDesafio, usarDesafio } from '../lib/desafio2fa';
 import {
   abrirSessao,
   COOKIE_DISPOSITIVO,
@@ -40,11 +40,8 @@ const limite = (n: number) => rateLimit({ windowMs: 15 * 60_000, limit: n });
 const MSG_NAO_AUTORIZADO = 'Acesso não autorizado.';
 const MSG_CADASTRO_INDISPONIVEL =
   'Não foi possível concluir o cadastro com estes dados. Tente fazer login ou recuperar a senha.';
-const MSG_CODIGO_INVALIDO = 'Código inválido ou expirado. Solicite um novo.';
 const MSG_FALHA_ENVIO = 'Não foi possível enviar o código. Tente novamente.';
-const ASSUNTO_2FA = 'PsycheLink · Código de acesso';
 
-const mascararEmail = (email: string) => `${email[0]}•••${email.slice(email.lastIndexOf('@'))}`;
 
 // Login do psicólogo, etapa 1: confere as credenciais e envia o código. Não emite sessão.
 authPsicologo.post('/psicologo/login', limite(10), async (req, res) => {
@@ -115,32 +112,16 @@ authPsicologo.post('/psicologo/login', limite(10), async (req, res) => {
     return res.json({ ok: true });
   }
 
-  const desafioId = randomBytes(32).toString('base64url');
-  const codigo = gerarCodigo();
+  let desafio;
   try {
-    await enviarCodigo(email, codigo, ASSUNTO_2FA);
+    desafio = await criarDesafio(conta.id, email, 'web');
   } catch (erroSmtp) {
     console.error('[SMTP Error] Falha ao entregar o código de acesso:', resumoErroSmtp(erroSmtp));
     return res.status(502).json({ error: MSG_FALHA_ENVIO });
   }
 
-  // Um desafio vivo por conta: o novo login invalida os anteriores.
-  await pool.query('UPDATE desafio_2fa SET usado_em = now() WHERE user_id = $1 AND usado_em IS NULL', [
-    conta.id,
-  ]);
-  const { rows: criado } = await pool.query<{ reenviar_em: Date }>(
-    `INSERT INTO desafio_2fa (id, user_id, codigo_hash, expira_em)
-     VALUES ($1, $2, $3, now() + interval '10 minutes')
-     RETURNING reenviado_em + interval '60 seconds' AS reenviar_em`,
-    [desafioId, conta.id, hashCodigo(codigo, desafioId)],
-  );
-
   await registrarAuditoria(req, 'login_ok', { ator });
-  return res.json({
-    desafioId,
-    emailMascarado: mascararEmail(email),
-    reenviarEm: criado[0].reenviar_em.toISOString(),
-  });
+  return res.json(desafio);
 });
 
 // Login do psicólogo, etapa 2: confere o código e abre a sessão (cookies).
@@ -149,44 +130,14 @@ authPsicologo.post('/psicologo/2fa', limite(20), async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: 'Dados inválidos.' });
   const { desafioId, codigo, confiar } = parsed.data;
 
-  // A tentativa é consumida antes da conferência: requisições paralelas não furam o limite de 5.
-  const { rows } = await pool.query<{ user_id: number; codigo_hash: string }>(
-    `UPDATE desafio_2fa SET tentativas = tentativas + 1
-      WHERE id = $1 AND usado_em IS NULL AND expira_em > now() AND tentativas < 5
-      RETURNING user_id, codigo_hash`,
-    [desafioId],
-  );
-  const desafio = rows[0];
-  if (!desafio) {
-    await registrarAuditoria(req, '2fa_falha', {
-      ator: null,
-      metadados: { motivo: 'desafio_invalido' },
-    });
-    return res.status(400).json({ error: MSG_CODIGO_INVALIDO });
-  }
+  const conferido = await conferirDesafio(req, desafioId, codigo, 'web');
+  if ('erro' in conferido) return res.status(400).json({ error: conferido.erro });
+  const ator = { id: conferido.userId, papel: 'psicologo' as const };
 
-  const ator = { id: desafio.user_id, papel: 'psicologo' as const };
-  if (!codigoConfere(codigo, desafioId, desafio.codigo_hash)) {
-    await registrarAuditoria(req, '2fa_falha', { ator, metadados: { motivo: 'codigo_incorreto' } });
-    return res.status(400).json({ error: 'Código incorreto.' });
-  }
-
-  // Marcar o uso e abrir a sessão acontecem com a linha do usuário travada. Uma troca de senha em
-  // andamento termina antes, e o desafio criado antes dela já não vale; ou espera esta transação,
-  // e a revogação dela alcança a sessão aberta aqui.
   const sid = await emTransacao(async (client) => {
-    await client.query('SELECT 1 FROM users WHERE id = $1 FOR SHARE', [desafio.user_id]);
-    // Requisições paralelas com o código certo: só a primeira a marcar o uso abre sessão.
-    const usado = await client.query(
-      `UPDATE desafio_2fa d SET usado_em = now()
-         FROM users u
-        WHERE d.id = $1 AND d.usado_em IS NULL AND u.id = d.user_id
-          AND (u.sessao_invalidada_em IS NULL OR d.criado_em > u.sessao_invalidada_em)`,
-      [desafioId],
-    );
-    if (!usado.rowCount) return null;
-    if (confiar) emitirCookieDispositivo(res, await confiarNoDispositivo(req, desafio.user_id, client));
-    return abrirSessao(req, res, desafio.user_id, client);
+    if (!(await usarDesafio(client, desafioId, conferido.userId))) return null;
+    if (confiar) emitirCookieDispositivo(res, await confiarNoDispositivo(req, conferido.userId, client));
+    return abrirSessao(req, res, conferido.userId, client);
   });
   if (!sid) return res.status(400).json({ error: MSG_CODIGO_INVALIDO });
   await registrarAuditoria(req, '2fa_ok', { ator, alvoTipo: 'sessao', alvoId: sid });
@@ -198,47 +149,13 @@ authPsicologo.post('/psicologo/2fa/reenviar', limite(5), async (req, res) => {
   if (!parsed.success) return res.status(400).json({ error: 'Dados inválidos.' });
   const { desafioId } = parsed.data;
 
-  // O UPDATE reserva o intervalo de 60 s antes do envio; dois cliques seguidos geram um e-mail só.
-  // Só reenvia desafio ainda válido e nunca além de 30 min do login: reenviar não ressuscita
-  // um desafio expirado nem renova as tentativas para sempre.
-  const codigo = gerarCodigo();
-  const { rows } = await pool.query<{ email: string; reenviar_em: Date }>(
-    `UPDATE desafio_2fa d
-        SET codigo_hash = $2, tentativas = 0, reenviado_em = now(),
-            expira_em = LEAST(now() + interval '10 minutes', d.criado_em + interval '30 minutes')
-       FROM users u
-      WHERE d.id = $1 AND u.id = d.user_id AND d.usado_em IS NULL AND d.expira_em > now()
-        AND d.reenviado_em <= now() - interval '60 seconds'
-      RETURNING u.email, d.reenviado_em + interval '60 seconds' AS reenviar_em`,
-    [desafioId, hashCodigo(codigo, desafioId)],
-  );
-
-  if (!rows[0]) {
-    const { rows: pendente } = await pool.query<{ reenviar_em: Date }>(
-      `SELECT reenviado_em + interval '60 seconds' AS reenviar_em
-         FROM desafio_2fa WHERE id = $1 AND usado_em IS NULL AND expira_em > now()`,
-      [desafioId],
-    );
-    // Desafio vencido, usado ou inexistente: reenviar não adianta, o cliente precisa voltar ao login.
-    if (!pendente[0]) {
-      return res.status(400).json({
-        codigo: 'DESAFIO_EXPIRADO',
-        error: 'Este acesso expirou. Entre de novo para receber outro código.',
-      });
-    }
-    return res.status(429).json({
-      error: 'Aguarde um minuto antes de pedir um novo código.',
-      reenviarEm: pendente[0].reenviar_em.toISOString(),
-    });
-  }
-
   try {
-    await enviarCodigo(rows[0].email, codigo, ASSUNTO_2FA);
+    const { status, corpo } = await reenviarDesafio(desafioId, 'web');
+    return res.status(status).json(corpo);
   } catch (erroSmtp) {
     console.error('[SMTP Error] Falha ao reenviar o código de acesso:', resumoErroSmtp(erroSmtp));
     return res.status(502).json({ error: MSG_FALHA_ENVIO });
   }
-  return res.json({ reenviarEm: rows[0].reenviar_em.toISOString() });
 });
 
 // Renova a sessão: o refresh é de uso único e cada uso emite um novo (rotação).
