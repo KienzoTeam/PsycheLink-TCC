@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { Link, VisuallyHidden } from 'react-aria-components';
-import { EyeOff, SearchX, UserPlus } from 'lucide-react';
+import { Archive, EyeOff, SearchX, UserPlus } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Chip, ChipFiltro } from '../../components/ui/Chip';
 import { Emocoes } from '../../components/ui/Emocoes';
@@ -70,9 +70,14 @@ export default function Pacientes() {
 
   return (
     <section className={pagina.tela} aria-labelledby="titulo-tela">
-      <h1 id="titulo-tela" className={pagina.titulo}>
-        Pacientes
-      </h1>
+      <header className={pagina.cabecalho}>
+        <h1 id="titulo-tela" className={pagina.titulo}>
+          Pacientes
+        </h1>
+        <Button variante="text" icone={<Archive aria-hidden />} onPress={() => navigate('/pacientes/arquivadas')}>
+          Anotações arquivadas
+        </Button>
+      </header>
 
       <div className={css.filtros}>
         <TextField
