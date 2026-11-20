@@ -6,7 +6,10 @@ import type { Pool, PoolClient } from 'pg';
 import { pool } from '../db';
 import { emTransacao } from '../lib/contextoseguro';
 import { derrubarAcessosWeb } from '../lib/sessaoWeb';
-import { registroSchema, senhaSchema } from '../schemas';
+import { desafioSchema, doisFatoresSchema, registroSchema, senhaSchema } from '../schemas';
+import { registrarAuditoria } from '../lib/auditoria';
+import { conferirDesafio, criarDesafio, MSG_CODIGO_INVALIDO, reenviarDesafio, usarDesafio } from '../lib/desafio2fa';
+import { confiarNoDispositivo, dispositivoConfiavel } from '../lib/dispositivoConfiavel';
 import { HASH_REFERENCIA } from '../lib/hashReferencia';
 import { normalizarEmail } from '../lib/validarEmail';
 import { gerarCodigo, hashCodigo, codigoConfere } from '../lib/codigo';
@@ -383,7 +386,15 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
   }
 });
 
-// Login
+type Perfil = { id: number; nome: string; email: string; data_nascimento: string };
+
+// Token do app (1 dia) e o mesmo perfil do GET /me: o app entra sem mais uma ida e volta.
+const acessoApp = ({ id, nome, email, data_nascimento }: Perfil) => ({
+  token: jwt.sign({ id, email }, process.env.JWT_SECRET!, { expiresIn: '1d' }),
+  usuario: { id, nome, email, data_nascimento },
+});
+
+// Login do app, etapa 1: confere a senha e envia o código (ou entra direto num celular confiável).
 auth.post('/login', limite(10), async (req, res) => {
   const email = normalizarEmail(req.body.email);
   const { password } = req.body;
@@ -423,17 +434,53 @@ auth.post('/login', limite(10), async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { id: user.rows[0].id, email: user.rows[0].email },
-      process.env.JWT_SECRET!,
-      { expiresIn: '1d' },
-    );
-    // Mesmo perfil do GET /me: o app entra sem mais uma ida e volta.
-    const { id, nome, data_nascimento } = user.rows[0];
-    return res.json({ token, usuario: { id, nome, email: user.rows[0].email, data_nascimento } });
+    // Celular confiável (token do SecureStore no cabeçalho): a senha já conferiu, entra sem código.
+    const conta = user.rows[0];
+    if (await dispositivoConfiavel(conta.id, req.get('x-dispositivo'))) return res.json(acessoApp(conta));
+    try {
+      return res.json(await criarDesafio(conta.id, conta.email, 'app'));
+    } catch (erroSmtp) {
+      console.error('[SMTP Error] Falha ao entregar o código de acesso:', resumoErroSmtp(erroSmtp));
+      return res.status(502).json({ error: 'Não foi possível enviar o código. Tente novamente.' });
+    }
   } catch (err) {
     console.error('Erro ao logar:', err);
     return res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
+});
+
+// Login do app, etapa 2: confere o código e entrega o token (e o do celular, se pediu para confiar).
+auth.post('/2fa', limite(20), async (req, res) => {
+  const parsed = doisFatoresSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Dados inválidos.' });
+  const { desafioId, codigo, confiar } = parsed.data;
+
+  const conferido = await conferirDesafio(req, desafioId, codigo, 'app');
+  if ('erro' in conferido) return res.status(400).json({ error: conferido.erro });
+
+  const acesso = await emTransacao(async (client) => {
+    if (!(await usarDesafio(client, desafioId, conferido.userId))) return null;
+    const { rows } = await client.query<Perfil>(
+      'SELECT id, nome, email, data_nascimento FROM users WHERE id = $1',
+      [conferido.userId],
+    );
+    const dispositivo = confiar ? await confiarNoDispositivo(req, conferido.userId, client) : undefined;
+    return { ...acessoApp(rows[0]), dispositivo };
+  });
+  if (!acesso) return res.status(400).json({ error: MSG_CODIGO_INVALIDO });
+  await registrarAuditoria(req, '2fa_ok', { ator: { id: conferido.userId, papel: 'paciente' } });
+  return res.json(acesso);
+});
+
+auth.post('/2fa/reenviar', limite(5), async (req, res) => {
+  const parsed = desafioSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Dados inválidos.' });
+  try {
+    const { status, corpo } = await reenviarDesafio(parsed.data.desafioId, 'app');
+    return res.status(status).json(corpo);
+  } catch (erroSmtp) {
+    console.error('[SMTP Error] Falha ao reenviar o código de acesso:', resumoErroSmtp(erroSmtp));
+    return res.status(502).json({ error: 'Não foi possível enviar o código. Tente novamente.' });
   }
 });
 
