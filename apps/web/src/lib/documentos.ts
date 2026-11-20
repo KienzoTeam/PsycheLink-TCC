@@ -2,7 +2,7 @@
 // sistema mudar, o texto muda junto e a versão sobe (o aceite é registrado com a versão).
 
 // E-mail de suporte do projeto. Quando existir, é só preencher: os documentos passam a mostrá-lo.
-export const EMAIL_SUPORTE: string | null = null;
+export const EMAIL_SUPORTE: string | null = 'suporte.psychelink@gmail.com';
 
 export const VERSAO_DOCUMENTOS = '2026-11-20';
 export const DATA_DOCUMENTOS = '20 de novembro de 2026';

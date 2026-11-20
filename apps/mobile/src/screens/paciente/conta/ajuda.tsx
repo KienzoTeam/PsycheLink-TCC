@@ -8,6 +8,7 @@ import { useTheme } from '../../../theme/ThemeContext';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
 import { styles as base } from '../consentimento/styleConsentimento';
 import { vibrarLeve } from '../../../lib/hapticos';
+import { EMAIL_SUPORTE } from '../../../constants/contato';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Ajuda'>;
 
@@ -111,6 +112,21 @@ export default function Ajuda({ navigation }: Props) {
             </React.Fragment>
           ))}
         </View>
+
+        {EMAIL_SUPORTE && (
+          <TouchableOpacity
+            style={[cartao, local.pergunta]}
+            onPress={() => void Linking.openURL(`mailto:${EMAIL_SUPORTE}`)}
+            accessibilityRole="link"
+            accessibilityLabel={`Escrever para o suporte: ${EMAIL_SUPORTE}`}
+          >
+            <Feather name="mail" size={20} color={theme.colors.primary} />
+            <View style={local.textoPergunta}>
+              <Text style={[base.rotulo, { color: theme.colors.onSurface }]}>Fale com a equipe</Text>
+              <Text style={[base.descricao, { color: theme.colors.onSurfaceVariant }]}>{EMAIL_SUPORTE}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
 
         <Text style={[base.descricao, { color: theme.colors.onSurfaceVariant, textAlign: 'center' }]}>
           PsycheLink {Constants.expoConfig?.version ?? ''} · Trabalho de Conclusão de Curso
