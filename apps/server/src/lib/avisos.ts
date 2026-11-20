@@ -10,7 +10,8 @@ export const TIPOS_AVISO = {
   vinculo_encerrado: { rotulo: 'Um paciente encerrou o vínculo', email: true },
   conta_excluida: { rotulo: 'Um paciente pediu a exclusão da conta', email: true },
   escala_respondida: { rotulo: 'Escala respondida', email: false },
-  sos_usado: { rotulo: 'Um paciente abriu o SOS', email: true },
+  // E-mail desligado por padrão: o aviso não é pedido de atendimento e não deve parecer um.
+  sos_usado: { rotulo: 'Um paciente abriu o SOS', email: false },
   dados_esparsos: { rotulo: 'Paciente com poucos registros na semana', email: false },
   recomendacao_feita: { rotulo: 'Recomendação concluída', email: false },
 } as const;
