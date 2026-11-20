@@ -1,5 +1,6 @@
 import { pool } from '../db';
 import { registrarAuditoria } from './auditoria';
+import { avisarDadosEsparsos } from './avisos';
 
 export const DIAS_PARA_EXCLUIR = 30;
 
@@ -21,7 +22,10 @@ export async function excluirContasVencidas(): Promise<number> {
 
 /** Roda ao subir e a cada 6 h; o Render gratuito dorme, então também vale ao acordar. */
 export function agendarExclusoes() {
-  const rodar = () => excluirContasVencidas().catch((erro) => console.error('Erro ao excluir contas vencidas:', erro));
+  const rodar = () => {
+    excluirContasVencidas().catch((erro) => console.error('Erro ao excluir contas vencidas:', erro));
+    avisarDadosEsparsos().catch((erro) => console.error('Erro ao avisar dados esparsos:', erro));
+  };
   void rodar();
   setInterval(rodar, 6 * 60 * 60_000).unref();
 }
