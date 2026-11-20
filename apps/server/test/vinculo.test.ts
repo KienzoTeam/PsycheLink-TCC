@@ -307,6 +307,7 @@ describe('consentimento (paciente)', () => {
       habitos: false,
       escalas: false,
       diario: false,
+      sos: false,
       atualizadoEm: null,
       diarioCompartilhados: 0,
     });

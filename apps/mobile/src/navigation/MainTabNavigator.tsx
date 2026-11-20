@@ -80,7 +80,7 @@ export default function MainTabNavigator({ navigation, route }: NativeStackScree
           {montadas.has(0) && <HomePagina />}
         </View>
         <View key="dados" style={{ flex: 1 }}>
-          {montadas.has(1) && <DadosPagina />}
+          {montadas.has(1) && <DadosPagina ativa={ABAS[ativo].nome === 'Dados'} />}
         </View>
         <View key="escalas" style={{ flex: 1 }}>
           {montadas.has(2) && <EscalasPagina ativa={ABAS[ativo].nome === 'Escalas'} />}

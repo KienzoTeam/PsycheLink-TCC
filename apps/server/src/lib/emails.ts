@@ -128,3 +128,19 @@ export function emailDeAvisoCadastro() {
     }),
   };
 }
+
+// Aviso ao psicólogo (FP12): só o tipo do evento e o caminho para o painel. Nada do paciente.
+export function emailDeAviso(rotulo: string) {
+  const origem = process.env.WEB_ORIGINS?.split(',')[0]?.trim();
+  return {
+    assunto: `PsycheLink · ${rotulo}`,
+    ...montar({
+      titulo: rotulo,
+      paragrafos: [
+        'Há um aviso novo no seu painel do PsycheLink.',
+        origem ? `Entre em ${origem} para ver os detalhes.` : 'Entre no painel para ver os detalhes.',
+      ],
+      seguranca: 'Por sigilo, este e-mail não traz o nome nem dados do paciente. Você pode desligar estes e-mails em Minha área.',
+    }),
+  };
+}

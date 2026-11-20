@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { emailDeAvisoCadastro, emailDeCodigo, type TipoCodigo } from './emails';
+import { emailDeAviso, emailDeAvisoCadastro, emailDeCodigo, type TipoCodigo } from './emails';
 
 // Lidos ao carregar o módulo, como o transporte SMTP abaixo.
 const chaveBrevo = process.env.BREVO_API_KEY;
@@ -85,6 +85,12 @@ export async function enviarCodigo(email: string, codigo: number, tipo: TipoCodi
 // porque a resposta da API é igual à de um cadastro novo e não pode revelar a conta.
 export async function enviarAvisoCadastro(email: string): Promise<void> {
   const { assunto, texto, html } = emailDeAvisoCadastro();
+  if (transporteDeEmail() === 'console de dev') console.log(`[aviso] ${email} · ${assunto}`);
+  await enviar(email, assunto, texto, html);
+}
+
+export async function enviarAviso(email: string, rotulo: string): Promise<void> {
+  const { assunto, texto, html } = emailDeAviso(rotulo);
   if (transporteDeEmail() === 'console de dev') console.log(`[aviso] ${email} · ${assunto}`);
   await enviar(email, assunto, texto, html);
 }

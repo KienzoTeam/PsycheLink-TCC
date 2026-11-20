@@ -137,11 +137,19 @@ export default function VisaoGeral({ resumo, de, ate, comparar, onComparar }: Pr
   const { consentimentos: c } = resumo;
   const periodo: Periodo = { start: parseDate(de), end: parseDate(ate) };
   const porDia = new Map(resumo.registros.map((r) => [r.data, r]));
+  const mediaPorDia = new Map((resumo.mediaMovelHumor ?? []).map((m) => [m.data, m.valor]));
   const dias = diasEntre(de, ate).map((data) => {
     const r = porDia.get(data);
-    return { data, humor: r?.humor ?? null, ansiedade: r?.ansiedade ?? null, sono: r?.sonoHoras ?? null };
+    return {
+      data,
+      humor: r?.humor ?? null,
+      ansiedade: r?.ansiedade ?? null,
+      sono: r?.sonoHoras ?? null,
+      mediaMovel: mediaPorDia.get(data) ?? null,
+    };
   });
   const horarios = resumo.distribuicaoHorario;
+  const crises = resumo.crisesPorHorario;
   const correlacao = resumo.correlacaoSonoHumor;
 
   return (
@@ -160,8 +168,27 @@ export default function VisaoGeral({ resumo, de, ate, comparar, onComparar }: Pr
           consentido={c.humor}
           largo
         >
-          <LegendaSeries />
+          <LegendaSeries comMedia={resumo.mediaMovelHumor !== null} />
           <GraficoHumorAnsiedade dados={dias} />
+        </Bloco>
+
+        <Bloco
+          titulo="Ansiedade em relação à média"
+          apoio={
+            resumo.variacaoAnsiedade?.media != null
+              ? `Quanto cada registro ficou acima (positivo) ou abaixo (negativo) da média do período, ${formatarNumero(resumo.variacaoAnsiedade.media)} de 10.`
+              : 'Quanto cada registro ficou acima ou abaixo da média de ansiedade do período.'
+          }
+          consentido={c.humor}
+        >
+          {resumo.variacaoAnsiedade && resumo.variacaoAnsiedade.dias.length > 0 ? (
+            <GraficoColunas
+              nome="Diferença da média"
+              dados={resumo.variacaoAnsiedade.dias.map((d) => ({ rotulo: formatarDataCurta(d.data), valor: d.desvio }))}
+            />
+          ) : (
+            <p className={pagina.apoio}>Nenhum registro de ansiedade neste período.</p>
+          )}
         </Bloco>
 
         <Bloco titulo="Sono por dia" apoio="Horas de sono informadas pelo paciente." consentido={c.habitos}>
@@ -196,6 +223,38 @@ export default function VisaoGeral({ resumo, de, ate, comparar, onComparar }: Pr
           )}
         </Bloco>
 
+        <Bloco
+          titulo="Crises por horário"
+          apoio={
+            'Acessos ao SOS e check-ins com ansiedade de 7 a 10, pela faixa do dia em que aconteceram.' +
+            (crises.sos === null ? ' O paciente não compartilha o uso do SOS: só a ansiedade entra.' : '')
+          }
+          consentido={crises.sos !== null || crises.ansiedadeAlta !== null}
+        >
+          <GraficoColunas
+            nome="Crises"
+            poucas
+            dados={FAIXAS_HORARIO.map((f) => ({
+              rotulo: f.rotulo,
+              valor: (crises.sos?.[f.id] ?? 0) + (crises.ansiedadeAlta?.[f.id] ?? 0),
+            }))}
+          />
+        </Bloco>
+
+        <Bloco titulo="Uso do SOS" apoio="Dia e hora em que o paciente abriu o SOS. O que ele fez lá não é registrado." consentido={resumo.sos !== null}>
+          {resumo.sos?.length ? (
+            <ul className={css.diario}>
+              {resumo.sos.map((u, i) => (
+                <li key={`${u.data}-${u.hora}-${i}`}>
+                  <time dateTime={u.data}>{formatarDia(u.data)}</time>, {u.hora}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className={pagina.apoio}>Nenhum acesso ao SOS neste período.</p>
+          )}
+        </Bloco>
+
         <Bloco titulo="Hábitos" apoio="Dias com o hábito marcado sobre os dias com hábitos registrados." consentido={c.habitos}>
           {resumo.habitos && <Habitos habitos={resumo.habitos} />}
         </Bloco>
@@ -218,18 +277,20 @@ export default function VisaoGeral({ resumo, de, ate, comparar, onComparar }: Pr
 
         <Bloco
           titulo="Diário compartilhado"
-          apoio="O paciente escolhe, a cada check-in, se o texto daquele dia é compartilhado."
+          apoio="O paciente escolhe, a cada check-in ou entrada do diário, se o texto é compartilhado."
           largo
         >
           {resumo.diario.length === 0 ? (
             <p className={pagina.apoio}>Nenhum texto compartilhado neste período.</p>
           ) : (
             <ul className={css.diario}>
-              {resumo.diario.map((entrada) => (
-                <li key={entrada.data}>
+              {resumo.diario.map((entrada, i) => (
+                <li key={`${entrada.data}-${entrada.hora ?? ''}-${i}`}>
                   <figure className={css.entrada}>
                     <figcaption>
-                      Texto escrito pelo paciente em <time dateTime={entrada.data}>{formatarDia(entrada.data)}</time>
+                      {entrada.origem === 'avulso' ? 'Diário' : 'Check-in'} de{' '}
+                      <time dateTime={entrada.data}>{formatarDia(entrada.data)}</time>
+                      {entrada.hora && `, ${entrada.hora}`}
                     </figcaption>
                     <blockquote>{entrada.texto}</blockquote>
                   </figure>

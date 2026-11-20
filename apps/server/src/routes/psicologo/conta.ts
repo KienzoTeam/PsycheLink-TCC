@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { pool } from '../../db';
 import { registrarAuditoria } from '../../lib/auditoria';
 import { emTransacao } from '../../lib/contextoseguro';
-import { limite, rota } from '../../lib/rota';
+import { lerOuNegar, limite, rota } from '../../lib/rota';
 import { revogarDispositivos } from '../../lib/dispositivoConfiavel';
 import {
   derrubarAcessosWeb,
@@ -13,6 +13,7 @@ import {
   SESSAO_VIVA,
 } from '../../lib/sessaoWeb';
 import { contaSchema, exclusaoContaSchema, trocaSenhaSchema } from '../../schemas';
+import { perfilProfissional, perfilSchema, salvarPerfil } from '../../lib/perfilProfissional';
 
 export const conta = Router();
 
@@ -56,6 +57,23 @@ conta.patch(
       [parsed.data.nome, parsed.data.especialidade, req.user!.id],
     );
     return res.json(await perfilDe(res.locals.psicologoId));
+  }),
+);
+
+// Perfil profissional que o paciente vinculado vê no app.
+conta.get(
+  '/me/perfil',
+  limite(60),
+  rota(async (_req, res) => res.json(await perfilProfissional(res.locals.psicologoId))),
+);
+
+conta.put(
+  '/me/perfil',
+  limite(30),
+  rota(async (req, res) => {
+    const corpo = lerOuNegar(perfilSchema, req.body, res);
+    if (!corpo) return;
+    return res.json(await salvarPerfil(res.locals.psicologoId, corpo));
   }),
 );
 
