@@ -9,6 +9,7 @@ import {
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
 import { limparContatos } from '../lib/contatosConfianca';
+import { guardarDispositivo, lerDispositivo } from '../lib/dispositivoConfiavel';
 import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,tokenEmMemoria,} from '../lib/authToken';
 
 export type UsuarioAutenticado = {
@@ -176,10 +177,19 @@ export function useAuth() {
     }
   };
 
+  // Token salvo e perfil já em mãos: a sessão começa sem o GET /auth/me.
+  const abrirSessaoApp = async (token: string, usuarioNovo: UsuarioAutenticado) => {
+    novaVersaoSessao();
+    await salvarTokenSeguro(token);
+    atualizarUsuarioCompartilhado(usuarioNovo);
+    sessaoInicializada = true;
+  };
+
   const login = async (
     email: string,
     senha: string,
     onEmailNaoVerificado?: () => void,
+    onCodigo?: (desafio: { desafioId: string; emailMascarado: string }) => void,
   ) => {
     if (!email.trim()) {
       Alert.alert('Campo faltando', 'Digite seu e-mail para continuar.');
@@ -195,17 +205,19 @@ export function useAuth() {
     try {
       atualizarUsuarioCompartilhado(null);
 
-      const response = await api.post('/auth/login', {
-        email: email.trim(),
-        password: senha,
-      });
+      const dispositivo = await lerDispositivo();
+      const response = await api.post(
+        '/auth/login',
+        { email: email.trim(), password: senha },
+        { headers: dispositivo ? { 'x-dispositivo': dispositivo } : undefined },
+      );
 
-      // O login já devolve o perfil: sem o GET /auth/me em seguida.
-      const { token, usuario } = response.data;
-      novaVersaoSessao();
-      await salvarTokenSeguro(token);
-      atualizarUsuarioCompartilhado(usuario);
-      sessaoInicializada = true;
+      // Sem celular confiável, a API manda o código por e-mail (2FA) e a tela do código conclui.
+      if (response.data.desafioId) {
+        onCodigo?.(response.data);
+        return;
+      }
+      await abrirSessaoApp(response.data.token, response.data.usuario);
     } catch (error: any) {
       if (
         error.response?.status === 403 &&
@@ -322,6 +334,35 @@ export function useAuth() {
     }
   };
 
+  // Login, etapa 2. 'expirado': o desafio acabou e é preciso entrar de novo.
+  const confirmarLogin = async (
+    desafioId: string,
+    codigo: string,
+    confiar: boolean,
+  ): Promise<'ok' | 'erro' | 'expirado'> => {
+    try {
+      const { data } = await api.post('/auth/2fa', { desafioId, codigo, confiar });
+      if (data.dispositivo) await guardarDispositivo(data.dispositivo);
+      await abrirSessaoApp(data.token, data.usuario);
+      return 'ok';
+    } catch (error: any) {
+      const mensagem: string = error.response?.data?.error || 'Confira os dígitos e tente novamente.';
+      Alert.alert('Código não verificado', mensagem);
+      return mensagem.startsWith('Código inválido ou expirado') ? 'expirado' : 'erro';
+    }
+  };
+
+  const reenviarCodigoLogin = async (desafioId: string): Promise<'ok' | 'erro' | 'expirado'> => {
+    try {
+      await api.post('/auth/2fa/reenviar', { desafioId });
+      Alert.alert('Verifique seu e-mail', 'Enviamos um novo código.');
+      return 'ok';
+    } catch (error: any) {
+      Alert.alert('Não foi possível reenviar', error.response?.data?.error || 'Tente novamente em instantes.');
+      return error.response?.data?.codigo === 'DESAFIO_EXPIRADO' ? 'expirado' : 'erro';
+    }
+  };
+
   const reenviarCodigo = async (email: string): Promise<boolean> => {
     try {
       await api.post('/auth/reenviar-codigo', { email: email.trim() });
@@ -413,7 +454,9 @@ export function useAuth() {
     login,
     registro,
     confirmarEmail,
+    confirmarLogin,
     reenviarCodigo,
+    reenviarCodigoLogin,
     solicitarRedefinicao,
     confirmarCodigoRedefinicao,
     redefinirSenha,

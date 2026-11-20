@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, TextInputInstance } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Switch, TextInputInstance } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
@@ -15,7 +15,8 @@ export default function VerificarCodigo({ navigation, route }: Props) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { email, modo } = route.params;
-  const { confirmarEmail, confirmarCodigoRedefinicao, reenviarCodigo } = useAuth();
+  const { confirmarEmail, confirmarCodigoRedefinicao, confirmarLogin, reenviarCodigo, reenviarCodigoLogin } = useAuth();
+  const [confiar, setConfiar] = useState(false);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [enviando, setEnviando] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -84,6 +85,15 @@ export default function VerificarCodigo({ navigation, route }: Props) {
 
     setEnviando(true);
 
+    // 2FA do login: com o token salvo, o AppNavigator troca para o app sozinho.
+    if (route.params.modo === 'login') {
+      const resultado = await confirmarLogin(route.params.desafioId, completo, confiar);
+      setEnviando(false);
+      if (resultado === 'expirado') return navigation.goBack();
+      if (resultado === 'erro') limpar();
+      return;
+    }
+
     if (modo === 'cadastro') {
       const ok = await confirmarEmail(email, completo);
       setEnviando(false);
@@ -103,6 +113,12 @@ export default function VerificarCodigo({ navigation, route }: Props) {
     if (cooldown > 0) return;
     // Trava já no toque: esperar a resposta deixava um segundo toque reenviar.
     setCooldown(60);
+    if (route.params.modo === 'login') {
+      const resultado = await reenviarCodigoLogin(route.params.desafioId);
+      if (resultado === 'expirado') return navigation.goBack();
+      if (resultado === 'erro') setCooldown(0);
+      return;
+    }
     const ok = await reenviarCodigo(email);
     if (!ok) setCooldown(0);
   };
@@ -124,13 +140,18 @@ export default function VerificarCodigo({ navigation, route }: Props) {
         <Text style={[styles.backText, { color: theme.colors.primary }]}>{'< Voltar'}</Text>
       </TouchableOpacity>
 
-      <View style={styles.stepsContainer}>
-        <View style={[styles.stepDot, { backgroundColor: theme.colors.primary }]} />
-        <View style={[styles.stepDotActive, { backgroundColor: theme.colors.primary }]} />
-        <View style={[styles.stepDot, { backgroundColor: theme.colors.outline }]} />
-      </View>
+      {/* As etapas são do cadastro e da recuperação; o login tem uma só. */}
+      {modo !== 'login' && (
+        <View style={styles.stepsContainer}>
+          <View style={[styles.stepDot, { backgroundColor: theme.colors.primary }]} />
+          <View style={[styles.stepDotActive, { backgroundColor: theme.colors.primary }]} />
+          <View style={[styles.stepDot, { backgroundColor: theme.colors.outline }]} />
+        </View>
+      )}
 
-      <Text style={[styles.title, { color: theme.colors.onBackground }]}>Verifique seu e-mail</Text>
+      <Text style={[styles.title, { color: theme.colors.onBackground }]}>
+        {modo === 'login' ? 'Código de acesso' : 'Verifique seu e-mail'}
+      </Text>
 
       <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
         Enviamos um código de 6 dígitos para{'\n'}
@@ -162,6 +183,27 @@ export default function VerificarCodigo({ navigation, route }: Props) {
         ))}
       </View>
 
+      {modo === 'login' && (
+        <View style={estilos.confiar}>
+          <Text
+            style={[estilos.confiarTexto, { color: theme.colors.onSurface }]}
+            onPress={() => setConfiar((atual) => !atual)}
+            maxFontSizeMultiplier={1.4}
+          >
+            Confiar neste celular por 30 dias
+          </Text>
+          <Switch
+            value={confiar}
+            onValueChange={setConfiar}
+            accessibilityLabel="Confiar neste celular por 30 dias"
+            accessibilityHint="Nos próximos logins, só a senha será pedida"
+            trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
+            thumbColor={confiar ? theme.colors.onPrimary : theme.colors.outline}
+            ios_backgroundColor={theme.colors.surfaceVariant}
+          />
+        </View>
+      )}
+
       <CustomButton
         title={enviando ? 'Verificando...' : 'Verificar código'}
         onPress={handleVerificar}
@@ -192,3 +234,15 @@ export default function VerificarCodigo({ navigation, route }: Props) {
     </ScrollView>
   );
 }
+
+const estilos = StyleSheet.create({
+  confiar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+    minHeight: 48,
+    marginBottom: 16,
+  },
+  confiarTexto: { flex: 1, fontSize: 16 },
+});
