@@ -5,6 +5,9 @@ import { useCompacto } from '../lib/useCompacto';
 import { buscarMe } from '../lib/psicologoApi';
 import { FormularioAcesso } from './auth/FormularioAcesso';
 import { RecuperarSenha } from './auth/RecuperarSenha';
+// Fontes da identidade (só nesta tela): Cormorant Garamond no nome, Outfit no slogan.
+import '@fontsource/cormorant-garamond/latin-600.css';
+import '@fontsource/outfit/latin-400.css';
 import css from './Auth.module.css';
 
 export function Auth() {
@@ -27,9 +30,7 @@ export function Auth() {
     <div className={css.pagina} data-compacto={compacto}>
       <header className={css.marca}>
         <div className={css.marcaConteudo}>
-          <span className={css.logo}>
-            <img src="/Psychelink.png" alt="" className={css.logoImagem} />
-          </span>
+          <img src="/logo-arvore.png" alt="" className={css.logo} />
           <div className={css.textos}>
             <h1 className={css.nome}>PsycheLink</h1>
             <p className={css.slogan}>O acompanhamento entre as sessões.</p>

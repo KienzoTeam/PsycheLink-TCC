@@ -213,7 +213,7 @@ Verificação complementar: axe-core (wcag2a, wcag2aa, wcag21aa, best-practice) 
 
 ## Typography
 
-**Fonte:** Google Sans Flex variável (`@fontsource-variable/google-sans-flex/wght.css`: só o eixo wght, ~52 KB no latim), com `system-ui` como reserva. Decisão do grupo (18/11): a interface segue o M3 Expressive; Cormorant Garamond + Outfit ficam só na identidade visual (logo, slides). A variante enfática do M3E muda só o peso: Medium (500), e Bold (700) em título médio/pequeno e rótulos.
+**Fonte:** Google Sans Flex variável (`@fontsource-variable/google-sans-flex/wght.css`: só o eixo wght, ~52 KB no latim), com `system-ui` como reserva. Decisão do grupo (18/11): a interface segue o M3 Expressive; Cormorant Garamond + Outfit ficam só na identidade visual (logo, slides, painel da tela de entrada, e-mails). A variante enfática do M3E muda só o peso: Medium (500), e Bold (700) em título médio/pequeno e rótulos.
 
 **Character:** neutra e legível, com a ênfase vindo de peso e largura, não de uma segunda família.
 
@@ -286,7 +286,7 @@ Em `src/components/ui/`, com react-aria-components por baixo onde há primitivo 
 - **DateRangePicker** (presets de 7, 30 e 90 dias sempre visíveis, mais campo com calendário, pt-BR via `I18nProvider`) e **Calendar** (célula de 44px, hoje com contorno, intervalo em faixa).
 
 ### Entrada (`src/rotas/Auth.tsx`)
-Tela dividida em tela cheia, do wireframe. Painel de marca à esquerda em `container-alto` (logo em um quadrado `container-minimo`, nome em `display-medio-enfatico`, slogan em `titulo-grande`) e formulário à direita, centrado em `--largura-formulario`. O conteúdo da marca entra deslizando da esquerda com desfoque, sem fade (a opacidade fica em 1); com `prefers-reduced-motion` a entrada é instantânea. Abaixo de 820px a marca vira faixa no topo (logo de `--tamanho-logo-faixa`, nome e slogan ao lado) e o formulário ocupa o resto.
+Tela dividida em tela cheia, do wireframe. Painel de marca à esquerda em `container-alto` (árvore solta, sem fundo, `public/logo-arvore.png` = `Psychelink.png` sem a margem transparente, com `--tamanho-logo` de largura; nome em Cormorant Garamond 600 no tamanho `display-grande`, slogan em Outfit no tamanho `titulo-grande`: as fontes da identidade só nesta tela, via `--fonte-marca` e `--fonte-marca-texto`) e formulário à direita, centrado em `--largura-formulario`. O conteúdo da marca entra deslizando da esquerda com desfoque, sem fade (a opacidade fica em 1); com `prefers-reduced-motion` a entrada é instantânea. Abaixo de 820px a marca vira faixa no topo (logo de `--tamanho-logo-faixa`, nome e slogan ao lado) e o formulário ocupa o resto.
 - **Login/Cadastro**: o `SegmentedControl` troca o modo; nome, data de nascimento, CRP, especialidade e confirmação de senha vivem em `Colapsavel`. Campos ocultos não validam (o schema do modo ativo é o único usado). Erros por campo ligados por `aria-describedby`, foco no primeiro inválido ao enviar. Erro de servidor aparece em um aviso `role="alert"` acima do botão.
 - **Verificação de código** (`rotas/auth/VerificacaoCodigo.tsx`): um só `Dialog` para a verificação em 2 etapas, a confirmação de e-mail do cadastro e o código de recuperação de senha. Envia sozinho ao completar 6 dígitos; erro limpa as caixas e devolve o foco à primeira; contagem "Reenviar em m:ss" até liberar o botão.
 - **Recuperar senha**: mesmo painel, com "Voltar ao login"; e-mail, diálogo do código e nova senha. O aviso de sucesso volta ao login pelo `Toast`.
