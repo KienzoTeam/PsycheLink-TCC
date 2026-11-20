@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { registrarAuditoria } from '../../lib/auditoria';
+import { avisarPsicologoDoPaciente } from '../../lib/avisos';
 import { comContextoPaciente } from '../../lib/contextoseguro';
 import { lerSeguro } from '../../lib/checkins';
 import { criptografar } from '../../lib/criptografia';
@@ -144,6 +145,7 @@ escalas.post(
       alvoId: id,
       metadados: { sigla: resultado.sigla },
     });
+    void avisarPsicologoDoPaciente(pacienteId, 'escala_respondida');
     return res.json({ scoreTotal: resultado.scoreTotal, subscores: resultado.subscores });
   }),
 );
