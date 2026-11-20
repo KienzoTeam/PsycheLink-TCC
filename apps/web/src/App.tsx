@@ -9,6 +9,7 @@ import { Auth } from './rotas/Auth';
 const Inicio = lazy(() => import('./rotas/inicio/Inicio'));
 const Pacientes = lazy(() => import('./rotas/pacientes/Pacientes'));
 const Perfil = lazy(() => import('./rotas/pacientes/Perfil'));
+const Arquivadas = lazy(() => import('./rotas/pacientes/Arquivadas'));
 const Checkins = lazy(() => import('./rotas/checkins/Checkins'));
 const Vinculo = lazy(() => import('./rotas/vinculo/Vinculo'));
 const Escalas = lazy(() => import('./rotas/escalas/Escalas'));
@@ -33,6 +34,7 @@ export default function App() {
             <Route element={<AreaProtegida />}>
               <Route path="inicio" element={<Inicio />} />
               <Route path="pacientes" element={<Pacientes />} />
+              <Route path="pacientes/arquivadas" element={<Arquivadas />} />
               <Route path="pacientes/:id" element={<Perfil />} />
               <Route path="checkins" element={<Checkins />} />
               <Route path="vinculo" element={<Vinculo />} />

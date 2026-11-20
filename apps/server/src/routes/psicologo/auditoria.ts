@@ -17,6 +17,7 @@ const ROTULOS = {
   sessao_reuso_detectado: 'Sessão revogada por reuso de credencial',
   sessoes_encerradas: 'Outras sessões encerradas',
   senha_alterada: 'Senha alterada',
+  documentos_aceitos: 'Documentos aceitos no cadastro',
   paciente_painel_visualizado: 'Painel do paciente visualizado',
   checkin_visualizado: 'Registro de check-in visualizado',
   anotacao_criada: 'Anotação criada',

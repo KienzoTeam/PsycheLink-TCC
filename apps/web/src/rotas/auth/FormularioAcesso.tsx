@@ -20,6 +20,8 @@ import {
 } from '../../lib/authApi';
 import { codigoDeErro, mensagemDeErro } from '../../lib/erros';
 import { CampoForm } from './CampoForm';
+import { AceiteDocumentos } from './AceiteDocumentos';
+import { VERSAO_DOCUMENTOS } from '../../lib/documentos';
 import { esquemaCadastro, esquemaLogin, mascararData, resolverZod, VALORES_VAZIOS, type Valores } from './validacao';
 import { VerificacaoCodigo } from './VerificacaoCodigo';
 import css from './Formulario.module.css';
@@ -85,7 +87,15 @@ export function FormularioAcesso({ email, aoRecuperarSenha }: Props) {
   }
 
   async function criarConta({ nome, email, password, dataNascimento, crp, especialidade }: Valores) {
-    await cadastrar({ nome, email, password, dataNascimento, crp, especialidade: especialidade || undefined });
+    await cadastrar({
+      nome,
+      email,
+      password,
+      dataNascimento,
+      crp,
+      especialidade: especialidade || undefined,
+      aceites: { versao: VERSAO_DOCUMENTOS },
+    });
     abrir({ tipo: 'email', email, reenviarEm: Date.now() + ESPERA_REENVIO_MS });
   }
 
@@ -183,6 +193,7 @@ export function FormularioAcesso({ email, aoRecuperarSenha }: Props) {
         </div>
         <Colapsavel aberto={cadastro}>
           <CampoForm senha control={control} nome="confirmacao" rotulo="Confirmar senha" autoComplete="new-password" />
+          <AceiteDocumentos control={control} />
         </Colapsavel>
         <Colapsavel aberto={!cadastro}>
           <div className={css.esqueci}>

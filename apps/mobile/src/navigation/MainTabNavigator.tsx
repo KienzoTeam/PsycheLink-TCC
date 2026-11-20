@@ -80,16 +80,16 @@ export default function MainTabNavigator({ navigation, route }: NativeStackScree
           {montadas.has(0) && <HomePagina />}
         </View>
         <View key="dados" style={{ flex: 1 }}>
-          {montadas.has(1) && <DadosPagina />}
+          {montadas.has(1) && <DadosPagina ativa={ABAS[ativo].nome === 'Dados'} />}
         </View>
         <View key="escalas" style={{ flex: 1 }}>
           {montadas.has(2) && <EscalasPagina ativa={ABAS[ativo].nome === 'Escalas'} />}
         </View>
         <View key="bem-estar" style={{ flex: 1 }}>
-          {montadas.has(3) && <BemEstarPagina onVoltar={voltarParaInicio} />}
+          {montadas.has(3) && <BemEstarPagina onVoltar={voltarParaInicio} ativa={ABAS[ativo].nome === 'Bem Estar'} />}
         </View>
         <View key="sos" style={{ flex: 1 }}>
-          {montadas.has(4) && <SOSPagina />}
+          {montadas.has(4) && <SOSPagina ativa={ABAS[ativo].nome === 'SOS'} />}
         </View>
       </PagerView>
 

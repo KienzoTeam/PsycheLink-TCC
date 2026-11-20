@@ -1,0 +1,100 @@
+.ancora {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Selo grande do M3: 16dp de altura, cantos totais, sobre o canto do ícone. */
+.selo {
+  position: absolute;
+  inset-block-start: var(--espaco-4);
+  inset-inline-end: var(--espaco-4);
+  min-width: 16px;
+  height: 16px;
+  padding-inline: var(--espaco-4);
+  border-radius: var(--forma-total);
+  background: var(--cor-erro);
+  color: var(--cor-sobre-erro);
+  font: var(--tipo-rotulo-pequeno);
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.popover {
+  width: min(360px, calc(100vw - 2 * var(--espaco-16)));
+  max-height: min(480px, 70vh);
+  overflow: auto;
+  border: var(--largura-borda) solid var(--cor-contorno-variante);
+  border-radius: var(--forma-md);
+  background: var(--cor-cartao);
+  box-shadow: var(--sombra-overlay);
+  transform-origin: var(--trigger-anchor-point);
+  transition:
+    opacity var(--duracao-efeitos-padrao) var(--mola-efeitos-padrao),
+    scale var(--duracao-espacial-padrao) var(--mola-espacial-padrao);
+}
+
+.popover[data-entering],
+.popover[data-exiting] {
+  opacity: 0;
+  scale: var(--escala-entrada);
+}
+
+.dialogo {
+  display: grid;
+  gap: var(--espaco-8);
+  padding: var(--espaco-12);
+  outline: none;
+}
+
+.titulo {
+  padding-inline: var(--espaco-8);
+  font: var(--tipo-titulo-medio);
+}
+
+.vazio {
+  padding: var(--espaco-8);
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+}
+
+.lista {
+  display: grid;
+  gap: var(--espaco-4);
+}
+
+.item {
+  display: grid;
+  gap: var(--espaco-4);
+  width: 100%;
+  min-height: var(--alvo-minimo);
+  padding: var(--espaco-8);
+  border: 0;
+  border-radius: var(--forma-sm);
+  background: none;
+  color: var(--cor-sobre-superficie);
+  text-align: start;
+  cursor: pointer;
+}
+
+.item:disabled {
+  cursor: default;
+}
+
+.item:not(:disabled):hover {
+  background: var(--cor-container-alto);
+}
+
+/* Não lido: o rótulo fica enfático. */
+.item[data-nova] .rotulo {
+  font: var(--tipo-corpo-grande-enfatico);
+}
+
+.rotulo {
+  font: var(--tipo-corpo-grande);
+}
+
+.detalhe {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+}

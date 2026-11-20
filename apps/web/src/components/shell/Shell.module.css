@@ -57,3 +57,7 @@
 .shell[data-compacto='true'] .conteudo {
   padding-inline: var(--espaco-16);
 }
+
+.fimTopo {
+  display: inline-flex;
+}
