@@ -221,6 +221,31 @@ export const listarAnotacoes = async (id: number) =>
 export const criarAnotacao = async (id: number, conteudo: string) =>
   instanteDaAnotacao((await api.post<{ anotacao: Anotacao }>(`/psicologo/pacientes/${id}/anotacoes`, { conteudo })).data.anotacao);
 
+export type ExercicioCatalogo = { id: string; titulo: string };
+
+export type Recomendacao = {
+  id: number;
+  exercicioId: string | null;
+  titulo: string;
+  descricao: string | null;
+  nota: string | null;
+  criadoEm: string;
+  feitoEm: string | null;
+  canceladoEm: string | null;
+};
+
+export type NovaRecomendacao = { exercicioId: string; nota: string } | { titulo: string; descricao: string; nota: string };
+
+export const listarExercicios = async () => (await api.get<{ exercicios: ExercicioCatalogo[] }>('/psicologo/exercicios')).data.exercicios;
+
+export const listarRecomendacoes = async (id: number) =>
+  (await api.get<{ recomendacoes: Recomendacao[] }>(`/psicologo/pacientes/${id}/recomendacoes`)).data.recomendacoes;
+
+export const criarRecomendacao = (id: number, dados: NovaRecomendacao) => api.post(`/psicologo/pacientes/${id}/recomendacoes`, dados);
+
+export const cancelarRecomendacao = (id: number, recomendacaoId: number) =>
+  api.delete(`/psicologo/pacientes/${id}/recomendacoes/${recomendacaoId}`);
+
 export const encerrarVinculo = (id: number) => api.post(`/psicologo/pacientes/${id}/encerrar-vinculo`);
 
 export const listarCheckins = async (filtro: FiltroCheckins, cursor?: string) =>
