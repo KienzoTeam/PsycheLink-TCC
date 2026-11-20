@@ -18,7 +18,7 @@ export type LinhaDetalhe = {
   habitos: Habitos | null; // null quando não há registro em `habito`
 };
 
-const faixaDoDia = (horario: string) => {
+export const faixaDoDia = (horario: string) => {
   const hora = Number(horario.slice(0, 2));
   if (hora < 6) return 'madrugada';
   if (hora < 12) return 'manha';
