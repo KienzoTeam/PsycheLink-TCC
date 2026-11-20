@@ -266,6 +266,17 @@ describe('redefinição de senha', () => {
     });
   };
 
+  it('recusa senha fraca na redefinição', async () => {
+    const psicologo = await criarPsicologo();
+    const tokenReset = jwt.sign({ email: psicologo.email, tipo: 'redefinicao' }, process.env.JWT_SECRET!, { expiresIn: '10m' });
+    const res = await criarCliente(servidor.url).requisitar('POST', '/auth/redefinir-senha', {
+      corpo: { token: tokenReset, password: 'Senha@123' },
+      origem: null,
+    });
+    assert.equal(res.status, 400);
+    assert.match(JSON.stringify(await res.json()), /Senha fácil de adivinhar/);
+  });
+
   it('revoga todas as sessões web da conta', async () => {
     const psicologo = await criarPsicologo();
     const [a, b] = [await entrar(servidor.url, psicologo), await entrar(servidor.url, psicologo)];
@@ -347,6 +358,7 @@ describe('conta do psicólogo', () => {
 
     assert.equal((await troca('senha-errada', 'NovaSenha!12345')).status, 400);
     assert.equal((await troca(psicologo.senha, 'curta')).status, 400);
+    assert.equal((await troca(psicologo.senha, 'Senha@123')).status, 400);
     assert.equal((await outra.requisitar('GET', '/psicologo/me')).status, 200);
 
     const pendente = await desafioPendente(psicologo);
