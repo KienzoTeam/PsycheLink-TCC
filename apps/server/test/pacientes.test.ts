@@ -535,11 +535,14 @@ describe('GET /psicologo/dashboard', () => {
   it('traz vinculados, série diária, check-ins recentes, atividade, dados insuficientes e médias', async () => {
     const corpo = await obter(D, '/psicologo/dashboard');
     assert.deepEqual(Object.keys(corpo).sort(), [
+      'alertas',
       'atividadeRecente',
       'checkinsRecentes',
       'consultasHoje',
       'dadosInsuficientes',
+      'engajamento',
       'escalas',
+      'insightsSemana',
       'medias',
       'pacientesVinculados',
       'serieVinculos',
