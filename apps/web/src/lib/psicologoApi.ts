@@ -213,6 +213,14 @@ export const listarLinhaDoTempo = async (id: number, params: { de: string; ate: 
 // O servidor devolve 'YYYY-MM-DD HH:mm' sem fuso, em UTC: vira ISO para formatar como os demais instantes.
 const instanteDaAnotacao = (a: Anotacao): Anotacao => ({ ...a, criadoEm: `${a.criadoEm.replace(' ', 'T')}:00Z` });
 
+export type GrupoArquivado = { pacienteId: number | null; nome: string | null; encerradoEm: string | null; anotacoes: Anotacao[] };
+
+export const listarArquivadas = async () =>
+  (await api.get<{ pacientes: GrupoArquivado[] }>('/psicologo/anotacoes-arquivadas')).data.pacientes.map((g) => ({
+    ...g,
+    anotacoes: g.anotacoes.map(instanteDaAnotacao),
+  }));
+
 export const listarAnotacoes = async (id: number) =>
   (await api.get<{ anotacoes: Anotacao[] }>(`/psicologo/pacientes/${id}/anotacoes`)).data.anotacoes.map(
     instanteDaAnotacao,
