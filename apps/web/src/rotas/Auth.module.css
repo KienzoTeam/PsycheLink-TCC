@@ -1,6 +1,5 @@
 .pagina {
-  --lado-logo: var(--tamanho-logo);
-  --forma-logo: var(--forma-xl);
+  --largura-logo: var(--tamanho-logo);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   min-height: 100dvh;
@@ -22,7 +21,7 @@
 .marcaConteudo {
   display: grid;
   justify-items: start;
-  gap: var(--espaco-24);
+  gap: var(--espaco-8);
   width: min(var(--largura-marca), 100%);
   animation: entrar-da-esquerda var(--duracao-espacial-lenta) var(--mola-espacial-lenta) both;
 }
@@ -35,21 +34,10 @@
 }
 
 .logo {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: var(--lado-logo);
-  aspect-ratio: 1;
-  border-radius: var(--forma-logo);
-  background: var(--cor-fundo-logo);
-}
-
-.logoImagem {
   display: block;
-  width: 100%;
-  height: 100%;
-  padding: var(--espaco-8);
-  object-fit: contain;
+  flex-shrink: 0;
+  width: var(--largura-logo);
+  height: auto;
 }
 
 .textos {
@@ -58,12 +46,15 @@
 }
 
 .nome {
-  font: var(--tipo-display-medio-enfatico);
+  font: var(--tipo-display-grande-enfatico);
+  font-family: var(--fonte-marca);
+  font-weight: 600;
 }
 
 .slogan {
   color: var(--cor-sobre-superficie-variante);
   font: var(--tipo-titulo-grande);
+  font-family: var(--fonte-marca-texto);
 }
 
 .painel {
@@ -90,8 +81,7 @@
 
 /* Abaixo do breakpoint a marca vira faixa no topo e o formulário ocupa o resto. */
 .pagina[data-compacto='true'] {
-  --lado-logo: var(--tamanho-logo-faixa);
-  --forma-logo: var(--forma-md);
+  --largura-logo: var(--tamanho-logo-faixa);
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
 }
@@ -111,11 +101,14 @@
 }
 
 .pagina[data-compacto='true'] .nome {
-  font: var(--tipo-titulo-grande-enfatico);
+  font: var(--tipo-headline-pequeno-enfatico);
+  font-family: var(--fonte-marca);
+  font-weight: 600;
 }
 
 .pagina[data-compacto='true'] .slogan {
   font: var(--tipo-corpo-medio);
+  font-family: var(--fonte-marca-texto);
 }
 
 .pagina[data-compacto='true'] .painel {

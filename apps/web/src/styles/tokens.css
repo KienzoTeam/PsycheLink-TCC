@@ -74,7 +74,6 @@
   /* Card elevado: o container mais claro que o fundo nos dois temas (mobile: surfaceContainer). */
   --cor-cartao: light-dark(#ffffff, var(--paleta-surface0));
   /* O logo tem traço escuro: o tile fica claro nos dois temas, como o ícone do app. */
-  --cor-fundo-logo: #ffffff;
 
   --cor-inversa: light-dark(var(--paleta-text), var(--paleta-text));
   --cor-sobre-inversa: light-dark(var(--paleta-base), var(--paleta-base));
@@ -120,6 +119,9 @@
 
   /* Tipografia M3. Cada papel é um atalho `font`; a variante enfática (M3 Expressive) só muda o peso. */
   --fonte: 'Google Sans Flex Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Identidade da marca (logo, tela de entrada): o resto da interface usa --fonte. */
+  --fonte-marca: 'Cormorant Garamond', Georgia, serif;
+  --fonte-marca-texto: 'Outfit', var(--fonte);
   --tipo-display-grande: 400 clamp(2.5rem, 1.4rem + 4.4vw, 3.5625rem) / 1.125 var(--fonte);
   --tipo-display-medio: 400 clamp(2.25rem, 1.5rem + 3vw, 2.8125rem) / 1.15 var(--fonte);
   --tipo-display-pequeno: 400 2.25rem / 2.75rem var(--fonte);
@@ -180,8 +182,8 @@
   --largura-conteudo: 75rem;
   --largura-formulario: 26rem;
   --largura-marca: 28rem;
-  --tamanho-logo: 8rem;
-  --tamanho-logo-faixa: 3.5rem;
+  --tamanho-logo: 13rem;
+  --tamanho-logo-faixa: 4.5rem;
   --largura-borda: 1px;
   --largura-borda-forte: 2px;
   --altura-scrollfade: 4rem;
