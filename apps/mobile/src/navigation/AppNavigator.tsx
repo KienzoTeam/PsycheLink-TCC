@@ -19,6 +19,9 @@ import Consultas from '../screens/paciente/consultas/consultas';
 import ResponderEscala from '../screens/paciente/escalas/responderEscala';
 import Consentimento from '../screens/paciente/consentimento/consentimento';
 import SOS from '../screens/paciente/sos/sos';
+import ConfiguracoesConta from '../screens/paciente/conta/configuracoesConta';
+import Privacidade from '../screens/paciente/conta/privacidade';
+import Ajuda from '../screens/paciente/conta/ajuda';
 import Diario from '../screens/paciente/diario/diario';
 import Historico from '../screens/paciente/historico/historico';
 import Notificacoes from '../screens/paciente/notificacoes/notificacoes';
@@ -39,6 +42,9 @@ export type RootStackParamList = {
   Consultas: undefined;
   ResponderEscala: { aplicacaoId: number };
   Consentimento: undefined;
+  ConfiguracoesConta: undefined;
+  Privacidade: undefined;
+  Ajuda: undefined;
   Diario: undefined;
   Historico: undefined;
   Notificacoes: undefined;
@@ -111,6 +117,9 @@ export default function AppNavigator() {
             <Stack.Screen name="Consultas" component={Consultas} />
             <Stack.Screen name="ResponderEscala" component={ResponderEscala} />
             <Stack.Screen name="Consentimento" component={Consentimento} />
+            <Stack.Screen name="ConfiguracoesConta" component={ConfiguracoesConta} />
+            <Stack.Screen name="Privacidade" component={Privacidade} />
+            <Stack.Screen name="Ajuda" component={Ajuda} />
             <Stack.Screen name="Diario" component={Diario} />
             <Stack.Screen name="Historico" component={Historico} />
             <Stack.Screen name="Notificacoes" component={Notificacoes} />

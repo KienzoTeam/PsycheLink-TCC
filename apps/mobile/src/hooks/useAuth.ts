@@ -454,7 +454,13 @@ export function useAuth() {
     await limparSessao();
   };
 
+  // Troca de senha devolve um token novo: a sessão segue neste celular com ele.
+  const renovarSessao = (token: string, usuarioNovo: UsuarioAutenticado) => abrirSessaoApp(token, usuarioNovo);
+  const renomear = (nome: string) => usuarioCompartilhado && atualizarUsuarioCompartilhado({ ...usuarioCompartilhado, nome });
+
   return {
+    renovarSessao,
+    renomear,
     login,
     registro,
     confirmarEmail,
