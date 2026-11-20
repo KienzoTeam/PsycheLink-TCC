@@ -6,6 +6,12 @@ import { verificarToken } from './auth';
 import { criptografar, criptografarOuNulo, descriptografar } from '../lib/criptografia';
 import { comContextoPaciente } from '../lib/contextoseguro';
 import { obterOuCriarPacienteId, obterPacienteId } from '../lib/paciente';
+import { lerSeguro } from '../lib/checkins';
+import { checkinsDoPeriodo, resumirCheckins } from '../lib/resumo';
+
+// Períodos do histórico e de Meus Dados (F4, F6): 7 dias, 30 dias, 3 meses e 12 meses.
+const PERIODOS = new Set([7, 30, 90, 365]);
+const TUDO = { humor: true, habitos: true, escalas: true, diario: true }; // o paciente vê tudo o que é dele
 
 export const checkin = Router();
 
@@ -279,6 +285,36 @@ checkin.get(['/resumo', '/checkins/resumo'], limite(60), verificarToken, async (
   } catch (err) {
     console.error('Erro ao buscar resumo de check-ins:', err);
     return res.status(500).json({ error: 'Erro interno ao buscar dados.' });
+  }
+});
+
+// Histórico (F4) e Meus Dados (F6): check-ins do período, do mais novo para o mais antigo, com o resumo.
+checkin.get(['/historico', '/checkins/historico'], limite(60), verificarToken, async (req, res) => {
+  const dias = Number(req.query.dias ?? 30);
+  if (!PERIODOS.has(dias)) return res.status(400).json({ error: 'Período inválido.' });
+
+  try {
+    const pacienteId = await obterPacienteId(req.user!.id);
+    if (pacienteId === null) {
+      return res.json({ dias, registros: [], frequenciaEmocional: [], habitos: null, distribuicaoHorario: null });
+    }
+
+    const linhas = await comContextoPaciente(pacienteId, (client) =>
+      checkinsDoPeriodo(client, pacienteId, null, null, dias - 1),
+    );
+    const { registros, ...resumo } = resumirCheckins(linhas, TUDO);
+    const porId = new Map(linhas.map((l) => [l.id, l]));
+    return res.json({
+      dias,
+      ...resumo,
+      registros: registros.reverse().map((r) => {
+        const linha = porId.get(r.id)!;
+        return { ...r, habitos: linha.habitos, notas: lerSeguro(linha.diario_livre), diarioCompartilhado: linha.diario_compartilhado };
+      }),
+    });
+  } catch (err) {
+    console.error('Erro ao buscar histórico de check-ins:', err);
+    return res.status(500).json({ error: 'Erro interno ao buscar o histórico.' });
   }
 });
 

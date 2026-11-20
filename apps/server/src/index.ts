@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { app } from './app';
 import { remetente, transporteDeEmail } from './lib/mailer';
+import { agendarExclusoes } from './lib/exclusaoConta';
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET || !process.env.ENCRYPTION_KEY) {
   console.error(
@@ -25,3 +26,4 @@ if (transporte === 'Brevo' && !/^[^\s@<>"]+@[^\s@<>"]+$/.test(remetente().email)
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+agendarExclusoes();

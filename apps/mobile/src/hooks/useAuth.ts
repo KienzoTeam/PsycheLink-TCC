@@ -6,6 +6,7 @@ import {
   registrarAoSessaoExpirar,
   respostaDeSessaoAntiga,
 } from '../lib/api';
+import { VERSAO_DOCUMENTOS } from '../constants/documentos';
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
 import { limparContatos } from '../lib/contatosConfianca';
@@ -300,6 +301,7 @@ export function useAuth() {
         email: email.trim(),
         password: senha,
         dataNascimento: dataISO, // YYYY-MM-DD
+        aceites: { versao: VERSAO_DOCUMENTOS },
       });
 
       onSuccess();
