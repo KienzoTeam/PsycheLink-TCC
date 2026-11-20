@@ -55,9 +55,10 @@ const rotulos = (pontos: Ponto[]) => {
 
 const UNIDADE: Record<Periodo, string> = { 7: '', 30: '', 90: 'Média por semana.', 365: 'Média por mês.' };
 
-type Props = Partial<NativeStackScreenProps<RootStackParamList, 'Dados'>>;
+// ativa: como aba, recarrega toda vez que volta a ficar visível (check-in novo, outro período).
+type Props = Partial<NativeStackScreenProps<RootStackParamList, 'Dados'>> & { ativa?: boolean };
 
-export default function MeusDados({ navigation }: Props) {
+export default function MeusDados({ navigation, ativa = true }: Props) {
   const { theme } = useTheme();
   // Como aba, a tela não recebe `navigation`: o hook serve para abrir o histórico.
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -79,8 +80,8 @@ export default function MeusDados({ navigation }: Props) {
   }, [dias]);
 
   useEffect(() => {
-    void carregar();
-  }, [carregar]);
+    if (ativa) void carregar();
+  }, [carregar, ativa]);
 
   const total = historico?.registros.length ?? 0;
   const pontos = historico ? agrupar(historico.registros, dias) : [];
