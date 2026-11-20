@@ -114,8 +114,11 @@ export type ResumoPaciente = {
   registros: RegistroResumo[];
   frequenciaEmocional: { emocao: string; quantidade: number }[];
   habitos: ({ diasRegistrados: number } & Record<ChaveHabito, number>) | null;
-  diario: { data: string; texto: string }[];
+  diario: { data: string; hora: string | null; texto: string; origem: 'checkin' | 'avulso' }[];
   distribuicaoHorario: Record<FaixaHorario, number> | null;
+  // null: o paciente não compartilha o uso do SOS.
+  sos: { data: string; hora: string }[] | null;
+  crisesPorHorario: { sos: Record<FaixaHorario, number> | null; ansiedadeAlta: Record<FaixaHorario, number> | null };
   // Uma entrada por dia do período; null quando a janela de 7 dias não tem nenhum registro.
   mediaMovelHumor: { data: string; valor: number | null }[] | null;
   // Desvio de cada registro em relação à média de ansiedade do período.
