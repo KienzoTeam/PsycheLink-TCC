@@ -241,7 +241,7 @@ authPsicologo.post('/registro-psicologo', limite(10), async (req, res) => {
   const email = normalizarEmail(parsed.data.email);
   if (!email) return res.status(400).json({ error: 'Formato de e-mail inválido.' });
 
-  const { nome, password, dataNascimento, crp, especialidade } = parsed.data;
+  const { nome, password, dataNascimento, crp, especialidade, aceites } = parsed.data;
 
   const client = await pool.connect();
   try {
@@ -337,6 +337,13 @@ authPsicologo.post('/registro-psicologo', limite(10), async (req, res) => {
     );
 
     await client.query('COMMIT');
+
+    if (aceites) {
+      await registrarAuditoria(req, 'documentos_aceitos', {
+        ator: { id: userId, papel: 'psicologo' },
+        metadados: { versao: aceites.versao },
+      });
+    }
 
     return res.status(201).json({
       message: 'Enviamos um código de 6 dígitos para o seu e-mail.',
