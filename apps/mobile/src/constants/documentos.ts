@@ -1,195 +1,232 @@
-export const Termos_De_Uso = `Estes Termos de Uso regulam o acesso e a utilização da plataforma PsycheLink, desenvolvida para apoiar o acompanhamento psicológico entre pacientes e seus profissionais de confiança. Ao criar uma conta, você declara ter lido, compreendido e concordado integralmente com as disposições abaixo.
+import { EMAIL_SUPORTE } from './contato';
+
+// Versão enviada ao servidor no cadastro (aceite registrado com data e hora). Muda junto com o texto.
+export const VERSAO_DOCUMENTOS = '2026-11-20';
+export const DATA_DOCUMENTOS = '20 de novembro de 2026';
+
+const CONTATO = EMAIL_SUPORTE
+  ? `Para dúvidas ou pedidos que não possam ser feitos no aplicativo, escreva para ${EMAIL_SUPORTE}.`
+  : 'O projeto ainda não tem um e-mail de contato. Por isso, tudo o que este documento descreve pode ser feito direto no aplicativo.';
+
+// A tela de leitura separa os blocos por linha em branco e trata como título o bloco que começa com "1.", "2." etc.
+// Por isso nenhum parágrafo comum pode começar assim.
+
+export const Termos_De_Uso = `Estes Termos de Uso explicam as regras para usar o aplicativo PsycheLink. O PsycheLink é um projeto acadêmico, sem fins comerciais: o Trabalho de Conclusão de Curso (TCC) de uma Etec de São José dos Campos, feito pela equipe do projeto PsycheLink (TCC). Ao criar sua conta, você confirma que leu e concorda com estes termos.
 
 1. Sobre o PsycheLink
 
-O PsycheLink é uma plataforma digital de apoio ao acompanhamento psicológico que permite ao usuário registrar seu estado emocional, realizar check-ins, acessar escalas psicológicas compartilhadas pelo seu psicólogo e manter comunicação estruturada com o profissional que o acompanha.
+O PsycheLink ajuda você a registrar como está se sentindo entre uma consulta e outra: check-ins de humor, sono e hábitos, diário, escalas enviadas pelo seu psicólogo, consultas marcadas, exercícios de bem-estar e uma tela de SOS. Se você tiver um psicólogo vinculado, ele vê somente o que você escolher compartilhar.
 
-O PsycheLink não é um serviço de saúde, não oferece diagnósticos, não realiza triagem clínica e não substitui, sob nenhuma hipótese, o atendimento presencial ou remoto prestado por psicólogos, psiquiatras ou quaisquer outros profissionais de saúde habilitados.
+O PsycheLink não é um serviço de saúde. Ele não faz diagnóstico, não indica tratamento e não substitui consulta com psicólogo, psiquiatra ou outro profissional de saúde. Gráficos e escalas mostram os registros que você fez, e quem os interpreta é o profissional.
 
-2. Criação e Gestão de Conta
+O aplicativo não tem troca de mensagens com o psicólogo. Para falar com ele, use o meio que vocês combinaram.
 
-Para utilizar o PsycheLink, você deve ser maior de 18 anos ou ter autorização expressa de seu responsável legal. Ao se cadastrar, você concorda em fornecer informações verdadeiras, precisas e atualizadas. É sua responsabilidade manter a confidencialidade de suas credenciais de acesso.
+2. Sua conta
 
-Cada conta é pessoal e intransferível. Você é responsável por todas as atividades realizadas em sua conta. Em caso de suspeita de acesso não autorizado, notifique imediatamente nossa equipe pelo canal de suporte.
+Para criar a conta você informa nome, e-mail, data de nascimento e uma senha. As informações devem ser verdadeiras. O PsycheLink foi pensado para maiores de 18 anos; se você for menor de idade, use o aplicativo somente com a autorização de um responsável legal.
 
-A vinculação com um psicólogo ocorre mediante código de convite fornecido exclusivamente pelo profissional. O PsycheLink não realiza indicação, busca ou intermediação de profissionais de saúde mental.
+Você confirma o e-mail com um código de 6 dígitos enviado ao endereço informado. Ao entrar, o aplicativo envia outro código de 6 dígitos para o seu e-mail (verificação em duas etapas). Se você marcar para confiar naquele celular, o código deixa de ser pedido por 30 dias, mas a senha continua obrigatória.
 
-3. Responsabilidades do Usuário
+A conta é pessoal. Guarde sua senha e não a compartilhe. Se suspeitar que alguém entrou na sua conta, troque a senha em Configurações da Conta.
 
-Você concorda em utilizar a plataforma de forma ética, responsável e em conformidade com a legislação brasileira vigente. É vedado utilizar o PsycheLink para fins ilícitos, discriminatórios, difamatórios ou que violem direitos de terceiros.
+A ligação com um psicólogo só acontece quando você digita o código de 6 dígitos que o próprio profissional gera. O PsycheLink não indica nem recomenda psicólogos.
 
-O usuário se compromete a não compartilhar conteúdos falsos, enganosos ou que possam comprometer a integridade da plataforma ou de outros usuários. Também é proibido tentar acessar áreas restritas, realizar engenharia reversa ou comprometer a segurança dos sistemas.
+3. Como usar
 
-O usuário é o único responsável pelas informações inseridas na plataforma, incluindo registros de humor, respostas a escalas e mensagens enviadas ao profissional vinculado.
+Use o aplicativo de forma ética e de acordo com a lei. Não tente entrar na conta de outra pessoa, burlar a segurança do sistema ou usar o aplicativo para prejudicar alguém. Você é responsável pelo que registra e escreve.
 
-4. Regras de Utilização
+Os registros que você cria (check-ins, diário, respostas) continuam sendo seus.
 
-O PsycheLink deve ser utilizado como complemento ao acompanhamento psicológico presencial ou remoto, nunca como substituto. Em situações de crise, emergência ou risco imediato à vida, o usuário deve acionar imediatamente o SAMU (192), o CVV (188) ou o serviço de emergência mais próximo.
+4. Em caso de crise
 
-É vedado o uso da plataforma para a prática de atividades que configurem exercício ilegal da psicologia ou medicina, bem como para a coleta não autorizada de dados de terceiros.
+O PsycheLink não é um canal de emergência e não acompanha seus registros em tempo real. Em situação de risco imediato à sua vida ou à de outra pessoa, ligue para o CVV (188, gratuito, 24 horas), para o SAMU (192) ou vá à UPA ou ao pronto-socorro mais próximo.
 
-5. Limitações da Plataforma
+5. Limites do serviço
 
-O PsycheLink é disponibilizado 'no estado em que se encontra', sem garantia de disponibilidade ininterrupta. Poderemos realizar manutenções programadas ou emergenciais que resultem em indisponibilidade temporária dos serviços.
+Como projeto acadêmico, o aplicativo é oferecido como está, sem garantia de funcionar sem interrupções. Ele pode ficar fora do ar, mudar ou ser encerrado. Se quiser guardar uma cópia dos seus dados, exporte-os em Privacidade e Segurança.
 
-Não nos responsabilizamos por danos decorrentes do uso inadequado da plataforma, pela interpretação equivocada de informações apresentadas ou por decisões tomadas com base exclusiva nos recursos oferecidos pelo aplicativo.
+A equipe não se responsabiliza por decisões tomadas apenas com base no que o aplicativo mostra. Decisões sobre sua saúde devem ser conversadas com um profissional.
 
-Funcionalidades específicas, como escalas psicológicas validadas, estão disponíveis apenas quando habilitadas pelo psicólogo responsável e não devem ser interpretadas de forma autônoma pelo usuário.
+6. Propriedade intelectual
 
-6. Propriedade Intelectual
+Os textos, as telas, o logotipo e o código do aplicativo são trabalho da equipe do projeto PsycheLink (TCC). Não os reproduza nem os use para fins comerciais sem autorização da equipe.
 
-Todo o conteúdo disponibilizado no PsycheLink — incluindo textos, interfaces, ícones, logotipos, fluxos, algoritmos e design — é propriedade exclusiva da PsycheLink Tecnologia Ltda. ou de seus licenciantes, protegido pela legislação de propriedade intelectual vigente.
+7. Encerramento da conta
 
-É vedada a reprodução, distribuição, modificação ou uso comercial de qualquer parte do conteúdo da plataforma sem autorização prévia e expressa por escrito.
+Você pode apagar sua conta quando quiser, em Configurações da Conta. A exclusão fica agendada e a conta é apagada de vez 30 dias depois; nesse prazo você pode cancelar. A Política de Privacidade explica o que acontece com cada dado.
 
-7. Suspensão e Encerramento de Contas
+A equipe pode suspender ou encerrar contas usadas de forma que viole estes termos.
 
-Reservamo-nos o direito de suspender ou encerrar contas que violem estes Termos, mediante notificação prévia sempre que possível. Casos de violação grave, como uso fraudulento ou atividades ilícitas, podem resultar em encerramento imediato sem aviso prévio.
+8. Mudanças nestes termos
 
-O usuário pode solicitar o encerramento de sua conta a qualquer momento acessando as Configurações do aplicativo. Após o encerramento, os dados serão tratados conforme nossa Política de Privacidade.`;
+A data de atualização aparece no topo de cada documento. No cadastro, o aplicativo registra a versão dos documentos que você aceitou, com data e hora.
 
-export const Politica_Privacidade = `Esta Política de Privacidade descreve como o PsycheLink coleta, utiliza, armazena e protege os dados pessoais dos seus usuários, em conformidade com a Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018 — LGPD) e demais normas aplicáveis.
+9. Contato
 
-1. Dados que Coletamos
+${CONTATO}`;
 
-Dados de cadastro: nome completo, endereço de e-mail, data de nascimento e senha (armazenada em formato criptografado). Esses dados são necessários para criar e autenticar sua conta na plataforma.
+export const Politica_Privacidade = `Esta Política de Privacidade explica quais dados o PsycheLink guarda, para que, com quem são compartilhados e como você controla tudo isso, conforme a Lei Geral de Proteção de Dados Pessoais (LGPD, Lei nº 13.709/2018). O controlador dos dados é a equipe do projeto PsycheLink (TCC), um trabalho acadêmico sem fins comerciais de uma Etec de São José dos Campos.
 
-Dados de uso: registros de humor, respostas a check-ins emocionais, escalas psicológicas preenchidas, anotações do diário emocional, horários de acesso e funcionalidades utilizadas. Esses dados constituem o núcleo do serviço prestado.
+1. Dados que guardamos
 
-Dados de comunicação: mensagens trocadas com o psicólogo vinculado dentro da plataforma, que ficam disponíveis para ambas as partes conforme a relação terapêutica estabelecida.
+Cadastro: nome, e-mail, data de nascimento e senha. A senha é guardada apenas de forma irreversível (hash bcrypt), nunca em texto legível.
 
-Dados técnicos: endereço IP, tipo de dispositivo, sistema operacional, versão do aplicativo e logs de acesso, coletados automaticamente para fins de segurança e melhoria do serviço.
+Seus registros: nos check-ins, as emoções, a intensidade do humor e da ansiedade, as horas e a qualidade do sono, os contextos e hábitos do dia e o texto que você escrever; as entradas do diário; as respostas às escalas que seu psicólogo enviar.
 
-2. Finalidade da Coleta
+Vínculo e escolhas: com qual psicólogo você está vinculado e desde quando, e o que você escolheu compartilhar.
 
-Utilizamos seus dados exclusivamente para: (a) fornecer e aprimorar os serviços da plataforma; (b) permitir o acompanhamento pelo psicólogo vinculado; (c) personalizar sua experiência na plataforma; (d) garantir a segurança e integridade do sistema; (e) cumprir obrigações legais e regulatórias.
+Recomendações: os exercícios que o psicólogo vinculado recomendar a você (com o texto dele cifrado) e se você marcou como feito.
 
-Não utilizamos seus dados para fins publicitários, não realizamos perfilamento para anúncios e não vendemos, alugamos ou cedemos seus dados a terceiros para finalidades comerciais.
+Uso do SOS: somente se você ligar essa opção, a data e a hora em que abriu a tela de SOS. O que você faz nela nunca é registrado.
 
-3. Base Legal para o Tratamento
+Segurança: ações importantes da conta (verificação em duas etapas, troca de senha, vínculo e encerramento do vínculo, mudança do compartilhamento, exportação de dados, exclusão da conta) ficam registradas com data, hora, endereço IP e tipo de aparelho ou navegador. Quando você confia em um celular, guardamos um identificador dele (apenas o hash) e o tipo de aparelho.
 
-O tratamento dos seus dados pessoais é realizado com base nas seguintes hipóteses legais previstas na LGPD: (a) consentimento livre, informado e inequívoco do titular; (b) execução de contrato; (c) cumprimento de obrigação legal; (d) legítimo interesse do controlador, respeitados os direitos e liberdades fundamentais do titular.
+Avisos no celular: os lembretes de check-in são agendados só no aparelho. Se você ligar os avisos do seu psicólogo (escala ou recomendação nova), guardamos o identificador de notificações do celular; desligar apaga esse identificador. O texto do aviso não traz conteúdo clínico.
 
-Para dados considerados sensíveis — como informações relativas à saúde mental — o tratamento ocorre exclusivamente com base no seu consentimento específico e destacado, obtido neste ato.
+No seu celular: o token de acesso fica no armazenamento seguro do aparelho. Os contatos de confiança da tela de SOS ficam somente no celular e não são enviados ao servidor. O aplicativo só lê a agenda se você pedir para escolher um contato e der a permissão.
 
-4. Compartilhamento de Dados
+O aplicativo não usa localização nem ferramentas de publicidade ou de análise de uso.
 
-Seus dados clínicos e de saúde são compartilhados exclusivamente com o psicólogo que você vinculou à sua conta, na medida necessária para o acompanhamento terapêutico. O profissional está sujeito ao sigilo profissional previsto no Código de Ética do Psicólogo (CFP).
+2. Para que usamos seus dados
 
-Podemos compartilhar dados com fornecedores de infraestrutura tecnológica (como serviços de nuvem e armazenamento), mediante contratos que garantam proteção equivalente à exigida pela LGPD.
+Usamos seus dados para: (a) criar e proteger sua conta; (b) mostrar a você seus registros, gráficos e resumos; (c) mostrar ao psicólogo vinculado o que você escolheu compartilhar; (d) enviar por e-mail os códigos de verificação; (e) manter o registro de segurança e cumprir obrigações legais.
 
-Não compartilharemos seus dados com terceiros sem seu consentimento, exceto quando exigido por lei, decisão judicial ou autoridade competente.
+Não usamos seus dados para publicidade e não os vendemos nem os cedemos a terceiros.
 
-5. Tempo de Retenção
+3. Base legal
 
-Mantemos seus dados pelo período necessário à prestação dos serviços e cumprimento das finalidades descritas nesta Política. Após o encerramento da conta, os dados pessoais serão eliminados em até 90 dias, salvo quando a retenção for necessária para cumprimento de obrigação legal ou regulatória.
+Informações sobre saúde mental são dados pessoais sensíveis (art. 11 da LGPD). Elas são tratadas com base no seu consentimento específico e destacado, dado no cadastro e descrito no documento de Consentimento para Tratamento de Dados Sensíveis. Você pode revogá-lo a qualquer momento.
 
-Dados de logs e registros técnicos podem ser mantidos por até 6 meses após o encerramento, conforme exigido pelo Marco Civil da Internet (Lei nº 12.965/2014).
+Os dados de cadastro são tratados para criar sua conta e prestar o serviço que você pediu. Os registros de segurança são mantidos para proteger a conta e atender a obrigações legais.
 
-6. Direitos do Titular (LGPD)
+4. Com quem compartilhamos
 
-Nos termos da LGPD, você tem direito a: (a) confirmação da existência de tratamento; (b) acesso aos seus dados; (c) correção de dados incompletos, inexatos ou desatualizados; (d) anonimização, bloqueio ou eliminação de dados desnecessários; (e) portabilidade dos dados; (f) eliminação dos dados tratados com consentimento; (g) informação sobre entidades com quem seus dados foram compartilhados; (h) revogação do consentimento.
+Psicólogo vinculado: ele só tem acesso enquanto o vínculo estiver ativo e somente ao que você liberou, por categoria: humor e emoções; hábitos e sono; escalas; textos do diário (liberados um a um); uso do SOS. Se você ainda não tiver definido suas escolhas, ao se vincular humor, hábitos e escalas começam compartilhados, e diário e SOS começam desligados. Você muda tudo isso em Psicólogo e privacidade, quando quiser. O psicólogo também vê o seu nome. Ele está sujeito ao sigilo profissional do Código de Ética Profissional do Psicólogo (Resolução CFP nº 010/2005).
 
-Para exercer seus direitos, acesse a seção 'Privacidade e Dados' nas Configurações do aplicativo ou entre em contato pelo e-mail: privacidade@psychelink.com.br. Atenderemos sua solicitação em até 15 dias úteis.
+Ao encerrar o vínculo, o psicólogo deixa de ter acesso aos seus registros.
 
-7. Segurança das Informações
+Serviços técnicos: o servidor e o banco de dados ficam em serviços de nuvem, os códigos de verificação são enviados por um serviço de envio de e-mail e, se você ligar os avisos, as notificações passam pelos serviços de notificação do Expo e do Google. Eles processam os dados só para o aplicativo funcionar.
 
-Adotamos medidas técnicas e organizacionais adequadas para proteger seus dados contra acesso não autorizado, perda, alteração ou divulgação indevida. Entre as medidas adotadas estão: criptografia em trânsito (TLS 1.3) e em repouso (AES-256), autenticação segura, controle de acesso baseado em função e monitoramento contínuo de segurança.
+Não compartilhamos seus dados com mais ninguém, exceto por obrigação legal ou decisão judicial.
 
-Em caso de incidente de segurança que possa afetar seus dados, notificaremos você e a Autoridade Nacional de Proteção de Dados (ANPD) dentro dos prazos legais previstos.`;
+5. Quanto tempo guardamos
 
-export const Consentimento_Dados = `Este documento formaliza o seu consentimento livre, informado, inequívoco e específico para o tratamento de dados pessoais sensíveis pelo PsycheLink, em conformidade com o artigo 11 da Lei nº 13.709/2018 (LGPD). Leia atentamente antes de aceitar.
+Guardamos seus dados enquanto sua conta existir. Quando você pede a exclusão em Configurações da Conta, a conta fica agendada e é apagada de vez 30 dias depois. Nesse prazo você pode cancelar. Ao agendar, seu vínculo com o psicólogo é encerrado e as sessões e os celulares confiáveis são desconectados.
 
-1. O que são Dados Sensíveis
+Quando a conta é apagada, seus check-ins, diário, respostas às escalas, escolhas de compartilhamento e demais registros ligados a você são apagados junto.
 
-A LGPD classifica como dados sensíveis aqueles que revelam origem racial ou étnica, convicção religiosa, opinião política, filiação a sindicato ou organização de caráter religioso, filosófico ou político, dado referente à saúde, dado genético ou biométrico, e dado referente à vida sexual.
+Há duas exceções. A primeira são as anotações que o psicólogo escreveu sobre você: elas são registro profissional dele e, pela guarda de 5 anos prevista pelo CFP, continuam com ele, cifradas e sem ligação com a sua conta. O texto é do psicólogo e pode citar você. A segunda são os registros de segurança: eles são imutáveis e não podem ser apagados. Ao apagar a conta, a ligação deles com você é removida, mas data, tipo de ação, IP e aparelho continuam nesses registros.
 
-No contexto do PsycheLink, os dados sensíveis tratados referem-se exclusivamente a informações relacionadas à saúde mental do usuário, coletadas no âmbito do acompanhamento psicológico.
+6. Seus direitos e onde exercê-los
 
-2. Dados Sensíveis Coletados
+A LGPD garante a você, entre outros direitos: confirmar que tratamos seus dados e acessá-los; corrigi-los; levá-los com você (portabilidade); pedir a eliminação dos dados tratados com consentimento; saber com quem foram compartilhados; e revogar o consentimento. Você também pode reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
 
-Registros de humor e estado emocional: pontuações diárias, descrições de sentimentos e padrões emocionais inseridos nos check-ins e no diário emocional da plataforma.
+No aplicativo você faz isto direto: (a) acessar e levar seus dados: Privacidade e Segurança, exportar em PDF ou JSON; (b) revogar ou mudar o compartilhamento, parar de compartilhar o diário e encerrar o vínculo: Psicólogo e privacidade; (c) desconectar celulares confiáveis: Privacidade e Segurança; (d) apagar a conta e os dados: Configurações da Conta; (e) corrigir o nome: Configurações da Conta. E-mail e data de nascimento ainda não podem ser alterados pelo aplicativo.
 
-Respostas a escalas psicológicas validadas: como escalas de ansiedade, depressão, estresse, qualidade do sono e bem-estar geral, disponibilizadas pelo psicólogo responsável.
+Outros pedidos previstos na LGPD, como anonimização ou bloqueio de dados, devem ser feitos pelo contato indicado no fim deste documento.
 
-Informações narrativas: textos livres inseridos no diário, relatos de experiências emocionais e observações inseridas pelo usuário ou compartilhadas com o psicólogo.
+7. Segurança
 
-Dados de acompanhamento terapêutico: frequência de uso, padrões de resposta, evolução ao longo do tempo e outros metadados relacionados ao processo terapêutico.
+As conexões entre o aplicativo e o servidor usam HTTPS. Emoções, contextos, textos de check-in e de diário e respostas às escalas são cifrados no servidor com AES-256-GCM antes de irem para o banco. Os demais dados, como nome, e-mail, notas de humor e horas de sono, ficam no banco sem essa cifragem e são protegidos pelos controles de acesso.
 
-3. Finalidade do Tratamento
+O banco de dados aplica regras de acesso por linha (RLS): cada conta só consegue ler os registros que a regra permite, e o psicólogo só lê pacientes com vínculo ativo. Os acessos do psicólogo aos dados de um paciente (painel, check-ins, escalas, anotações e relatórios) ficam em um registro de auditoria imutável. O acesso à conta exige verificação em duas etapas por e-mail, a menos que você tenha marcado um celular como confiável.
 
-Os dados sensíveis são tratados exclusivamente para: (a) permitir o acompanhamento do seu processo terapêutico pelo psicólogo vinculado; (b) fornecer insights e visualizações personalizadas sobre sua evolução emocional; (c) apoiar a comunicação entre você e seu psicólogo; (d) aprimorar os recursos da plataforma, de forma anonimizada e agregada, sem identificação individual.
+Nenhuma medida elimina todo risco. Se houver um incidente de segurança que afete seus dados, a LGPD exige comunicar a ANPD e os titulares afetados, e a equipe seguirá essa regra.
 
-É expressamente vedado o uso desses dados para fins publicitários, de perfilamento comercial, venda a terceiros ou qualquer finalidade não descrita neste documento.
+8. Contato
 
-4. Compartilhamento
+${CONTATO}`;
 
-Seus dados sensíveis são compartilhados exclusivamente com o psicólogo vinculado à sua conta, que está sujeito ao dever de sigilo profissional conforme o Código de Ética dos Psicólogos (Resolução CFP nº 010/2005).
+export const Consentimento_Dados = `Este documento pede o seu consentimento específico e destacado para tratar dados pessoais sensíveis no PsycheLink, como exige o art. 11 da LGPD (Lei nº 13.709/2018). Leia com calma antes de aceitar. Você pode não aceitar, mas então não conseguirá criar a conta, porque o aplicativo existe para registrar esse tipo de informação.
 
-Fornecedores de infraestrutura tecnológica (servidores, armazenamento em nuvem) têm acesso técnico aos dados armazenados, porém estão vinculados a acordos de confidencialidade e proteção equivalentes aos exigidos pela LGPD. Nenhum dado é acessado por humanos nesses fornecedores sem autorização formal.
+1. O que são dados sensíveis
 
-5. Prazo de Retenção
+A LGPD chama de dados sensíveis aqueles que merecem proteção extra, como os referentes à saúde. No PsycheLink, são os registros sobre a sua saúde mental.
 
-Os dados sensíveis serão mantidos durante o período de uso ativo da conta e por até 90 dias após o encerramento, salvo obrigação legal em contrário. Você pode solicitar a eliminação antecipada a qualquer momento, conforme previsto na seção 'Privacidade e Dados' das Configurações.
+2. Quais dados sensíveis você registra
 
-6. Revogação do Consentimento
+Check-ins: emoções, intensidade do humor e da ansiedade, horas e qualidade do sono, contextos, hábitos e o texto que você escrever.
 
-Você pode revogar este consentimento a qualquer momento, sem qualquer prejuízo ou penalidade, acessando as Configurações do aplicativo > Privacidade e Dados > Gerenciar Consentimentos, ou enviando solicitação para privacidade@psychelink.com.br.
+Diário: as entradas de texto que você criar.
 
-A revogação do consentimento não afeta a licitude do tratamento realizado anteriormente à revogação. Após a revogação, o PsycheLink deixará de coletar novos dados sensíveis, podendo resultar na impossibilidade de utilização de funcionalidades que dependam desses dados.
+Escalas: suas respostas às escalas psicológicas que o psicólogo vinculado enviar. O resultado é um número calculado a partir das respostas e não é diagnóstico.
 
-Em caso de revogação, os dados já coletados serão anonimizados ou eliminados conforme sua solicitação, respeitando os prazos legais aplicáveis.
+Uso do SOS: somente se você ligar essa opção, a data e a hora em que abriu a tela de SOS. Nunca o que você fez nela.
 
-7. Seus Direitos
+3. Para que tratamos esses dados
 
-Além do direito de revogação, você possui todos os direitos previstos na LGPD, incluindo acesso, correção, portabilidade e eliminação dos seus dados sensíveis. Consulte nossa Política de Privacidade para detalhes sobre como exercer esses direitos.`;
+Tratamos esses dados para: (a) mostrar a você seus registros, gráficos e resumos; (b) mostrar ao psicólogo vinculado apenas o que você liberar.
 
-export const Aviso_Etico = `Este documento tem por objetivo informar, de forma clara e transparente, a natureza, os limites e o propósito do PsycheLink, assegurando que o usuário compreenda adequadamente o papel da plataforma no contexto da saúde mental.
+Não usamos esses dados para publicidade, não os vendemos e não os usamos para nenhuma outra finalidade.
+
+4. Quem pode ver
+
+O psicólogo vinculado, e somente enquanto o vínculo estiver ativo. Cada categoria é uma escolha sua e independente: humor e emoções; hábitos e sono; escalas; textos do diário (um a um, em cada check-in ou entrada); uso do SOS. Se você ainda não tiver definido suas escolhas, ao se vincular humor, hábitos e escalas começam compartilhados, e diário e SOS começam desligados. Se você desligar uma categoria, o psicólogo deixa de ver aquele tipo de registro.
+
+O psicólogo está sujeito ao sigilo profissional (Código de Ética Profissional do Psicólogo, Resolução CFP nº 010/2005). Os acessos dele aos dados de um paciente ficam em um registro de auditoria imutável.
+
+A equipe do projeto, que mantém o servidor, tem acesso técnico ao banco de dados e à chave de cifragem. Esse acesso serve apenas para manter o sistema funcionando. Textos e emoções ficam cifrados no banco.
+
+5. Por quanto tempo
+
+Enquanto sua conta existir. Se você pedir a exclusão, a conta é apagada de vez 30 dias depois, com os seus registros. As anotações que o psicólogo escreveu sobre você ficam com ele por 5 anos, sem ligação com a sua conta, como exige a guarda de documentos do CFP. Os detalhes estão na Política de Privacidade.
+
+6. Como revogar o consentimento
+
+Você pode revogar quando quiser, sem custo e sem penalidade. Em Psicólogo e privacidade, desligue as categorias que não quer mais compartilhar, pare de compartilhar o diário ou encerre o vínculo. O efeito sobre o que o psicólogo enxerga é imediato. Para apagar de vez os seus dados, use Configurações da Conta.
+
+A revogação não desfaz o que o psicólogo já viu antes dela nem as anotações que ele já escreveu. Os seus registros continuam no seu aplicativo, e você pode continuar usando-o sem compartilhar nada.
+
+7. Seus direitos
+
+Além de revogar, você tem os demais direitos da LGPD, como acesso, correção, portabilidade e eliminação. A Política de Privacidade mostra onde exercer cada um no aplicativo.
+
+8. Contato
+
+${CONTATO}`;
+
+export const Aviso_Etico = `Este aviso diz com clareza o que o PsycheLink é, o que ele não é e quais limites você precisa conhecer antes de usá-lo.
 
 1. O que é o PsycheLink
 
-O PsycheLink é uma plataforma digital de apoio ao acompanhamento psicológico. Sua função é facilitar a comunicação entre pacientes e seus psicólogos, organizar registros emocionais e fornecer recursos complementares ao processo terapêutico.
+O PsycheLink é um aplicativo de apoio ao acompanhamento psicológico. Ele serve para você registrar como está entre uma consulta e outra e, se quiser, deixar esses registros à disposição do seu psicólogo.
 
-O PsycheLink é uma ferramenta tecnológica desenvolvida por profissionais de tecnologia e consultores da área de saúde mental. Não é um serviço de saúde e não possui registro junto a conselhos profissionais como CRM ou CFP como prestador direto de serviços clínicos.
+É um projeto acadêmico, sem fins comerciais: o Trabalho de Conclusão de Curso (TCC) de uma Etec de São José dos Campos. Não é um serviço de saúde nem uma clínica.
 
-2. O PsycheLink NÃO Substitui Atendimento Profissional
+2. O que o PsycheLink não faz
 
-O uso do PsycheLink não dispensa, substitui ou equivale ao atendimento prestado por psicólogos, psiquiatras, neurologistas ou qualquer outro profissional de saúde mental devidamente habilitado.
+O aplicativo não faz diagnóstico, não indica medicamento ou tratamento e não substitui atendimento com psicólogo, psiquiatra ou outro profissional de saúde.
 
-Diagnósticos, prescrições, orientações clínicas e decisões terapêuticas são de competência exclusiva de profissionais de saúde habilitados e só devem ser emitidos no contexto de uma relação terapêutica formal.
+As escalas são instrumentos de acompanhamento. O aplicativo não as interpreta como diagnóstico: a leitura dos resultados é do psicólogo que as enviou, dentro do atendimento.
 
-Nenhuma informação, recurso, escala ou conteúdo disponível no PsycheLink deve ser interpretado como diagnóstico, prescrição ou recomendação clínica.
+Os exercícios de bem-estar, como os de respiração, são de autocuidado e não substituem tratamento.
 
-3. Limites Éticos e Técnicos
+3. Limites do aplicativo
 
-As escalas psicológicas disponíveis na plataforma são instrumentos de apoio ao acompanhamento, e seus resultados devem ser interpretados exclusivamente pelo psicólogo responsável, no contexto da relação terapêutica.
+O PsycheLink não é atendimento de crise e não acompanha seus registros em tempo real. Escrever algo no check-in ou no diário não chama ajuda. O psicólogo vê o que você registrou quando abre o painel dele, e só o que você liberou.
 
-Os recursos de bem-estar, como meditações, exercícios respiratórios e conteúdos informativos, têm caráter educacional e de autocuidado. Não substituem intervenções terapêuticas formais.
+A tela de SOS oferece atalhos para ligar ou conversar por chat com o CVV e para falar com os contatos de confiança que você cadastrar. Esses contatos ficam só no seu celular.
 
-O PsycheLink não oferece atendimento em crise, triagem emergencial, pronto-socorro psicológico ou qualquer modalidade de intervenção clínica em tempo real.
+4. Em caso de crise ou emergência
 
-4. Em Caso de Crise ou Emergência
+Se você estiver em sofrimento intenso, pensando em se machucar ou em acabar com a própria vida, ou se houver risco imediato para você ou para outra pessoa, procure ajuda agora.
 
-Se você estiver passando por uma crise emocional intensa, pensamentos de autolesão, ideação suicida ou qualquer situação de risco imediato à sua vida ou de terceiros, procure ajuda especializada imediatamente.
+CVV, Centro de Valorização da Vida: ligue 188, gratuito, 24 horas por dia. Também há chat em cvv.org.br/chat.
 
-CVV — Centro de Valorização da Vida: ligue 188 (gratuito, 24 horas por dia, 7 dias por semana). Também disponível em www.cvv.org.br para atendimento por chat.
+SAMU: ligue 192 para emergências médicas, inclusive em crise psiquiátrica.
 
-SAMU — Serviço de Atendimento Móvel de Urgência: ligue 192. Pronto para atendimento de emergências médicas e psiquiátricas.
+UPA ou pronto-socorro: vá à unidade mais próxima ou peça a alguém de confiança que vá com você.
 
-UPA ou Pronto-Socorro mais próximo: em situações de crise grave com risco imediato, dirija-se pessoalmente à unidade de saúde mais próxima ou solicite ajuda a alguém de confiança.
+5. Seu papel
 
-O PsycheLink pode ser utilizado para comunicar uma dificuldade ao seu psicólogo, mas não é um canal de atendimento emergencial. Em situações urgentes, utilize os serviços listados acima.
+Você decide o que registra e o que o psicólogo vê. As decisões sobre a sua saúde continuam sendo suas e dos profissionais que acompanham você. Use o aplicativo como complemento, nunca como substituto do atendimento.
 
-5. Responsabilidade do Usuário
+6. Como o aplicativo trata essas regras
 
-Ao utilizar o PsycheLink, você declara compreender que a plataforma é um recurso complementar de apoio ao acompanhamento psicológico e que a responsabilidade pelas decisões relativas à sua saúde mental permanece com você e com os profissionais que o acompanham.
+O psicólogo só vê seus registros com vínculo ativo e dentro das categorias que você liberou. Seus dados não são usados para publicidade. Os avisos que o psicólogo recebe sobre você não carregam conteúdo clínico.
 
-O PsycheLink não assume responsabilidade por consequências decorrentes do uso inadequado da plataforma como substituta de atendimento profissional.
+O psicólogo vinculado tem deveres éticos próprios, como o sigilo previsto no Código de Ética Profissional do Psicólogo (Resolução CFP nº 010/2005). O aplicativo não substitui o julgamento dele.
 
-6. Compromisso Ético do PsycheLink
+7. Contato
 
-O PsycheLink foi desenvolvido com responsabilidade ética e respeito à saúde mental dos usuários. Nosso compromisso é fornecer uma plataforma segura, transparente e que respeite os limites de sua atuação tecnológica.
-
-Trabalhamos em colaboração com psicólogos e seguimos as orientações do Conselho Federal de Psicologia (CFP) no que diz respeito ao uso de tecnologias no contexto do acompanhamento psicológico.
-
-Em caso de dúvidas sobre a natureza ética do serviço prestado, entre em contato: etica@psychelink.com.br.`;
+${CONTATO}`;
