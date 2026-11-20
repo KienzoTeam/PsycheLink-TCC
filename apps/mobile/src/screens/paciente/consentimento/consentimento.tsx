@@ -18,6 +18,7 @@ import {
   type Escolhas,
   type Vinculo,
 } from '../../../lib/vinculoService';
+import PerfilDoPsicologo from './perfilDoPsicologo';
 import { styles } from './styleConsentimento';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Consentimento'>;
@@ -269,6 +270,7 @@ export default function Consentimento({ navigation }: Props) {
                   </Text>
                 </View>
               </View>
+              <PerfilDoPsicologo />
             </View>
 
             <Text style={[styles.introducao, { color: theme.colors.onBackground }]} maxFontSizeMultiplier={1.4}>
