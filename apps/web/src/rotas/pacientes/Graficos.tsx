@@ -32,7 +32,8 @@ const COR_HUMOR = 'var(--dados-5)';
 const COR_ANSIEDADE = 'var(--dados-2)';
 const COR_BARRA = 'var(--dados-3)';
 
-type ParDia = { data: string; humor: number | null; ansiedade: number | null };
+// mediaMovel: média do humor nos 7 dias até a data (inclui dias antes do período).
+type ParDia = { data: string; humor: number | null; ansiedade: number | null; mediaMovel?: number | null };
 
 const dica =
   (titulo: (rotulo: string) => string, unidade = '') =>
@@ -60,7 +61,7 @@ function Moldura({ children }: { children: ReactNode }) {
   );
 }
 
-export function LegendaSeries() {
+export function LegendaSeries({ comMedia = false }: { comMedia?: boolean }) {
   return (
     <ul className={css.legenda} aria-label="Legenda">
       <li>
@@ -71,6 +72,12 @@ export function LegendaSeries() {
         <span className={css.amostraAnsiedade} aria-hidden />
         Ansiedade
       </li>
+      {comMedia && (
+        <li>
+          <span className={css.amostraMedia} aria-hidden />
+          Humor, média de 7 dias
+        </li>
+      )}
     </ul>
   );
 }
@@ -85,6 +92,17 @@ export function GraficoHumorAnsiedade({ dados }: { dados: ParDia[] }) {
         <YAxis domain={[1, 10]} ticks={ESCALA_INTENSIDADE} width={LARGURA_EIXO_Y} tickLine={false} axisLine={false} />
         <Tooltip content={dica(formatarDataCurta)} isAnimationActive={false} />
         <Line dataKey="humor" name="Humor" stroke={COR_HUMOR} className={css.humor} dot={ponto(COR_HUMOR)} isAnimationActive={false} />
+        {dados.some((d) => d.mediaMovel != null) && (
+          <Line
+            dataKey="mediaMovel"
+            name="Humor, média de 7 dias"
+            stroke={COR_HUMOR}
+            strokeDasharray="2 4"
+            dot={false}
+            connectNulls
+            isAnimationActive={false}
+          />
+        )}
         <Line
           dataKey="ansiedade"
           name="Ansiedade"

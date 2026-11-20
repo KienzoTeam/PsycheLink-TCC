@@ -6,9 +6,11 @@ import {
   registrarAoSessaoExpirar,
   respostaDeSessaoAntiga,
 } from '../lib/api';
+import { VERSAO_DOCUMENTOS } from '../constants/documentos';
 import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
 import { limparContatos } from '../lib/contatosConfianca';
+import { desligarLembretes } from '../lib/lembretes';
 import { guardarDispositivo, lerDispositivo } from '../lib/dispositivoConfiavel';
 import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,tokenEmMemoria,} from '../lib/authToken';
 
@@ -299,6 +301,7 @@ export function useAuth() {
         email: email.trim(),
         password: senha,
         dataNascimento: dataISO, // YYYY-MM-DD
+        aceites: { versao: VERSAO_DOCUMENTOS },
       });
 
       onSuccess();
@@ -447,6 +450,7 @@ export function useAuth() {
 
     // Só no "Sair" explícito: a sessão que expira sozinha não apaga os contatos de crise do paciente.
     await limparContatos();
+    await desligarLembretes();
     await limparSessao();
   };
 

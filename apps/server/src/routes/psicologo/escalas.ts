@@ -14,6 +14,7 @@ import {
   type Opcao,
   type Subescalas,
 } from '../../lib/escalas';
+import { avisarPaciente } from '../../lib/pushPaciente';
 import { idDe, lerOuNegar, limite, rota } from '../../lib/rota';
 import { consentimentosDe, vinculoAtivoDe, vinculoOuNegar } from '../../lib/vinculo';
 
@@ -97,6 +98,7 @@ escalas.post(
       alvoId: criada.id,
       metadados: { sigla: criada.sigla },
     });
+    void avisarPaciente(Number(req.params.pacienteId), 'escala');
     return res.status(201).json({ aplicacao: aplicacaoJson(criada) });
   }),
 );

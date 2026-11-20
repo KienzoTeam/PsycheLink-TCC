@@ -93,3 +93,9 @@
 .amostraAnsiedade {
   border-block-start: var(--largura-linha-dados) dashed var(--dados-2);
 }
+
+/* Média móvel: pontilhada, na cor do humor, para ler como tendência da mesma série. */
+.amostraMedia {
+  width: var(--espaco-24);
+  border-block-start: var(--largura-linha-dados) dotted var(--dados-5);
+}

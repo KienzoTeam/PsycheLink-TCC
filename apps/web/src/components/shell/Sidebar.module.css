@@ -31,6 +31,16 @@
   padding-inline-start: 0;
 }
 
+.acoesTopo {
+  display: flex;
+  align-items: center;
+}
+
+/* Recolhida, a barra só tem a largura de um ícone: sino e alternar ficam em coluna. */
+.recolhida .acoesTopo {
+  flex-direction: column;
+}
+
 .marca {
   font: var(--tipo-titulo-grande-enfatico);
   color: var(--cor-sobre-superficie);

@@ -155,13 +155,13 @@ auth.post('/registro', limite(10), async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Formato de e-mail inválido.' });
 
   try {
-    const { nome, password, dataNascimento } = parsed.data;
+    const { nome, password, dataNascimento, aceites } = parsed.data;
     const hashedPassword = await bcrypt.hash(password, 10);
     const codigo = gerarCodigo();
 
     // Checagem, senha e código entram juntos sob um lock do e-mail: um cadastro paralelo espera e já
     // encontra o código ativo. O e-mail só sai depois do COMMIT, sem segurar o lock durante o SMTP.
-    const aceito = await emTransacao(async (client) => {
+    const userId = await emTransacao(async (client) => {
       await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [email]);
       const { rows } = await client.query(
         `SELECT u.id, u.email_verificado, u.password_hash, v.expira_em > now() AS codigo_ativo,
@@ -180,32 +180,43 @@ auth.post('/registro', limite(10), async (req, res) => {
         conta?.email_verificado ||
         (conta?.codigo_ativo && !(await bcrypt.compare(password, conta.password_hash)))
       ) {
-        return false;
+        return null;
       }
 
       // Pendente nunca entrou no painel (o login exige e-mail confirmado): não há vínculo nem código a perder.
       if (conta?.psicologo) await client.query('DELETE FROM psicologo WHERE user_id = $1', [conta.id]);
 
+      let id: number = conta?.id;
       if (conta) {
         await client.query(
           'UPDATE users SET nome = $1, password_hash = $2, data_nascimento = $3 WHERE email = $4',
           [nome, hashedPassword, dataNascimento, email],
         );
       } else {
-        await client.query(
+        const novo = await client.query<{ id: number }>(
           `INSERT INTO users (nome, email, password_hash, data_nascimento, email_verificado)
-           VALUES ($1, $2, $3, $4, false)`,
+           VALUES ($1, $2, $3, $4, false)
+           RETURNING id`,
           [nome, email, hashedPassword, dataNascimento],
         );
+        id = novo.rows[0].id;
       }
       await gravarCodigo(client, email, codigo);
-      return true;
+      return id;
     });
+
+    // Só quando o cadastro foi aceito: quem já tem conta confirmada não ganha registro nenhum.
+    if (userId && aceites) {
+      await registrarAuditoria(req, 'documentos_aceitos', {
+        ator: { id: userId, papel: 'paciente' },
+        metadados: { versao: aceites.versao },
+      });
+    }
 
     // Não revela conta existente: a resposta é a de um cadastro novo e o dono recebe só um aviso.
     // O aviso é aguardado como o código, para o tempo e a falha de SMTP serem os mesmos.
     try {
-      await (aceito ? enviarCodigo(email, codigo) : enviarAvisoCadastro(email));
+      await (userId ? enviarCodigo(email, codigo) : enviarAvisoCadastro(email));
     } catch (erroSmtp) {
       console.error('[SMTP Error] Falha ao entregar o e-mail do cadastro:', resumoErroSmtp(erroSmtp));
       return res.status(400).json({
@@ -390,7 +401,7 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
 type Perfil = { id: number; nome: string; email: string; data_nascimento: string };
 
 // Token do app (1 dia) e o mesmo perfil do GET /me: o app entra sem mais uma ida e volta.
-const acessoApp = ({ id, nome, email, data_nascimento }: Perfil) => ({
+export const acessoApp = ({ id, nome, email, data_nascimento }: Perfil) => ({
   token: jwt.sign({ id, email }, process.env.JWT_SECRET!, { expiresIn: '1d' }),
   usuario: { id, nome, email, data_nascimento },
 });
