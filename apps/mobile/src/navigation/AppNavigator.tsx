@@ -18,6 +18,7 @@ import Consultas from '../screens/paciente/consultas/consultas';
 import ResponderEscala from '../screens/paciente/escalas/responderEscala';
 import Consentimento from '../screens/paciente/consentimento/consentimento';
 import SOS from '../screens/paciente/sos/sos';
+import Historico from '../screens/paciente/historico/historico';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -34,6 +35,7 @@ export type RootStackParamList = {
   Consultas: undefined;
   ResponderEscala: { aplicacaoId: number };
   Consentimento: undefined;
+  Historico: undefined;
   SOSPublico: undefined;
 };
 
@@ -81,6 +83,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Consultas" component={Consultas} />
             <Stack.Screen name="ResponderEscala" component={ResponderEscala} />
             <Stack.Screen name="Consentimento" component={Consentimento} />
+            <Stack.Screen name="Historico" component={Historico} />
             <Stack.Screen name="Vinculacao" component={Vinculacao} />
           </>
         ) : (

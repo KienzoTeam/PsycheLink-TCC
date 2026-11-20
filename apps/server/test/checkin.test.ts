@@ -279,6 +279,40 @@ describe('POST /checkin', () => {
     });
   });
 
+  describe('GET /checkin/historico', () => {
+    const historico = async (paciente: Paciente, dias?: number) =>
+      criarCliente(servidor.url).requisitar('GET', `/checkin/historico${dias ? `?dias=${dias}` : ''}`, {
+        cabecalhos: bearer(paciente),
+      });
+
+    it('lista o período do mais novo para o mais antigo, com notas e hábitos descriptografados', async () => {
+      const paciente = await criarPaciente();
+      const id = await pacienteIdDe(paciente);
+      for (const dias of [0, 3, 6, 7, 20]) {
+        await criarCheckin(id, { diasAtras: dias, humor: Math.min(dias + 1, 10), diario: `nota ${dias}`, exercicio: dias === 3 });
+      }
+
+      const res = await historico(paciente, 7);
+      assert.equal(res.status, 200);
+      const corpo = (await res.json()) as Json;
+      assert.deepEqual(corpo.registros.map((r: Json) => r.humor), [1, 4, 7]);
+      assert.equal(corpo.registros[0].notas, 'nota 0');
+      assert.equal(corpo.registros[1].habitos.exercicio, true);
+      assert.equal(corpo.registros[0].habitos.exercicio, false);
+      assert.equal(corpo.dias, 7);
+
+      const mes = (await (await historico(paciente)).json()) as Json;
+      assert.equal(mes.dias, 30);
+      assert.equal(mes.registros.length, 5);
+    });
+
+    it('recusa período fora da lista e exige login', async () => {
+      const paciente = await criarPaciente();
+      assert.equal((await historico(paciente, 15)).status, 400);
+      assert.equal((await criarCliente(servidor.url).requisitar('GET', '/checkin/historico')).status, 401);
+    });
+  });
+
   describe('autenticação', () => {
     it('sem Authorization responde 401', async () => {
       const res = await criarCliente(servidor.url).requisitar('POST', '/checkin', { corpo: BASE });
