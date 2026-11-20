@@ -17,7 +17,8 @@
         "monochromeImage": "./src/assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.kienzoteam.psychelink"
+      "package": "com.kienzoteam.psychelink",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./src/assets/favicon.png"

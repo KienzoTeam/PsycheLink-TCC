@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "815324895052",
+    "project_id": "psychelink-tcc",
+    "storage_bucket": "psychelink-tcc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815324895052:android:85545e5247a16ba5b7e1e9",
+        "android_client_info": {
+          "package_name": "com.kienzoteam.psychelink"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjwAWQbc6z3_E74pbceVOfTzC_8pejYSQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
