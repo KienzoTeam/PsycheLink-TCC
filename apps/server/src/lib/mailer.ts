@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { emailDeAvisoCadastro, emailDeCodigo, type TipoCodigo } from './emails';
 
 // Lidos ao carregar o módulo, como o transporte SMTP abaixo.
 const chaveBrevo = process.env.BREVO_API_KEY;
@@ -50,6 +51,7 @@ async function enviar(para: string, assunto: string, texto: string, html: string
         to: [{ email: para }],
         subject: assunto,
         htmlContent: html,
+        textContent: texto,
       }),
       signal: AbortSignal.timeout(15_000),
     }).catch((erro: unknown) => {
@@ -71,36 +73,18 @@ async function enviar(para: string, assunto: string, texto: string, html: string
   }
 }
 
-export async function enviarCodigo(
-  email: string,
-  codigo: number,
-  assunto = 'PsycheLink · Confirme seu e-mail'
-): Promise<void> {
+export async function enviarCodigo(email: string, codigo: number, tipo: TipoCodigo = 'cadastro'): Promise<void> {
+  const { assunto, texto, html } = emailDeCodigo(tipo, codigo);
   // Só no dev sem e-mail configurado o código vai para o console; com e-mail de verdade ele nunca chega ao log.
-  if (transporteDeEmail() === 'console de dev') {
-    console.log(`[código] ${email} · ${assunto}: ${codigo}`);
-  }
-
-  await enviar(
-    email,
-    assunto,
-    `Seu código é ${codigo}. Ele expira em 15 minutos.`,
-    `<p>Seu código é <strong>${codigo}</strong>.</p><p>Expira em 15 minutos.</p>`
-  );
+  // O assunto já termina no código ("PsycheLink · Código de acesso: 123456").
+  if (transporteDeEmail() === 'console de dev') console.log(`[código] ${email} · ${assunto}`);
+  await enviar(email, assunto, texto, html);
 }
 
 // Cadastro tentado com um e-mail que já existe: o dono é avisado aqui, sem código nenhum,
 // porque a resposta da API é igual à de um cadastro novo e não pode revelar a conta.
 export async function enviarAvisoCadastro(email: string): Promise<void> {
-  const assunto = 'PsycheLink · Tentativa de cadastro com seu e-mail';
-  const texto =
-    'Alguém tentou criar uma conta no PsycheLink com este e-mail. ' +
-    "Se foi você, entre normalmente ou use 'Esqueci minha senha'; se ainda não confirmou o cadastro, use o código que enviamos antes. " +
-    'Se não foi você, ignore esta mensagem.';
-
-  if (transporteDeEmail() === 'console de dev') {
-    console.log(`[aviso] ${email} · ${assunto}`);
-  }
-
-  await enviar(email, assunto, texto, `<p>${texto}</p>`);
+  const { assunto, texto, html } = emailDeAvisoCadastro();
+  if (transporteDeEmail() === 'console de dev') console.log(`[aviso] ${email} · ${assunto}`);
+  await enviar(email, assunto, texto, html);
 }

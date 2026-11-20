@@ -9,7 +9,6 @@ import { enviarCodigo } from './mailer';
 // 2FA por e-mail, igual no painel (canal 'web', psicólogo) e no app (canal 'app', paciente).
 export type Canal = 'web' | 'app';
 
-const ASSUNTO_2FA = 'PsycheLink · Código de acesso';
 export const MSG_CODIGO_INVALIDO = 'Código inválido ou expirado. Solicite um novo.';
 
 const mascararEmail = (email: string) => `${email[0]}•••${email.slice(email.lastIndexOf('@'))}`;
@@ -19,7 +18,7 @@ const papelDo = (canal: Canal) => (canal === 'web' ? ('psicologo' as const) : ('
 export async function criarDesafio(userId: number, email: string, canal: Canal) {
   const desafioId = randomBytes(32).toString('base64url');
   const codigo = gerarCodigo();
-  await enviarCodigo(email, codigo, ASSUNTO_2FA);
+  await enviarCodigo(email, codigo, 'acesso');
 
   // Um desafio vivo por conta: o novo login invalida os anteriores.
   await pool.query('UPDATE desafio_2fa SET usado_em = now() WHERE user_id = $1 AND usado_em IS NULL', [userId]);
@@ -115,6 +114,6 @@ export async function reenviarDesafio(desafioId: string, canal: Canal) {
   }
 
   // Erro de envio sobe para o chamador (502).
-  await enviarCodigo(rows[0].email, codigo, ASSUNTO_2FA);
+  await enviarCodigo(rows[0].email, codigo, 'acesso');
   return { status: 200, corpo: { reenviarEm: rows[0].reenviar_em.toISOString() } };
 }
