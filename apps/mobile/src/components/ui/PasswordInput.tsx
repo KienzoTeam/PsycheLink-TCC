@@ -10,17 +10,20 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
+import MedidorSenha from './MedidorSenha';
 
 interface Props extends TextInputProps {
   label: string;
   placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
+  /** Só em senha nova (cadastro, redefinição), nunca no login. */
+  medidor?: boolean;
 }
 
 /** Campo de senha com olho de revelar. Ref exposta para cadeia de teclado (next → done). */
 const PasswordInput = forwardRef<TextInputInstance, Props>(function PasswordInput(
-  { label, placeholder, value, onChangeText, ...rest }: Props,
+  { label, placeholder, value, onChangeText, medidor, ...rest }: Props,
   ref
 ) {
   const [visible, setVisible] = useState(false);
@@ -65,6 +68,7 @@ const PasswordInput = forwardRef<TextInputInstance, Props>(function PasswordInpu
           />
         </TouchableOpacity>
       </View>
+      {medidor && <MedidorSenha senha={value} />}
     </View>
   );
 });

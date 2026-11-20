@@ -79,6 +79,7 @@ export default function NovaSenha({ navigation, route }: Props) {
         placeholder="Mínimo 8 caracteres"
         value={senha}
         onChangeText={setSenha}
+        medidor
         autoComplete="new-password"
         textContentType="newPassword"
       />
