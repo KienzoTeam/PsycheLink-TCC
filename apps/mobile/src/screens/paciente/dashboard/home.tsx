@@ -20,6 +20,7 @@ import { rotularEmocao } from '../../../lib/emocoes';
 import { useConsultas } from '../../../hooks/useConsultas';
 import { buscarVinculo, type Vinculo } from '../../../lib/vinculoService';
 import { styles } from './styleHome';
+import { buscarConta, cancelarExclusao } from '../../../lib/contaService';
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -55,6 +56,8 @@ export default function Home() {
   const [carregandoPainel, setCarregandoPainel] = useState(true);
   const [erroPainel, setErroPainel] = useState(false);
   const [tentativaPainel, setTentativaPainel] = useState(0);
+  // Data em que a conta será apagada, se o paciente pediu a exclusão (pode desistir até lá).
+  const [excluirEm, setExcluirEm] = useState<string | null>(null);
 
   // Recarrega toda vez que a Home ganha foco
   useFocusEffect(
@@ -62,6 +65,10 @@ export default function Home() {
       let telaAtiva = true;
       setCarregandoPainel(true);
       setErroPainel(false);
+
+      buscarConta()
+        .then((c) => telaAtiva && setExcluirEm(c.excluirEm))
+        .catch(() => undefined);
 
       buscarPainelCheckin()
         .then((dados) => {
@@ -193,6 +200,24 @@ export default function Home() {
         </Animated.View>
 
         <View style={styles.content}>
+          {excluirEm && (
+            <View
+              style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.error, gap: 8 }]}
+              accessibilityRole="alert"
+            >
+              <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Exclusão da conta agendada</Text>
+              <Text style={[styles.consultaDetalhe, { color: theme.colors.onSurfaceVariant }]}>
+                Sua conta e seus registros serão apagados em {new Date(excluirEm).toLocaleDateString('pt-BR')}.
+              </Text>
+              <TouchableOpacity
+                onPress={() => void cancelarExclusao().then(() => setExcluirEm(null)).catch(() => undefined)}
+                style={{ minHeight: 44, justifyContent: 'center' }}
+                accessibilityRole="button"
+              >
+                <Text style={{ color: theme.colors.primary, fontWeight: '700', fontSize: 15 }}>Cancelar exclusão</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           <TouchableOpacity
             style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}
             onPress={() => navigation.navigate('Consultas')}
@@ -223,6 +248,22 @@ export default function Home() {
                 Nenhuma consulta agendada.
               </Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}
+            onPress={() => navigation.navigate('Diario')}
+            accessibilityRole="button"
+            accessibilityHint="Abre o diário"
+          >
+            <View style={styles.cardHeader}>
+              <Feather name="book-open" size={18} color={theme.colors.primary} />
+              <Text style={[styles.cardTitle, styles.consultaTitulo, { color: theme.colors.onSurface }]}>Diário</Text>
+              <Feather name="chevron-right" size={18} color={theme.colors.subtext1} />
+            </View>
+            <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>
+              Escreva quando quiser, quantas vezes quiser.
+            </Text>
           </TouchableOpacity>
 
           {/* Só exibe o selo de demonstração APÓS carregar, sem erro e sem dados reais */}
@@ -369,6 +410,22 @@ export default function Home() {
         onPsicologoPrivacidade={() => {
           setSheetContaAberta(false);
           navigation.navigate('Consentimento');
+        }}
+        onConfiguracoesConta={() => {
+          setSheetContaAberta(false);
+          navigation.navigate('ConfiguracoesConta');
+        }}
+        onPrivacidade={() => {
+          setSheetContaAberta(false);
+          navigation.navigate('Privacidade');
+        }}
+        onAjudaSuporte={() => {
+          setSheetContaAberta(false);
+          navigation.navigate('Ajuda');
+        }}
+        onNotificacoes={() => {
+          setSheetContaAberta(false);
+          navigation.navigate('Notificacoes');
         }}
       />
 

@@ -57,6 +57,42 @@ export async function buscarResumoCheckins(): Promise<ResumoCheckins> {
   return response.data;
 }
 
+export type Habitos = {
+  hidratacao: boolean;
+  exercicio: boolean;
+  meditacao: boolean;
+  limiteTelas: boolean;
+  contatoSocial: boolean;
+  medicacao: boolean;
+};
+
+export type RegistroHistorico = {
+  id: number;
+  data: string; // 'YYYY-MM-DD'
+  horario: string | null; // 'HH:MM' (Brasília)
+  humor: number | null;
+  ansiedade: number | null;
+  sonoHoras: number | null;
+  qualidadeSono: string | null;
+  emocoes: string[] | null;
+  gatilhos: string[] | null;
+  habitos: Habitos | null;
+  notas: string | null;
+  diarioCompartilhado: boolean;
+};
+
+export type Historico = {
+  dias: number;
+  registros: RegistroHistorico[]; // do mais novo para o mais antigo
+  frequenciaEmocional: FrequenciaEmocional[];
+};
+
+/** GET /checkin/historico: alimenta o Histórico (F4) e Meus Dados (F6). */
+export async function buscarHistorico(dias: number): Promise<Historico> {
+  const { data } = await api.get<Historico>('/checkin/historico', { params: { dias } });
+  return data;
+}
+
 export type PainelCheckin = {
   semDados: boolean;
   inativo?: boolean;

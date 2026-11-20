@@ -27,3 +27,19 @@
   display: grid;
   gap: var(--espaco-24);
 }
+
+.grupo {
+  display: grid;
+  gap: var(--espaco-4);
+}
+
+.rotuloGrupo {
+  font: var(--tipo-rotulo-grande);
+  color: var(--cor-sobre-superficie-variante);
+}
+
+.opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--espaco-24);
+}

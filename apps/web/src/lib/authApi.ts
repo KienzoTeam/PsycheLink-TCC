@@ -15,6 +15,7 @@ type DadosCadastro = {
   dataNascimento: string;
   crp: string;
   especialidade?: string;
+  aceites?: { versao: string };
 };
 
 // Navegador confiável: a API abre a sessão direto e responde { ok: true }, sem desafio.

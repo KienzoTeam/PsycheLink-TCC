@@ -6,9 +6,9 @@ import { CHECKIN_EM, CHECKIN_HORARIO, emocoesDe, lerSeguro } from '../../lib/che
 import { comContextoPsicologo } from '../../lib/contextoseguro';
 import { criptografar } from '../../lib/criptografia';
 import { codificarCursor, cursorDe } from '../../lib/cursor';
-import { arredondar, media, pearson } from '../../lib/estatistica';
+import { arredondar, desviosDaMedia, media, pearson } from '../../lib/estatistica';
 import { dia, diasEntre, periodoValido } from '../../lib/periodo';
-import { checkinsDoPeriodo, faixaDoDia, type LinhaDetalhe, resumirCheckins } from '../../lib/resumo';
+import { checkinsDoPeriodo, faixaDoDia, type LinhaDetalhe, mediaMovelHumor, resumirCheckins } from '../../lib/resumo';
 import { idDe, lerOuNegar, limite, rota } from '../../lib/rota';
 import { consentimentosDe, PACIENTE_NAO_ENCONTRADO, vinculoOuNegar } from '../../lib/vinculo';
 import { anotacaoSchema } from '../../schemas';
@@ -164,6 +164,9 @@ pacientes.get(
       const consent = consentimentosDe(vinculo);
 
       const rows = await checkinsDoPeriodo(client, vinculo.paciente_id, q.de ?? null, q.ate ?? null, q.dias);
+      const mediaMovel = consent.humor
+        ? await mediaMovelHumor(client, vinculo.paciente_id, q.de ?? null, q.ate ?? null, q.dias)
+        : null;
 
       const anterior =
         q.compararDe === undefined
@@ -222,10 +225,10 @@ pacientes.get(
           ).rows
         : null;
 
-      return { vinculo, consent, rows, anterior, recentes, entradas, usosSos };
+      return { vinculo, consent, rows, mediaMovel, anterior, recentes, entradas, usosSos };
     });
     if (!dados) return;
-    const { vinculo, consent, rows, anterior, recentes, entradas, usosSos } = dados;
+    const { vinculo, consent, rows, mediaMovel, anterior, recentes, entradas, usosSos } = dados;
 
     const { registros, frequenciaEmocional, habitos, distribuicaoHorario } = resumirCheckins(rows, consent);
 
@@ -269,6 +272,13 @@ pacientes.get(
         : null,
     });
 
+    // Desvio de cada registro em relação à média de ansiedade do próprio período.
+    const variacaoAnsiedade = consent.humor
+      ? desviosDaMedia(
+          registros.flatMap((r) => (r.ansiedade === null ? [] : [{ data: r.data, valor: r.ansiedade }])),
+        )
+      : null;
+
     // Sem N suficiente a correlação é ruído: só devolve com pares completos de sono e humor.
     const pares = registros.flatMap((r): Array<[number, number]> =>
       r.sonoHoras !== null && r.humor !== null ? [[r.sonoHoras, r.humor]] : [],
@@ -288,6 +298,8 @@ pacientes.get(
       habitos,
       diario,
       distribuicaoHorario,
+      mediaMovelHumor: mediaMovel,
+      variacaoAnsiedade,
       comparacao: anterior ? { atual: resumirPeriodo(rows), anterior: resumirPeriodo(anterior) } : null,
       correlacaoSonoHumor:
         correlacao === null ? null : { r: Number(correlacao.toFixed(2)), n: pares.length },

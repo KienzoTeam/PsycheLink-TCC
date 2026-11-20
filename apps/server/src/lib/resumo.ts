@@ -54,6 +54,45 @@ export async function checkinsDoPeriodo(
   return rows;
 }
 
+/** Quantos registros citam cada emoção; empate desempata pelo nome para a ordem ser sempre a mesma. */
+export function contarEmocoes(listas: Array<string[] | null>, limite = 5) {
+  const contagem = new Map<string, number>();
+  for (const emocoes of listas) {
+    for (const emocao of emocoes ?? []) contagem.set(emocao, (contagem.get(emocao) ?? 0) + 1);
+  }
+  return [...contagem.entries()]
+    .map(([emocao, quantidade]) => ({ emocao, quantidade }))
+    .sort((a, b) => b.quantidade - a.quantidade || a.emocao.localeCompare(b.emocao))
+    .slice(0, limite);
+}
+
+/**
+ * Média dos últimos 7 dias do humor para cada dia do período (o dia e os 6 anteriores, mesmo antes
+ * do início do período). Dia sem nenhum registro na janela fica null. Mesmos limites de checkinsDoPeriodo.
+ */
+export async function mediaMovelHumor(
+  client: PoolClient,
+  pacienteId: number,
+  de: string | null,
+  ate: string | null,
+  dias = 30,
+): Promise<Array<{ data: string; valor: number | null }>> {
+  const { rows } = await client.query<{ data: string; valor: number | null }>(
+    `WITH p AS (SELECT COALESCE($2::date, COALESCE($3::date, CURRENT_DATE) - $4::int) AS de,
+                       COALESCE($3::date, CURRENT_DATE) AS ate)
+     SELECT to_char(p.de + n, 'YYYY-MM-DD') AS data,
+            round(avg(c.intensidade_humor), 1)::float8 AS valor
+       FROM p
+      CROSS JOIN generate_series(0, p.ate - p.de) AS n
+       LEFT JOIN checkin_diario c
+              ON c.paciente_id = $1 AND c.data BETWEEN p.de + n - 6 AND p.de + n
+      GROUP BY p.de, n
+      ORDER BY n`,
+    [pacienteId, de, ate, dias],
+  );
+  return rows;
+}
+
 /**
  * Humor/ansiedade/emoções/gatilhos/horário seguem o consentimento "humor".
  * Sono e hábitos seguem "hábitos". Sem nenhum dos dois, nem a data nem a quantidade de
@@ -76,16 +115,7 @@ export function resumirCheckins(rows: LinhaDetalhe[], consent: Consentimentos) {
     gatilhos: consent.humor ? emocoesDe(l.contexto_gatilho) : null,
   }));
 
-  const contagem = new Map<string, number>();
-  for (const registro of registros) {
-    for (const emocao of registro.emocoes ?? []) {
-      contagem.set(emocao, (contagem.get(emocao) ?? 0) + 1);
-    }
-  }
-  const frequenciaEmocional = [...contagem.entries()]
-    .map(([emocao, quantidade]) => ({ emocao, quantidade }))
-    .sort((a, b) => b.quantidade - a.quantidade)
-    .slice(0, 5);
+  const frequenciaEmocional = contarEmocoes(registros.map((r) => r.emocoes));
 
   let habitos: null | ({ diasRegistrados: number } & Record<keyof Habitos, number>) = null;
   if (consent.habitos) {

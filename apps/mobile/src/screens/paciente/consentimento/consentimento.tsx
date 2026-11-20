@@ -49,7 +49,14 @@ const DIARIO: Categoria = {
   descricao: 'Vale para os próximos check-ins. Desligado por padrão.',
 };
 
-const SEM_ESCOLHAS: Escolhas = { humor: false, habitos: false, escalas: false, diario: false };
+const SOS: Categoria = {
+  chave: 'sos',
+  rotulo: 'Avisar quando eu abrir o SOS',
+  descricao:
+    'Seu psicólogo vê só o dia e a hora, nunca o que você fez lá. Ele não é avisado para responder na hora: em risco, ligue 188 ou 192. Desligado por padrão.',
+};
+
+const SEM_ESCOLHAS: Escolhas = { humor: false, habitos: false, escalas: false, diario: false, sos: false };
 
 const textosCompartilhados = (n: number) =>
   n === 0
@@ -175,7 +182,7 @@ export default function Consentimento({ navigation }: Props) {
   };
 
   const alterado =
-    consentimento !== null && [...CATEGORIAS, DIARIO].some(({ chave }) => escolhas[chave] !== consentimento[chave]);
+    consentimento !== null && [...CATEGORIAS, DIARIO, SOS].some(({ chave }) => escolhas[chave] !== consentimento[chave]);
 
   const estiloCartao = {
     backgroundColor: theme.colors.surfaceContainer,
@@ -322,6 +329,17 @@ export default function Consentimento({ navigation }: Props) {
                   </Text>
                 </TouchableOpacity>
               )}
+            </View>
+
+            <View style={[styles.cartao, estiloCartao]}>
+              <Text
+                style={[styles.tituloDiario, { color: theme.colors.onSurface }]}
+                accessibilityRole="header"
+                maxFontSizeMultiplier={1.4}
+              >
+                Uso do SOS
+              </Text>
+              {renderLinha(SOS)}
             </View>
 
             {consentimento.atualizadoEm && (

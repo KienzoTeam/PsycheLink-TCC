@@ -1,0 +1,52 @@
+.lista {
+  display: grid;
+  gap: var(--espaco-12);
+}
+
+.item {
+  display: grid;
+  gap: var(--espaco-8);
+}
+
+.topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--espaco-8) var(--espaco-16);
+}
+
+.titulo {
+  font: var(--tipo-titulo-medio);
+  overflow-wrap: anywhere;
+}
+
+.situacao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-4);
+  font: var(--tipo-rotulo-grande);
+}
+
+.situacao svg {
+  flex-shrink: 0;
+  width: var(--tamanho-icone-pequeno);
+  height: var(--tamanho-icone-pequeno);
+}
+
+/* Texto livre do psicólogo: preserva as quebras de linha e nunca vira marcação. */
+.texto {
+  font: var(--tipo-corpo-grande);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.data {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-medio);
+}
+
+.cancelada .titulo,
+.cancelada .texto {
+  color: var(--cor-sobre-superficie-variante);
+}
