@@ -1,8 +1,8 @@
 // Layout dos e-mails (Catppuccin Latte, como o painel), sem cartão: fundo único, que o tema escuro
 // do leitor inverte sem sobrar moldura. E-mail não é página web: tabelas e estilos inline (Gmail e
 // Outlook ignoram boa parte do CSS) e o logo como imagem hospedada (o Gmail bloqueia imagem embutida).
-// Texto em Outfit pelo Google Fonts (Outlook e Apple Mail carregam; o Gmail cai na fonte do sistema);
-// o nome da marca vai na imagem do logo. Contraste ≥ 4,5:1 em todo texto.
+// Texto na fonte do sistema (sem fonte externa: nada a baixar ao abrir); o nome da marca vai na
+// imagem do logo. Contraste ≥ 4,5:1 em todo texto.
 // Os textos são fixos e o código só tem dígitos: nada vindo do usuário entra no HTML sem escapar.
 
 const COR = {
@@ -14,10 +14,8 @@ const COR = {
   codigo: '#6a1fd0', // 6,4:1 no bloco lilás
   marca: '#8839ef', // mesmo mauve da imagem do logo
 };
-const FONTE = "Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+const FONTE = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 const FONTE_MARCA = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
-const FONTES_GOOGLE =
-  'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap';
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace";
 
 export type TipoCodigo = 'cadastro' | 'acesso' | 'senha';
@@ -78,7 +76,6 @@ function montar({ titulo, paragrafos, seguranca, codigo, minutos }: Conteudo) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
-<link href="${FONTES_GOOGLE}" rel="stylesheet">
 <title>${titulo}</title>
 </head>
 <body style="margin:0;padding:0;background:${COR.fundo};">
