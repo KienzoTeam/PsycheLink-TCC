@@ -422,6 +422,7 @@ export default function Home() {
         onAjudaSuporte={() => {
           setSheetContaAberta(false);
           navigation.navigate('Ajuda');
+        }}
         onNotificacoes={() => {
           setSheetContaAberta(false);
           navigation.navigate('Notificacoes');
