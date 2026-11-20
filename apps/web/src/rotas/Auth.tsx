@@ -30,7 +30,7 @@ export function Auth() {
     <div className={css.pagina} data-compacto={compacto}>
       <header className={css.marca}>
         <div className={css.marcaConteudo}>
-          <img src="/logo-arvore.png" alt="" className={css.logo} />
+          <img src="/logo-arvore.svg" alt="" className={css.logo} />
           <div className={css.textos}>
             <h1 className={css.nome}>PsycheLink</h1>
             <p className={css.slogan}>O acompanhamento entre as sessões.</p>
