@@ -70,7 +70,7 @@ export function RecuperarSenha({ email, aoVoltar }: Props) {
         {novaSenha ? (
           <>
             <div className={css.bloco}>
-              <CampoForm senha autoFocus control={control} nome="password" rotulo="Nova senha" autoComplete="new-password" />
+              <CampoForm senha medidor autoFocus control={control} nome="password" rotulo="Nova senha" autoComplete="new-password" />
             </div>
             <div className={css.bloco}>
               <CampoForm senha control={control} nome="confirmacao" rotulo="Confirmar nova senha" autoComplete="new-password" />

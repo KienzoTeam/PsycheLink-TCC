@@ -172,6 +172,7 @@ export function FormularioAcesso({ email, aoRecuperarSenha }: Props) {
             control={control}
             nome="password"
             rotulo="Senha"
+            medidor={cadastro}
             autoComplete={cadastro ? 'new-password' : 'current-password'}
           />
         </div>
