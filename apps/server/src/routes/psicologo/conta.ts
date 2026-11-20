@@ -4,7 +4,14 @@ import { pool } from '../../db';
 import { registrarAuditoria } from '../../lib/auditoria';
 import { emTransacao } from '../../lib/contextoseguro';
 import { limite, rota } from '../../lib/rota';
-import { derrubarAcessosWeb, limparCookies, revogarSessoes, SESSAO_VIVA } from '../../lib/sessaoWeb';
+import { revogarDispositivos } from '../../lib/dispositivoConfiavel';
+import {
+  derrubarAcessosWeb,
+  limparCookieDispositivo,
+  limparCookies,
+  revogarSessoes,
+  SESSAO_VIVA,
+} from '../../lib/sessaoWeb';
 import { contaSchema, exclusaoContaSchema, trocaSenhaSchema } from '../../schemas';
 
 export const conta = Router();
@@ -99,7 +106,12 @@ conta.get(
         ORDER BY ultimo_uso_em DESC`,
       [req.user!.id, res.locals.sessaoId],
     );
-    return res.json({ sessoes: rows });
+    const { rows: confiaveis } = await pool.query<{ n: number }>(
+      `SELECT count(*)::int AS n FROM dispositivo_confiavel
+        WHERE user_id = $1 AND revogado_em IS NULL AND expira_em > now()`,
+      [req.user!.id],
+    );
+    return res.json({ sessoes: rows, dispositivosConfiaveis: confiaveis[0].n });
   }),
 );
 
@@ -110,6 +122,18 @@ conta.post(
     const encerradas = await revogarSessoes(req.user!.id, res.locals.sessaoId);
     await registrarAuditoria(req, 'sessoes_encerradas', { metadados: { quantidade: encerradas } });
     return res.json({ encerradas });
+  }),
+);
+
+// Todos os navegadores confiáveis da conta voltam a pedir o código (inclusive este).
+conta.post(
+  '/me/dispositivos/esquecer',
+  limite(10),
+  rota(async (req, res) => {
+    const esquecidos = await revogarDispositivos(req.user!.id);
+    limparCookieDispositivo(res);
+    await registrarAuditoria(req, 'dispositivos_esquecidos', { metadados: { quantidade: esquecidos } });
+    return res.json({ esquecidos });
   }),
 );
 
