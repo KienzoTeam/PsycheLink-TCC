@@ -33,11 +33,11 @@ import {
 } from '../../lib/psicologoApi';
 import pagina from '../Pagina.module.css';
 import css from './MinhaArea.module.css';
+import { PerfilProfissional } from './PerfilProfissional';
 
-// Mesmos limites do servidor (registroSchema, contaSchema e senhaSchema).
+// Mesmos limites do servidor (registroSchema e senhaSchema).
 const NOME_MIN = 2;
 const NOME_MAX = 120;
-const ESPECIALIDADE_MAX = 255;
 const SENHA_MIN = 8;
 const SENHA_MAX = 72;
 const CHAVE_ME = ['psicologo', 'me'];
@@ -46,14 +46,13 @@ const ABAS = ['perfil', 'senha', 'sessoes', 'avisos', 'preferencias'] as const;
 function PerfilConta({ psicologo }: { psicologo: Psicologo }) {
   const cliente = useQueryClient();
   const [nome, setNome] = useState(psicologo.nome);
-  const [especialidade, setEspecialidade] = useState(psicologo.especialidade ?? '');
   const [tentou, setTentou] = useState(false);
 
   const nomeErro = nome.trim().length < NOME_MIN || nome.trim().length > NOME_MAX ? `Informe o nome com ${NOME_MIN} a ${NOME_MAX} caracteres.` : undefined;
-  const especialidadeErro = especialidade.trim().length > ESPECIALIDADE_MAX ? `Use até ${ESPECIALIDADE_MAX} caracteres.` : undefined;
 
   const salvar = useMutation({
-    mutationFn: () => atualizarMe({ nome: nome.trim(), especialidade: especialidade.trim() }),
+    // A especialidade é editada no cartão "Perfil profissional"; o PATCH exige o campo, então segue o valor atual.
+    mutationFn: () => atualizarMe({ nome: nome.trim(), especialidade: psicologo.especialidade ?? '' }),
     onSuccess: (atualizado) => {
       cliente.setQueryData(CHAVE_ME, atualizado);
       notificar({ titulo: 'Perfil atualizado' });
@@ -63,7 +62,7 @@ function PerfilConta({ psicologo }: { psicologo: Psicologo }) {
   function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     setTentou(true);
-    if (!nomeErro && !especialidadeErro) salvar.mutate();
+    if (!nomeErro) salvar.mutate();
   }
 
   return (
@@ -71,13 +70,6 @@ function PerfilConta({ psicologo }: { psicologo: Psicologo }) {
       <form onSubmit={enviar} noValidate className={css.formulario}>
         <h2 className={pagina.tituloSecao}>Perfil</h2>
         <TextField rotulo="Nome" value={nome} onChange={setNome} autoComplete="name" erro={tentou ? nomeErro : undefined} />
-        <TextField
-          rotulo="Especialidade"
-          value={especialidade}
-          onChange={setEspecialidade}
-          descricao="Opcional."
-          erro={tentou ? especialidadeErro : undefined}
-        />
         <TextField rotulo="E-mail" value={psicologo.email} isReadOnly descricao="Não pode ser alterado aqui." />
         <TextField rotulo="CRP" value={psicologo.crp} isReadOnly descricao="Não pode ser alterado aqui." />
         {salvar.isError && <AvisoErro>{mensagemDeErro(salvar.error, 'Não foi possível salvar o perfil.')}</AvisoErro>}
@@ -416,6 +408,7 @@ export default function MinhaArea() {
             painel: me.data ? (
               <div className={css.pilha}>
                 <PerfilConta key={me.data.id} psicologo={me.data} />
+                <PerfilProfissional />
                 <ExcluirConta />
               </div>
             ) : me.isError ? (
