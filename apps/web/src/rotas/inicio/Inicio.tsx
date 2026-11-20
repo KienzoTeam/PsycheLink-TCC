@@ -31,7 +31,7 @@ const noPaciente = (id: number) => `/pacientes/${id}`;
 function Engajamento({ engajamento }: { engajamento: Dashboard['engajamento'] }) {
   const { ativos, compartilhando } = engajamento;
   return (
-    <Card>
+    <Card className={css.destaque}>
       <h2 className={css.tituloCartao}>Engajamento</h2>
       {compartilhando === 0 ? (
         <p className={css.vazio}>Nenhum paciente compartilha humor ainda. O engajamento conta só quem compartilha.</p>
@@ -52,38 +52,43 @@ function Engajamento({ engajamento }: { engajamento: Dashboard['engajamento'] })
 
 function Alertas({ alertas }: { alertas: Dashboard['alertas'] }) {
   const linhas = [
-    { rotulo: 'Poucos registros', valor: plural(alertas.esparsos, 'paciente', 'pacientes'), apoio: 'Menos de 3 check-ins nos últimos 7 dias.' },
-    { rotulo: 'Uso do SOS', valor: plural(alertas.sos.usos, 'uso', 'usos'), apoio: 'Acessos ao SOS nos últimos 7 dias, só de quem compartilha o SOS.' },
-    { rotulo: 'Escalas não abertas', valor: plural(alertas.escalasNaoVistas, 'escala', 'escalas'), apoio: 'Respondidas, com o detalhe ainda não aberto por você.' },
+    { rotulo: 'Poucos registros', valor: plural(alertas.esparsos, 'paciente', 'pacientes') },
+    { rotulo: 'Uso do SOS', valor: plural(alertas.sos.usos, 'uso', 'usos') },
+    { rotulo: 'Escalas não abertas', valor: plural(alertas.escalasNaoVistas, 'escala', 'escalas') },
   ];
   return (
-    <Card>
+    <Card className={css.destaque}>
       <h2 className={css.tituloCartao}>Alertas ativos</h2>
       <p className={css.numeroMedio}>{alertas.total}</p>
-      <p className={css.legenda}>Soma dos três itens abaixo. É uma contagem, não uma avaliação de risco.</p>
       <dl className={css.definicoes}>
         {linhas.map((linha) => (
           <div key={linha.rotulo}>
             <dt>{linha.rotulo}</dt>
             <dd>{linha.valor}</dd>
-            <dd className={css.apoio}>{linha.apoio}</dd>
           </div>
         ))}
       </dl>
-      {alertas.sos.pacientes.length > 0 && (
-        <>
-          <h3 className={css.subtitulo}>Quem usou o SOS</h3>
-          <ul>
-            {alertas.sos.pacientes.map((item) => (
-              <ListItem
-                key={item.pacienteId}
-                href={noPaciente(item.pacienteId)}
-                titulo={item.nome}
-                apoio={`${plural(item.usos, 'uso', 'usos')} em 7 dias`}
-              />
-            ))}
-          </ul>
-        </>
+      <p className={css.definicao}>
+        Contagem, não avaliação de risco. Poucos registros: menos de 3 check-ins em 7 dias. SOS: últimos 7 dias, só de quem
+        compartilha. Escalas: respondidas e ainda não abertas por você.
+      </p>
+    </Card>
+  );
+}
+
+function UsoSos({ pacientes }: { pacientes: Dashboard['alertas']['sos']['pacientes'] }) {
+  return (
+    <Card>
+      <h2 className={css.tituloCartao}>Uso do SOS</h2>
+      <p className={css.legenda}>Últimos 7 dias, só dos pacientes que compartilham o uso do SOS. Não é pedido de atendimento.</p>
+      {pacientes.length === 0 ? (
+        <p className={css.vazio}>Nenhum uso do SOS compartilhado nos últimos 7 dias.</p>
+      ) : (
+        <ul>
+          {pacientes.map((item) => (
+            <ListItem key={item.pacienteId} href={noPaciente(item.pacienteId)} titulo={item.nome} apoio={`${plural(item.usos, 'uso', 'usos')} em 7 dias`} />
+          ))}
+        </ul>
       )}
     </Card>
   );
@@ -107,7 +112,7 @@ function Insights({ insights }: { insights: Dashboard['insightsSemana'] }) {
   const { registros, humor, ansiedade, emocoes } = insights;
   const [principal, ...outras] = emocoes;
   return (
-    <Card className={pagina.largura}>
+    <Card>
       <h2 className={css.tituloCartao}>Insights da semana</h2>
       <p className={css.legenda}>
         Os últimos 7 dias contra os 7 anteriores, dos pacientes que compartilham humor. A variação é só a diferença entre os números.
@@ -146,7 +151,7 @@ function Vinculados({ dados, periodo }: { dados: Dashboard; periodo: number }) {
   const primeiro = serieVinculos[0];
   const ultimo = serieVinculos.at(-1);
   return (
-    <Card className={css.vinculados}>
+    <Card className={cx(css.vinculados, css.destaque)}>
       <div>
         <h2 className={css.tituloCartao}>
           Pacientes vinculados
@@ -371,6 +376,8 @@ export default function Inicio() {
     queryKey: ['dashboard', periodo],
     queryFn: () => buscarDashboard(periodo),
     placeholderData: keepPreviousData,
+    // Check-ins novos não geram aviso: o painel se atualiza sozinho enquanto a aba está visível.
+    refetchInterval: 30_000,
   });
   const dados = consulta.data;
   const comPacientes = dados !== undefined && dados.pacientesVinculados > 0;
@@ -402,22 +409,25 @@ export default function Inicio() {
           />
         </Card>
       ) : (
-        <div className={pagina.grade} aria-busy={consulta.isPlaceholderData}>
-          <div className={cx(pagina.grade, pagina.largura)}>
+        <div className={css.painel} aria-busy={consulta.isPlaceholderData}>
+          <div className={css.destaques}>
+            <Vinculados dados={dados} periodo={periodo} />
             <Engajamento engajamento={dados.engajamento} />
             <Alertas alertas={dados.alertas} />
           </div>
           <Insights insights={dados.insightsSemana} />
-          <div className={css.coluna}>
-            <Vinculados dados={dados} periodo={periodo} />
-            <Atividades itens={dados.atividadeRecente} />
-            <DadosInsuficientes itens={dados.dadosInsuficientes} />
-            <Escalas escalas={dados.escalas} naoVistas={dados.alertas.escalasNaoVistas} />
-          </div>
-          <div className={css.coluna}>
-            <ResumoCheckins itens={dados.checkinsRecentes} />
-            <Medias medias={dados.medias} periodo={periodo} />
-            <ConsultasHoje itens={dados.consultasHoje} />
+          <div className={css.colunas}>
+            <div className={css.coluna}>
+              <ConsultasHoje itens={dados.consultasHoje} />
+              <Escalas escalas={dados.escalas} naoVistas={dados.alertas.escalasNaoVistas} />
+              <UsoSos pacientes={dados.alertas.sos.pacientes} />
+              <DadosInsuficientes itens={dados.dadosInsuficientes} />
+            </div>
+            <div className={css.coluna}>
+              <ResumoCheckins itens={dados.checkinsRecentes} />
+              <Medias medias={dados.medias} periodo={periodo} />
+              <Atividades itens={dados.atividadeRecente} />
+            </div>
           </div>
         </div>
       )}
