@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { avisar } from '../../lib/avisos';
 import { perfilProfissional } from '../../lib/perfilProfissional';
 import { DatabaseError } from 'pg';
 import { z } from 'zod';
@@ -125,6 +126,7 @@ vinculo.post(
       alvoId: criado.vinculoId,
       metadados: { psicologoId: criado.psicologoId },
     });
+    void avisar(criado.psicologoId, 'vinculo_novo', pacienteId);
     return res.status(201).json({ vinculo: await vinculoAtivoDe(userId) });
   }),
 );
@@ -150,6 +152,7 @@ vinculo.post(
       alvoId: rows[0].id,
       metadados: { encerradoPor: 'paciente' },
     });
+    void avisar(rows[0].psicologo_id, 'vinculo_encerrado', rows[0].paciente_id);
     return res.json({ ok: true });
   }),
 );

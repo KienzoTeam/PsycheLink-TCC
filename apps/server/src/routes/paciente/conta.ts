@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { pool } from '../../db';
 import { registrarAuditoria } from '../../lib/auditoria';
+import { avisar } from '../../lib/avisos';
 import { lerSeguro } from '../../lib/checkins';
 import { comContextoPaciente, emTransacao } from '../../lib/contextoseguro';
 import { revogarDispositivos } from '../../lib/dispositivoConfiavel';
@@ -118,6 +119,7 @@ conta.post(
       pacienteId: vinculo?.paciente_id,
       metadados: { dias: DIAS_PARA_EXCLUIR, ...(vinculo && { psicologoId: vinculo.psicologo_id }) },
     });
+    if (vinculo) void avisar(vinculo.psicologo_id, 'conta_excluida', vinculo.paciente_id);
     return res.json({ ok: true, dias: DIAS_PARA_EXCLUIR });
   }),
 );
