@@ -16,6 +16,26 @@ const CORES_BARRAS = ['#6C4CE0', '#4B32B0', '#B9CFFB', '#D9CFF8', '#F4A6B0'];
 const COR_HUMOR = '#6C4CE0';
 const COR_ANSIEDADE = '#F4645C';
 const MINIMO_REGISTROS = 3; // F6: abaixo disso, alerta em vez de gráfico enganoso
+const ANSIEDADE_ALTA = 7; // mesmo corte do painel do psicólogo
+// Mesmas faixas do painel do psicólogo (hora de Brasília do check-in).
+const FAIXAS = [
+  { rotulo: 'Madrugada', ate: 6 },
+  { rotulo: 'Manhã', ate: 12 },
+  { rotulo: 'Tarde', ate: 18 },
+  { rotulo: 'Noite', ate: 24 },
+];
+
+/** F6, análise por horário: check-ins com ansiedade de 7 a 10, contados pela faixa do dia. */
+function ansiedadeAltaPorFaixa(registros: RegistroHistorico[]) {
+  const contagem = FAIXAS.map(() => 0);
+  for (const r of registros) {
+    if (r.horario === null || (r.ansiedade ?? 0) < ANSIEDADE_ALTA) continue;
+    const hora = Number(r.horario.slice(0, 2));
+    contagem[FAIXAS.findIndex((f) => hora < f.ate)]++;
+  }
+  return contagem;
+}
+
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 type Ponto = { rotulo: string; humor: number | null; ansiedade: number | null; sono: number | null };
@@ -227,6 +247,44 @@ export default function MeusDados({ navigation, ativa = true }: Props) {
                       />
                     </View>,
                   )}
+
+                {(() => {
+                  const faixas = ansiedadeAltaPorFaixa(historico.registros);
+                  const total = faixas.reduce((a, b) => a + b, 0);
+                  return cartao(
+                    'clock',
+                    'Ansiedade alta por horário',
+                    total === 0 ? (
+                      <Text style={{ color: theme.colors.onSurfaceVariant }}>
+                        Nenhum check-in com ansiedade de 7 a 10 neste período.
+                      </Text>
+                    ) : (
+                      <View
+                        accessible
+                        accessibilityLabel={`Check-ins com ansiedade de 7 a 10: ${FAIXAS.map((f, i) => `${f.rotulo}, ${faixas[i]}`).join('; ')}.`}
+                      >
+                        <Text style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>
+                          Check-ins com ansiedade de 7 a 10, pela hora em que foram feitos. Madrugada até 6h, manhã até 12h,
+                          tarde até 18h, noite até 24h.
+                        </Text>
+                        <BarChart
+                          data={faixas.map((valor, i) => ({ value: valor, label: FAIXAS[i].rotulo, frontColor: COR_ANSIEDADE }))}
+                          maxValue={Math.max(4, ...faixas)}
+                          noOfSections={Math.min(4, Math.max(...faixas, 1))}
+                          barWidth={36}
+                          spacing={22}
+                          barBorderRadius={4}
+                          yAxisColor="transparent"
+                          xAxisColor={theme.colors.outlineVariant}
+                          rulesColor={theme.colors.outlineVariant}
+                          yAxisTextStyle={textoEixo}
+                          xAxisLabelTextStyle={textoEixo}
+                          height={140}
+                        />
+                      </View>
+                    ),
+                  );
+                })()}
 
                 {historico.frequenciaEmocional.length > 0 &&
                   cartao(
