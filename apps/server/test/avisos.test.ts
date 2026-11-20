@@ -84,7 +84,7 @@ describe('avisos do psicólogo (FP12)', () => {
       email: false,
       push: false,
     });
-    assert.equal(tipos.find((t: Json) => t.tipo === 'sos_usado').email, true);
+    assert.equal(tipos.find((t: Json) => t.tipo === 'sos_usado').email, false);
     assert.deepEqual(((await (await web.requisitar('GET', '/psicologo/avisos')).json()) as Json).avisos, []);
   });
 
