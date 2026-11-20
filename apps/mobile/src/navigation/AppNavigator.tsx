@@ -19,6 +19,7 @@ import Consultas from '../screens/paciente/consultas/consultas';
 import ResponderEscala from '../screens/paciente/escalas/responderEscala';
 import Consentimento from '../screens/paciente/consentimento/consentimento';
 import SOS from '../screens/paciente/sos/sos';
+import Diario from '../screens/paciente/diario/diario';
 import Historico from '../screens/paciente/historico/historico';
 import Notificacoes from '../screens/paciente/notificacoes/notificacoes';
 import { lembretesSuportados } from '../lib/lembretes';
@@ -38,6 +39,7 @@ export type RootStackParamList = {
   Consultas: undefined;
   ResponderEscala: { aplicacaoId: number };
   Consentimento: undefined;
+  Diario: undefined;
   Historico: undefined;
   Notificacoes: undefined;
   SOSPublico: undefined;
@@ -109,6 +111,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Consultas" component={Consultas} />
             <Stack.Screen name="ResponderEscala" component={ResponderEscala} />
             <Stack.Screen name="Consentimento" component={Consentimento} />
+            <Stack.Screen name="Diario" component={Diario} />
             <Stack.Screen name="Historico" component={Historico} />
             <Stack.Screen name="Notificacoes" component={Notificacoes} />
             <Stack.Screen name="Vinculacao" component={Vinculacao} />

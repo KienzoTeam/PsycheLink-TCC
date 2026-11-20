@@ -225,6 +225,22 @@ export default function Home() {
             )}
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.borderRadius.lg, borderColor: theme.colors.outlineVariant }]}
+            onPress={() => navigation.navigate('Diario')}
+            accessibilityRole="button"
+            accessibilityHint="Abre o diário"
+          >
+            <View style={styles.cardHeader}>
+              <Feather name="book-open" size={18} color={theme.colors.primary} />
+              <Text style={[styles.cardTitle, styles.consultaTitulo, { color: theme.colors.onSurface }]}>Diário</Text>
+              <Feather name="chevron-right" size={18} color={theme.colors.subtext1} />
+            </View>
+            <Text style={[styles.consultaDetalhe, { color: theme.colors.subtext1 }]}>
+              Escreva quando quiser, quantas vezes quiser.
+            </Text>
+          </TouchableOpacity>
+
           {/* Só exibe o selo de demonstração APÓS carregar, sem erro e sem dados reais */}
           {mostrarExemplo && (
             <>
