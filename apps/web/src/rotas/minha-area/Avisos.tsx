@@ -101,6 +101,10 @@ export function Avisos() {
               ))}
             </tbody>
           </table>
+          <p className={pagina.subtituloSecao}>
+            O aviso de SOS só informa que o paciente abriu a tela (e só se ele permitiu). Não é um pedido de atendimento: o
+            app orienta o paciente a ligar para o 188 ou o 192 em situação de risco.
+          </p>
           {salvar.isError && <AvisoErro>{mensagemDeErro(salvar.error, 'Não foi possível salvar.')}</AvisoErro>}
         </div>
       </Card>
