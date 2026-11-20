@@ -26,12 +26,13 @@ import Diario from '../screens/paciente/diario/diario';
 import Historico from '../screens/paciente/historico/historico';
 import Notificacoes from '../screens/paciente/notificacoes/notificacoes';
 import { lembretesSuportados } from '../lib/lembretes';
+import { renovarAvisos } from '../lib/pushPaciente';
 
 export type RootStackParamList = {
   Login: undefined;
   Registro: undefined;
   Vinculacao: undefined;
-  Main: { aba?: 'Home' | 'SOS' } | undefined;
+  Main: { aba?: 'Home' | 'Escalas' | 'Bem Estar' | 'SOS' } | undefined;
   EsqueciSenha: undefined;
   // No modo 'login', email é o mascarado que a API devolve (2FA).
   VerificarCodigo: { email: string; modo: 'cadastro' | 'recuperacao' } | { email: string; modo: 'login'; desafioId: string };
@@ -54,10 +55,14 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const navegacao = createNavigationContainerRef<RootStackParamList>();
 
-// Toque num lembrete abre a tela que ele cita (Checkin ou Dados), só com a sessão ativa.
+// Toque numa notificação abre a tela que ela cita, só com a sessão ativa. Lembretes citam Checkin
+// ou Dados; os avisos do psicólogo (push do servidor) citam uma aba.
 function abrirTelaDaNotificacao(resposta: Notifications.NotificationResponse | null) {
   const tela = resposta?.notification.request.content.data?.tela;
-  if ((tela === 'Checkin' || tela === 'Dados') && navegacao.isReady()) navegacao.navigate(tela);
+  if (!navegacao.isReady()) return;
+  if (tela === 'Checkin' || tela === 'Dados') navegacao.navigate(tela);
+  else if (tela === 'Escalas') navegacao.navigate('Main', { aba: 'Escalas' });
+  else if (tela === 'BemEstar') navegacao.navigate('Main', { aba: 'Bem Estar' });
 }
 
 /**
@@ -67,7 +72,8 @@ function abrirTelaDaNotificacao(resposta: Notifications.NotificationResponse | n
  */
 export default function AppNavigator() {
   const { theme, isDark } = useTheme();
-  const { sessao } = useAuth();
+  const { sessao, usuario } = useAuth();
+  const usuarioId = usuario?.id;
 
   // Transições e fundos do stack acompanham o nosso tema (sem flash claro no escuro).
   const navigationTheme = useMemo<Theme>(
@@ -91,6 +97,10 @@ export default function AppNavigator() {
     const assinatura = Notifications.addNotificationResponseReceivedListener(abrirTelaDaNotificacao);
     return () => assinatura.remove();
   }, [sessao]);
+
+  useEffect(() => {
+    if (lembretesSuportados && sessao === 'ativa' && usuarioId) void renovarAvisos(usuarioId);
+  }, [sessao, usuarioId]);
 
   // Token ainda sendo lido do armazenamento: só o fundo, sem piscar o Login.
   if (sessao === 'lendo') {
