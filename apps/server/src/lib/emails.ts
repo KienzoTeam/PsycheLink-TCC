@@ -52,7 +52,7 @@ const logo = () => {
   if (!origem) {
     return `<span style="font-family:${FONTE_MARCA};font-size:32px;line-height:40px;font-weight:600;color:${COR.marca};">PsycheLink</span>`;
   }
-  return `<img src="${origem}/email-marca.png" width="280" height="76" alt="PsycheLink" style="display:block;width:280px;max-width:100%;height:auto;border:0;">`;
+  return `<img src="${origem}/email-marca.png" width="280" height="91" alt="PsycheLink" style="display:block;width:280px;max-width:100%;height:auto;border:0;">`;
 };
 
 function montar({ titulo, paragrafos, seguranca, codigo, minutos }: Conteudo) {
