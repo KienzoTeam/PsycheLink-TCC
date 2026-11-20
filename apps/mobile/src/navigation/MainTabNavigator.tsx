@@ -89,7 +89,7 @@ export default function MainTabNavigator({ navigation, route }: NativeStackScree
           {montadas.has(3) && <BemEstarPagina onVoltar={voltarParaInicio} />}
         </View>
         <View key="sos" style={{ flex: 1 }}>
-          {montadas.has(4) && <SOSPagina />}
+          {montadas.has(4) && <SOSPagina ativa={ABAS[ativo].nome === 'SOS'} />}
         </View>
       </PagerView>
 
