@@ -5,6 +5,7 @@ import { lerSeguro } from '../../lib/checkins';
 import { comContextoPsicologo } from '../../lib/contextoseguro';
 import { criptografar } from '../../lib/criptografia';
 import { EXERCICIOS, tituloDoExercicio } from '../../lib/exercicios';
+import { avisarPaciente } from '../../lib/pushPaciente';
 import { idDe, lerOuNegar, limite, rota } from '../../lib/rota';
 import { vinculoOuNegar } from '../../lib/vinculo';
 
@@ -94,6 +95,7 @@ recomendacoes.post(
       alvoId: criada.id,
       metadados: { catalogo: criada.exercicio_id !== null },
     });
+    void avisarPaciente(criada.paciente_id, 'recomendacao');
     return res.status(201).json({ recomendacao: recomendacaoDe(criada) });
   }),
 );

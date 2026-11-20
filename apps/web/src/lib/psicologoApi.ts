@@ -35,6 +35,8 @@ export type PacienteResumo = {
   vinculadoEm: string;
 };
 
+export type VariacaoSemanal = { atual: number | null; anterior: number | null; variacao: number | null };
+
 export type Dashboard = {
   pacientesVinculados: number;
   serieVinculos: { data: string; total: number }[];
@@ -42,8 +44,31 @@ export type Dashboard = {
   // `acao` é texto aberto: o servidor pode acrescentar ações novas.
   atividadeRecente: { pacienteId: number; nome: string; acao: string; em: string }[];
   dadosInsuficientes: { pacienteId: number; nome: string; registros7d: number }[];
+  // Dos que compartilham humor, quantos fizeram 3 ou mais check-ins nos últimos 7 dias.
+  engajamento: { compartilhando: number; ativos: number };
+  alertas: {
+    total: number;
+    esparsos: number;
+    sos: { usos: number; pacientes: { pacienteId: number; nome: string; usos: number }[] };
+    escalasNaoVistas: number;
+  };
+  insightsSemana: {
+    registros: { atual: number; anterior: number };
+    humor: VariacaoSemanal;
+    ansiedade: VariacaoSemanal;
+    emocoes: { emocao: string; quantidade: number }[];
+  };
   medias: { n: number; humor: number | null; ansiedade: number | null; sono: number | null };
-  consultasHoje: { id: number; pacienteId: number; nome: string; inicio: string; fim: string; status: StatusConsulta }[];
+  consultasHoje: {
+    id: number;
+    pacienteId: number;
+    nome: string;
+    inicio: string;
+    fim: string;
+    status: StatusConsulta;
+    // Escalas respondidas deste paciente cujo detalhe o psicólogo ainda não abriu.
+    escalasParaRever: number;
+  }[];
   escalas: {
     pendentes: number;
     respondidasRecentes: {
@@ -54,6 +79,8 @@ export type Dashboard = {
       respondidoEm: string;
       scoreTotal: number;
       item9DiferenteDeZero: boolean | null;
+      // O psicólogo já abriu o detalhe desta aplicação.
+      vista: boolean;
     }[];
   };
 };
@@ -87,8 +114,15 @@ export type ResumoPaciente = {
   registros: RegistroResumo[];
   frequenciaEmocional: { emocao: string; quantidade: number }[];
   habitos: ({ diasRegistrados: number } & Record<ChaveHabito, number>) | null;
-  diario: { data: string; texto: string }[];
+  diario: { data: string; hora: string | null; texto: string; origem: 'checkin' | 'avulso' }[];
   distribuicaoHorario: Record<FaixaHorario, number> | null;
+  // null: o paciente não compartilha o uso do SOS.
+  sos: { data: string; hora: string }[] | null;
+  crisesPorHorario: { sos: Record<FaixaHorario, number> | null; ansiedadeAlta: Record<FaixaHorario, number> | null };
+  // Uma entrada por dia do período; null quando a janela de 7 dias não tem nenhum registro.
+  mediaMovelHumor: { data: string; valor: number | null }[] | null;
+  // Desvio de cada registro em relação à média de ansiedade do período.
+  variacaoAnsiedade: { media: number | null; dias: { data: string; desvio: number }[] } | null;
   comparacao: { atual: ResumoPeriodo; anterior: ResumoPeriodo } | null;
   correlacaoSonoHumor: { r: number; n: number } | null;
   esparso: boolean | null;
@@ -213,6 +247,14 @@ export const listarLinhaDoTempo = async (id: number, params: { de: string; ate: 
 // O servidor devolve 'YYYY-MM-DD HH:mm' sem fuso, em UTC: vira ISO para formatar como os demais instantes.
 const instanteDaAnotacao = (a: Anotacao): Anotacao => ({ ...a, criadoEm: `${a.criadoEm.replace(' ', 'T')}:00Z` });
 
+export type GrupoArquivado = { pacienteId: number | null; nome: string | null; encerradoEm: string | null; anotacoes: Anotacao[] };
+
+export const listarArquivadas = async () =>
+  (await api.get<{ pacientes: GrupoArquivado[] }>('/psicologo/anotacoes-arquivadas')).data.pacientes.map((g) => ({
+    ...g,
+    anotacoes: g.anotacoes.map(instanteDaAnotacao),
+  }));
+
 export const listarAnotacoes = async (id: number) =>
   (await api.get<{ anotacoes: Anotacao[] }>(`/psicologo/pacientes/${id}/anotacoes`)).data.anotacoes.map(
     instanteDaAnotacao,
@@ -220,6 +262,31 @@ export const listarAnotacoes = async (id: number) =>
 
 export const criarAnotacao = async (id: number, conteudo: string) =>
   instanteDaAnotacao((await api.post<{ anotacao: Anotacao }>(`/psicologo/pacientes/${id}/anotacoes`, { conteudo })).data.anotacao);
+
+export type ExercicioCatalogo = { id: string; titulo: string };
+
+export type Recomendacao = {
+  id: number;
+  exercicioId: string | null;
+  titulo: string;
+  descricao: string | null;
+  nota: string | null;
+  criadoEm: string;
+  feitoEm: string | null;
+  canceladoEm: string | null;
+};
+
+export type NovaRecomendacao = { exercicioId: string; nota: string } | { titulo: string; descricao: string; nota: string };
+
+export const listarExercicios = async () => (await api.get<{ exercicios: ExercicioCatalogo[] }>('/psicologo/exercicios')).data.exercicios;
+
+export const listarRecomendacoes = async (id: number) =>
+  (await api.get<{ recomendacoes: Recomendacao[] }>(`/psicologo/pacientes/${id}/recomendacoes`)).data.recomendacoes;
+
+export const criarRecomendacao = (id: number, dados: NovaRecomendacao) => api.post(`/psicologo/pacientes/${id}/recomendacoes`, dados);
+
+export const cancelarRecomendacao = (id: number, recomendacaoId: number) =>
+  api.delete(`/psicologo/pacientes/${id}/recomendacoes/${recomendacaoId}`);
 
 export const encerrarVinculo = (id: number) => api.post(`/psicologo/pacientes/${id}/encerrar-vinculo`);
 
@@ -428,3 +495,16 @@ export const esquecerNavegadores = async () =>
 
 export const encerrarOutrasSessoes = async () =>
   (await api.post<{ encerradas: number }>('/psicologo/me/sessoes/encerrar-outras')).data.encerradas;
+
+// Avisos do psicólogo (sino, preferências e push do navegador).
+export type Aviso = { id: number; tipo: string; rotulo: string; pacienteId: number | null; nome: string | null; criadoEm: string; lida: boolean };
+export type PreferenciaAviso = { tipo: string; rotulo: string; painel: boolean; email: boolean; push: boolean };
+
+export const listarAvisos = async () => (await api.get<{ avisos: Aviso[]; naoLidas: number }>('/psicologo/avisos')).data;
+export const marcarAvisosLidos = async () => void (await api.post('/psicologo/avisos/lidas', {}));
+export const buscarPreferenciasAvisos = async () =>
+  (await api.get<{ tipos: PreferenciaAviso[]; chavePush: string | null }>('/psicologo/avisos/preferencias')).data;
+export const salvarPreferenciaAviso = async ({ tipo, painel, email, push }: PreferenciaAviso) =>
+  (await api.put<{ tipos: PreferenciaAviso[] }>('/psicologo/avisos/preferencias', { [tipo]: { painel, email, push } })).data.tipos;
+export const inscreverPush = async (inscricao: PushSubscriptionJSON) => void (await api.post('/psicologo/avisos/push', inscricao));
+export const cancelarPush = async (endpoint: string) => void (await api.delete('/psicologo/avisos/push', { data: { endpoint } }));

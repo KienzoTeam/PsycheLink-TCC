@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { VisuallyHidden } from 'react-aria-components';
 import { Info, LogOut } from 'lucide-react';
 import { SeletorTema } from '../../components/shell/SeletorTema';
+import { Avisos } from './Avisos';
 import { useSair } from '../../components/shell/useSair';
 import { AvisoErro } from '../../components/ui/AvisoErro';
 import { Button } from '../../components/ui/Button';
@@ -40,7 +41,7 @@ const NOME_MAX = 120;
 const SENHA_MIN = 8;
 const SENHA_MAX = 72;
 const CHAVE_ME = ['psicologo', 'me'];
-const ABAS = ['perfil', 'senha', 'sessoes', 'preferencias'] as const;
+const ABAS = ['perfil', 'senha', 'sessoes', 'avisos', 'preferencias'] as const;
 
 function PerfilConta({ psicologo }: { psicologo: Psicologo }) {
   const cliente = useQueryClient();
@@ -418,6 +419,7 @@ export default function MinhaArea() {
           },
           { id: 'senha', rotulo: 'Senha', painel: <TrocaSenha /> },
           { id: 'sessoes', rotulo: 'Sessões', painel: <Sessoes /> },
+          { id: 'avisos', rotulo: 'Avisos', painel: <Avisos /> },
           { id: 'preferencias', rotulo: 'Preferências', painel: <Preferencias /> },
         ]}
       />

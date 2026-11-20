@@ -5,7 +5,7 @@ import { RootStackParamList } from '../../navigation/AppNavigator';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../theme/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Politica_Privacidade, Termos_De_Uso, Consentimento_Dados, Aviso_Etico } from '../../constants/documentos';
+import { Politica_Privacidade, Termos_De_Uso, Consentimento_Dados, Aviso_Etico, DATA_DOCUMENTOS } from '../../constants/documentos';
 import CustomInput from '../../components/ui/CustomInput';
 import PasswordInput from '../../components/ui/PasswordInput';
 import CustomButton from '../../components/ui/CustomButton';
@@ -189,7 +189,7 @@ export default function Registro({ navigation }: Props) {
 
       <DocumentItem
         titulo="Termos de Uso"
-        dataAtualizacao="07 de agosto de 2026"
+        dataAtualizacao={DATA_DOCUMENTOS}
         conteudo={Termos_De_Uso}
         aceito={termosAceitos}
         onAceitar={() => setTermosAceitos(true)}
@@ -197,7 +197,7 @@ export default function Registro({ navigation }: Props) {
 
       <DocumentItem
         titulo="Política de Privacidade (LGPD)"
-        dataAtualizacao="07 de agosto de 2026"
+        dataAtualizacao={DATA_DOCUMENTOS}
         conteudo={Politica_Privacidade}
         aceito={privacidadeAceita}
         onAceitar={() => setPrivacidadeAceita(true)}
@@ -205,7 +205,7 @@ export default function Registro({ navigation }: Props) {
 
       <DocumentItem
         titulo="Consentimento para Tratamento de Dados Sensíveis"
-        dataAtualizacao="07 de agosto de 2026"
+        dataAtualizacao={DATA_DOCUMENTOS}
         conteudo={Consentimento_Dados}
         aceito={consentimentoAceito}
         onAceitar={() => setConsentimentoAceito(true)}
@@ -213,7 +213,7 @@ export default function Registro({ navigation }: Props) {
 
       <DocumentItem
         titulo="Aviso Ético e Profissional"
-        dataAtualizacao="07 de agosto de 2026"
+        dataAtualizacao={DATA_DOCUMENTOS}
         conteudo={Aviso_Etico}
         aceito={avisoAceito}
         onAceitar={() => setAvisoAceito(true)}
