@@ -10,6 +10,7 @@ import { erroEmail } from '../lib/email';
 import { resetarRascunho } from '../lib/rascunhoCheckin';
 import { limparContatos } from '../lib/contatosConfianca';
 import { desligarLembretes } from '../lib/lembretes';
+import { desligarAvisos } from '../lib/pushPaciente';
 import { guardarDispositivo, lerDispositivo } from '../lib/dispositivoConfiavel';
 import { salvarTokenSeguro,obterTokenSeguro,removerTokenSeguro,tokenEmMemoria,} from '../lib/authToken';
 
@@ -437,6 +438,9 @@ export function useAuth() {
   };
 
   const logout = async () => {
+    // Antes do logout no servidor, que encerra a sessão que este pedido precisa. Sem rede, o token
+    // fica lá e a próxima conta deste celular não o herda (a escolha local é por usuário).
+    await desligarAvisos().catch((error: any) => console.warn('Não foi possível remover o token dos avisos:', error?.message));
     try {
       const token = await obterTokenSeguro();
       if (token) {

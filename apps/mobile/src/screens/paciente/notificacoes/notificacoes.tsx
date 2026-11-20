@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../../theme/ThemeContext';
 import { RootStackParamList } from '../../../navigation/AppNavigator';
+import { useAuth } from '../../../hooks/useAuth';
 import { styles as base } from '../consentimento/styleConsentimento';
 import {
   carregarLembretes,
@@ -16,6 +17,8 @@ import {
   type Lembretes,
   type TipoLembrete,
 } from '../../../lib/lembretes';
+import { avisosLigados, desligarAvisos, ligarAvisos, semPushNoExpoGo } from '../../../lib/pushPaciente';
+import { mensagemDeErro } from '../../../lib/vinculoService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Notificacoes'>;
 
@@ -24,6 +27,10 @@ const ITENS: { tipo: TipoLembrete; rotulo: string; descricao: string }[] = [
   { tipo: 'noite', rotulo: 'Check-in da noite', descricao: 'Todo dia, caso ainda não tenha feito o de hoje.' },
   { tipo: 'semanal', rotulo: 'Resumo da semana', descricao: 'Toda segunda-feira, um convite para ver Meus Dados.' },
 ];
+
+const DESCRICAO_AVISOS = semPushNoExpoGo
+  ? 'No Expo Go do Android este aviso não chega. Use o aplicativo do PsycheLink instalado no celular.'
+  : 'Avisa quando seu psicólogo pedir uma escala ou recomendar um exercício. Precisa de internet e do aplicativo instalado. O aviso não mostra nenhum detalhe.';
 
 const PASSO = 15; // minutos
 
@@ -35,12 +42,20 @@ function mover({ hora, minuto }: Lembrete, delta: number) {
 export default function Notificacoes({ navigation }: Props) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const { usuario } = useAuth();
   const [lembretes, setLembretes] = useState<Lembretes | null>(null);
   const [semPermissao, setSemPermissao] = useState(false);
+  const [avisos, setAvisos] = useState<boolean | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+  const [erroAvisos, setErroAvisos] = useState<string | null>(null);
 
   useEffect(() => {
     void carregarLembretes().then(setLembretes);
   }, []);
+
+  useEffect(() => {
+    if (usuario) void avisosLigados(usuario.id).then(setAvisos);
+  }, [usuario]);
 
   // Cada mudança vale na hora: sem botão de salvar numa tela de interruptores.
   const aplicar = async (novo: Lembretes, ligando: boolean) => {
@@ -62,6 +77,30 @@ export default function Notificacoes({ navigation }: Props) {
   const ajustar = (tipo: TipoLembrete, delta: number) => {
     if (!lembretes) return;
     void aplicar({ ...lembretes, [tipo]: { ...lembretes[tipo], ...mover(lembretes[tipo], delta) } }, false);
+  };
+
+  // Ligar pede a permissão e registra o aparelho no servidor; desligar tira o registro de lá.
+  const alternarAvisos = async () => {
+    if (!usuario || ocupado) return;
+    const ligando = !avisos;
+    setOcupado(true);
+    setErroAvisos(null);
+    setSemPermissao(false);
+    try {
+      if (ligando) {
+        if (await ligarAvisos(usuario.id)) setAvisos(true);
+        else setSemPermissao(true);
+      } else {
+        await desligarAvisos();
+        setAvisos(false);
+      }
+    } catch (erro) {
+      setErroAvisos(
+        mensagemDeErro(erro, `Não foi possível ${ligando ? 'ligar' : 'desligar'} os avisos agora. Confira a internet e tente de novo.`),
+      );
+    } finally {
+      setOcupado(false);
+    }
   };
 
   const cartao = {
@@ -174,6 +213,41 @@ export default function Notificacoes({ navigation }: Props) {
                 );
               })}
             </View>
+
+            <View style={[base.cartao, cartao]}>
+              <View style={base.linha}>
+                <View style={base.linhaTextos} aria-hidden>
+                  <Text style={[base.rotulo, { color: theme.colors.onSurface }]} maxFontSizeMultiplier={1.4}>
+                    Avisos do seu psicólogo
+                  </Text>
+                  <Text style={[base.descricao, { color: theme.colors.onSurfaceVariant }]} maxFontSizeMultiplier={1.4}>
+                    {DESCRICAO_AVISOS}
+                  </Text>
+                </View>
+                <Switch
+                  value={avisos === true}
+                  onValueChange={() => void alternarAvisos()}
+                  disabled={avisos === null || ocupado || semPushNoExpoGo}
+                  trackColor={{ false: theme.colors.surfaceVariant, true: theme.colors.primary }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  accessibilityLabel="Avisos do seu psicólogo"
+                  accessibilityHint={DESCRICAO_AVISOS}
+                  accessibilityState={{ checked: avisos === true, disabled: avisos === null || ocupado || semPushNoExpoGo }}
+                />
+              </View>
+            </View>
+
+            {erroAvisos && (
+              <View
+                style={[
+                  local.aviso,
+                  { backgroundColor: theme.colors.surfaceContainer, borderColor: theme.colors.error, borderRadius: theme.borderRadius.md },
+                ]}
+                accessibilityRole="alert"
+              >
+                <Text style={[base.descricao, { color: theme.colors.onSurface }]}>{erroAvisos}</Text>
+              </View>
+            )}
           </>
         )}
       </ScrollView>
