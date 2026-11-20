@@ -11,6 +11,7 @@ export type Escolhas = {
   habitos: boolean;
   escalas: boolean;
   diario: boolean;
+  sos: boolean;
 };
 
 /** `diarioCompartilhados` é quantos textos do diário estão liberados agora. */
@@ -40,12 +41,14 @@ export async function salvarConsentimento({
   habitos,
   escalas,
   diario,
+  sos,
 }: Escolhas): Promise<Consentimento> {
   const { data } = await api.put<Consentimento>('/paciente/consentimento', {
     humor,
     habitos,
     escalas,
     diario,
+    sos,
   });
   return data;
 }
