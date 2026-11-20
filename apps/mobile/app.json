@@ -17,7 +17,7 @@
         "monochromeImage": "./src/assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.psychelink"
+      "package": "com.kienzoteam.psychelink"
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
@@ -38,6 +38,12 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a048be29-8418-4b14-8927-901770007549"
+      }
+    },
+    "owner": "imfenyx"
   }
 }
