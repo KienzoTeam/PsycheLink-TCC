@@ -10,6 +10,8 @@ import { escalas } from './escalas';
 import { consultas } from './consultas';
 import { relatorios } from './relatorios';
 import { auditoria } from './auditoria';
+import { avisos } from './avisos';
+import { exercicios, recomendacoes } from './recomendacoes';
 import { arquivadas } from './arquivadas';
 
 /**
@@ -40,7 +42,9 @@ async function exigirPsicologo(req: Request, res: Response, next: NextFunction) 
 
 psicologo.use(exigirSessaoWeb, exigirPsicologo);
 psicologo.use(conta);
+psicologo.use('/pacientes/:pacienteId/recomendacoes', recomendacoes);
 psicologo.use('/pacientes', pacientes);
+psicologo.use('/exercicios', exercicios);
 psicologo.use('/vinculo', vinculo);
 psicologo.use('/checkins', checkins);
 psicologo.use('/dashboard', dashboard);
@@ -48,4 +52,5 @@ psicologo.use(escalas);
 psicologo.use('/consultas', consultas);
 psicologo.use('/relatorios', relatorios);
 psicologo.use('/auditoria', auditoria);
+psicologo.use('/avisos', avisos);
 psicologo.use('/anotacoes-arquivadas', arquivadas);

@@ -1,0 +1,33 @@
+.aceite {
+  display: grid;
+  gap: var(--espaco-8);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-4);
+  margin-inline-start: calc(-1 * var(--espaco-12));
+}
+
+.erro {
+  color: var(--cor-erro);
+  font: var(--tipo-corpo-medio);
+}
+
+.data {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-corpo-medio);
+}
+
+.secao {
+  display: grid;
+  gap: var(--espaco-8);
+  margin-block-start: var(--espaco-16);
+  font: var(--tipo-corpo-grande);
+  text-wrap: pretty;
+}
+
+.titulo {
+  font: var(--tipo-titulo-medio);
+}

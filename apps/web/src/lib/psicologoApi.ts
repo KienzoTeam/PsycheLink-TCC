@@ -35,6 +35,8 @@ export type PacienteResumo = {
   vinculadoEm: string;
 };
 
+export type VariacaoSemanal = { atual: number | null; anterior: number | null; variacao: number | null };
+
 export type Dashboard = {
   pacientesVinculados: number;
   serieVinculos: { data: string; total: number }[];
@@ -42,8 +44,31 @@ export type Dashboard = {
   // `acao` é texto aberto: o servidor pode acrescentar ações novas.
   atividadeRecente: { pacienteId: number; nome: string; acao: string; em: string }[];
   dadosInsuficientes: { pacienteId: number; nome: string; registros7d: number }[];
+  // Dos que compartilham humor, quantos fizeram 3 ou mais check-ins nos últimos 7 dias.
+  engajamento: { compartilhando: number; ativos: number };
+  alertas: {
+    total: number;
+    esparsos: number;
+    sos: { usos: number; pacientes: { pacienteId: number; nome: string; usos: number }[] };
+    escalasNaoVistas: number;
+  };
+  insightsSemana: {
+    registros: { atual: number; anterior: number };
+    humor: VariacaoSemanal;
+    ansiedade: VariacaoSemanal;
+    emocoes: { emocao: string; quantidade: number }[];
+  };
   medias: { n: number; humor: number | null; ansiedade: number | null; sono: number | null };
-  consultasHoje: { id: number; pacienteId: number; nome: string; inicio: string; fim: string; status: StatusConsulta }[];
+  consultasHoje: {
+    id: number;
+    pacienteId: number;
+    nome: string;
+    inicio: string;
+    fim: string;
+    status: StatusConsulta;
+    // Escalas respondidas deste paciente cujo detalhe o psicólogo ainda não abriu.
+    escalasParaRever: number;
+  }[];
   escalas: {
     pendentes: number;
     respondidasRecentes: {
@@ -54,6 +79,8 @@ export type Dashboard = {
       respondidoEm: string;
       scoreTotal: number;
       item9DiferenteDeZero: boolean | null;
+      // O psicólogo já abriu o detalhe desta aplicação.
+      vista: boolean;
     }[];
   };
 };
@@ -92,6 +119,10 @@ export type ResumoPaciente = {
   // null: o paciente não compartilha o uso do SOS.
   sos: { data: string; hora: string }[] | null;
   crisesPorHorario: { sos: Record<FaixaHorario, number> | null; ansiedadeAlta: Record<FaixaHorario, number> | null };
+  // Uma entrada por dia do período; null quando a janela de 7 dias não tem nenhum registro.
+  mediaMovelHumor: { data: string; valor: number | null }[] | null;
+  // Desvio de cada registro em relação à média de ansiedade do período.
+  variacaoAnsiedade: { media: number | null; dias: { data: string; desvio: number }[] } | null;
   comparacao: { atual: ResumoPeriodo; anterior: ResumoPeriodo } | null;
   correlacaoSonoHumor: { r: number; n: number } | null;
   esparso: boolean | null;
@@ -215,6 +246,14 @@ export const listarLinhaDoTempo = async (id: number, params: { de: string; ate: 
 
 // O servidor devolve 'YYYY-MM-DD HH:mm' sem fuso, em UTC: vira ISO para formatar como os demais instantes.
 const instanteDaAnotacao = (a: Anotacao): Anotacao => ({ ...a, criadoEm: `${a.criadoEm.replace(' ', 'T')}:00Z` });
+
+export type GrupoArquivado = { pacienteId: number | null; nome: string | null; encerradoEm: string | null; anotacoes: Anotacao[] };
+
+export const listarArquivadas = async () =>
+  (await api.get<{ pacientes: GrupoArquivado[] }>('/psicologo/anotacoes-arquivadas')).data.pacientes.map((g) => ({
+    ...g,
+    anotacoes: g.anotacoes.map(instanteDaAnotacao),
+  }));
 
 export const listarAnotacoes = async (id: number) =>
   (await api.get<{ anotacoes: Anotacao[] }>(`/psicologo/pacientes/${id}/anotacoes`)).data.anotacoes.map(

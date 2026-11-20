@@ -25,3 +25,17 @@ export function pearson(pares: Array<[number, number]>): number | null {
   const denominador = Math.sqrt(sxx * syy);
   return denominador === 0 ? null : sxy / denominador;
 }
+
+/** Desvio de cada valor em relação à média da própria série, com uma casa decimal. */
+export function desviosDaMedia(itens: Array<{ data: string; valor: number }>) {
+  const m = media(itens.map((i) => i.valor));
+  return {
+    media: arredondar(m),
+    dias: m === null ? [] : itens.map((i) => ({ data: i.data, desvio: Number((i.valor - m).toFixed(1)) })),
+  };
+}
+
+/** Diferença entre duas médias já arredondadas, para a tela bater com o que o psicólogo confere à mão. */
+export function variacaoEntre(atual: number | null, anterior: number | null): number | null {
+  return atual === null || anterior === null ? null : Number((atual - anterior).toFixed(1));
+}
