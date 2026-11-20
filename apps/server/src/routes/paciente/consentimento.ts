@@ -8,18 +8,20 @@ import { lerOuNegar, limite, rota } from '../../lib/rota';
 
 export const consentimento = Router();
 
-const CATEGORIAS = ['humor', 'habitos', 'escalas', 'diario'] as const;
+const CATEGORIAS = ['humor', 'habitos', 'escalas', 'diario', 'sos'] as const;
 
 const consentimentoSchema = z.object({
   humor: z.boolean(),
   habitos: z.boolean(),
   escalas: z.boolean(),
   diario: z.boolean(),
+  // Opcional: versões antigas do app não mandam; sem o campo, fica como estava.
+  sos: z.boolean().optional(),
 });
 
 // `diario` é o valor inicial do interruptor "Compartilhar este texto" no check-in; quem libera
 // cada texto é a marcação daquele check-in. `diarioCompartilhados` conta os textos liberados.
-type Consentimento = z.infer<typeof consentimentoSchema> & { atualizadoEm: Date | null };
+type Consentimento = Omit<z.infer<typeof consentimentoSchema>, 'sos'> & { sos: boolean; atualizadoEm: Date | null };
 
 const contarCompartilhados = async (client: PoolClient, pacienteId: number) =>
   (
@@ -35,6 +37,7 @@ const COLUNAS = `COALESCE(compartilha_humor, false)   AS humor,
                  COALESCE(compartilha_habitos, false) AS habitos,
                  COALESCE(compartilha_escalas, false) AS escalas,
                  COALESCE(compartilha_diario, false)  AS diario,
+                 compartilha_sos                      AS sos,
                  atualizado_em AT TIME ZONE 'UTC'     AS "atualizadoEm"`;
 
 // Sem registro nada é compartilhado.
@@ -43,6 +46,7 @@ const NADA_COMPARTILHADO: Consentimento = {
   habitos: false,
   escalas: false,
   diario: false,
+  sos: false,
   atualizadoEm: null,
 };
 
@@ -82,16 +86,18 @@ consentimento.put(
       );
       const gravado = await client.query<Consentimento>(
         `INSERT INTO consentimento
-           (paciente_id, compartilha_humor, compartilha_habitos, compartilha_escalas, compartilha_diario, atualizado_em)
-         VALUES ($1, $2, $3, $4, $5, now())
+           (paciente_id, compartilha_humor, compartilha_habitos, compartilha_escalas, compartilha_diario,
+            compartilha_sos, atualizado_em)
+         VALUES ($1, $2, $3, $4, $5, COALESCE($6, false), now())
          ON CONFLICT (paciente_id) DO UPDATE SET
            compartilha_humor = EXCLUDED.compartilha_humor,
            compartilha_habitos = EXCLUDED.compartilha_habitos,
            compartilha_escalas = EXCLUDED.compartilha_escalas,
            compartilha_diario = EXCLUDED.compartilha_diario,
+           compartilha_sos = COALESCE($6, consentimento.compartilha_sos),
            atualizado_em = now()
          RETURNING ${COLUNAS}`,
-        [pacienteId, novo.humor, novo.habitos, novo.escalas, novo.diario],
+        [pacienteId, novo.humor, novo.habitos, novo.escalas, novo.diario, novo.sos ?? null],
       );
       return {
         antes: anterior.rows[0] ?? NADA_COMPARTILHADO,
@@ -100,13 +106,13 @@ consentimento.put(
     });
 
     // Os metadados guardam só as categorias que mudaram e o novo valor, nunca o estado inteiro.
-    const alterados = CATEGORIAS.filter((c) => novo[c] !== antes[c]);
+    const alterados = CATEGORIAS.filter((c) => atual[c] !== antes[c]);
     if (alterados.length > 0) {
       await registrarAuditoria(req, 'consentimento_alterado', {
         ator: { id: req.user!.id, papel: 'paciente' },
         pacienteId,
         alvoTipo: 'consentimento',
-        metadados: Object.fromEntries(alterados.map((c) => [c, novo[c]])),
+        metadados: Object.fromEntries(alterados.map((c) => [c, atual[c]])),
       });
     }
     return res.json(atual);
