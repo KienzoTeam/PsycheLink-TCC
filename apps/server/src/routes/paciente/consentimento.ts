@@ -24,8 +24,9 @@ type Consentimento = z.infer<typeof consentimentoSchema> & { atualizadoEm: Date 
 const contarCompartilhados = async (client: PoolClient, pacienteId: number) =>
   (
     await client.query<{ n: number }>(
-      `SELECT count(*)::int AS n FROM checkin_diario
-        WHERE paciente_id = $1 AND diario_compartilhado AND diario_livre IS NOT NULL`,
+      `SELECT (SELECT count(*)::int FROM checkin_diario
+                WHERE paciente_id = $1 AND diario_compartilhado AND diario_livre IS NOT NULL)
+            + (SELECT count(*)::int FROM diario_entrada WHERE paciente_id = $1 AND compartilhado) AS n`,
       [pacienteId],
     )
   ).rows[0].n;
@@ -121,12 +122,16 @@ consentimento.post(
     if (pacienteId === null) return res.json({ revogados: 0 });
 
     const revogados = await comContextoPaciente(pacienteId, async (client) => {
-      const { rowCount } = await client.query(
+      const checkins = await client.query(
         `UPDATE checkin_diario SET diario_compartilhado = false
           WHERE paciente_id = $1 AND diario_compartilhado`,
         [pacienteId],
       );
-      return rowCount ?? 0;
+      const entradas = await client.query(
+        'UPDATE diario_entrada SET compartilhado = false WHERE paciente_id = $1 AND compartilhado',
+        [pacienteId],
+      );
+      return (checkins.rowCount ?? 0) + (entradas.rowCount ?? 0);
     });
 
     if (revogados > 0) {
