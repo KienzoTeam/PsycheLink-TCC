@@ -63,6 +63,11 @@ export function FormularioAcesso({ email, aoRecuperarSenha }: Props) {
   async function iniciarLogin({ email, password }: Valores) {
     try {
       const desafio = await entrar(email, password);
+      if (!('desafioId' in desafio)) {
+        await queryClient.invalidateQueries({ queryKey: ['psicologo', 'me'] });
+        navigate('/inicio');
+        return;
+      }
       abrir({
         tipo: 'doisFatores',
         desafioId: desafio.desafioId,
@@ -93,9 +98,9 @@ export function FormularioAcesso({ email, aoRecuperarSenha }: Props) {
     }
   });
 
-  async function confirmarDesafio(desafioId: string, codigo: string) {
+  async function confirmarDesafio(desafioId: string, codigo: string, confiar: boolean) {
     try {
-      await confirmarDoisFatores(desafioId, codigo);
+      await confirmarDoisFatores(desafioId, codigo, confiar);
     } catch (falha) {
       // O desafio acabou: não adianta digitar de novo, é preciso entrar outra vez.
       if (isAxiosError(falha) && mensagemDeErro(falha) === MSG_CODIGO_ENCERRADO) {
@@ -205,7 +210,8 @@ export function FormularioAcesso({ email, aoRecuperarSenha }: Props) {
           instrucao="Digite o código de 6 dígitos que enviamos por e-mail."
           email={verificacao.emailMascarado}
           reenviarEm={verificacao.reenviarEm}
-          onConfirmar={(codigo) => confirmarDesafio(verificacao.desafioId, codigo)}
+          opcaoConfiar
+          onConfirmar={(codigo, confiar) => confirmarDesafio(verificacao.desafioId, codigo, confiar)}
           onReenviar={() => reenviarDesafio(verificacao.desafioId)}
         />
       )}

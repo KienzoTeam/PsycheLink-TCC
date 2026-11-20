@@ -1,0 +1,85 @@
+/* M3: caixa 18dp com cantos de 2dp e contorno de 2dp; camada de estado de 40dp; alvo de toque mínimo. */
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--alvo-minimo);
+  /* A caixa (não a camada de 40dp) alinha com a borda do conteúdo. */
+  margin-inline-start: calc((1.125rem - 2.5rem) / 2);
+  color: var(--cor-sobre-superficie);
+  cursor: pointer;
+}
+
+.alvo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 50%;
+  color: var(--cor-sobre-superficie);
+}
+
+.alvo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentcolor;
+  opacity: 0;
+  transition: opacity var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+.checkbox[data-hovered] .alvo::before {
+  opacity: var(--camada-hover);
+}
+
+.checkbox[data-focus-visible] .alvo::before {
+  opacity: var(--camada-foco);
+}
+
+.checkbox[data-pressed] .alvo::before {
+  opacity: var(--camada-pressionado);
+}
+
+.caixa {
+  display: grid;
+  place-items: center;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  border: 2px solid var(--cor-sobre-superficie-variante);
+  border-radius: 2px;
+  transition:
+    background-color var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida),
+    border-color var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+.icone {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  color: var(--cor-sobre-primaria);
+  opacity: 0;
+  transition: opacity var(--duracao-efeitos-rapida) var(--mola-efeitos-rapida);
+}
+
+.checkbox[data-selected] .alvo {
+  color: var(--cor-primaria);
+}
+
+.checkbox[data-selected] .caixa {
+  border-color: var(--cor-primaria);
+  background: var(--cor-primaria);
+}
+
+.checkbox[data-selected] .icone {
+  opacity: 1;
+}
+
+.checkbox[data-focus-visible] .caixa {
+  outline: 2px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+.rotulo {
+  font: var(--tipo-corpo-medio);
+}
