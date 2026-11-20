@@ -8,7 +8,7 @@ import { criptografar } from '../../lib/criptografia';
 import { codificarCursor, cursorDe } from '../../lib/cursor';
 import { arredondar, media, pearson } from '../../lib/estatistica';
 import { dia, diasEntre, periodoValido } from '../../lib/periodo';
-import { checkinsDoPeriodo, type LinhaDetalhe, resumirCheckins } from '../../lib/resumo';
+import { checkinsDoPeriodo, faixaDoDia, type LinhaDetalhe, resumirCheckins } from '../../lib/resumo';
 import { idDe, lerOuNegar, limite, rota } from '../../lib/rota';
 import { consentimentosDe, PACIENTE_NAO_ENCONTRADO, vinculoOuNegar } from '../../lib/vinculo';
 import { anotacaoSchema } from '../../schemas';
@@ -17,6 +17,7 @@ export const pacientes = Router();
 
 const MIN_PARES_CORRELACAO = 10;
 const MIN_REGISTROS_SEMANA = 3;
+const ANSIEDADE_ALTA = 7; // "crise" no gráfico por horário: ansiedade de 7 a 10
 
 // Lista
 
@@ -201,12 +202,46 @@ pacientes.get(
         )
       ).rows;
 
-      return { vinculo, consent, rows, anterior, recentes, entradas };
+      // Uso do SOS (F9): a policy só devolve com o consentimento "sos"; sem ele, a seção vem null.
+      const compartilhaSos =
+        (await client.query<{ sos: boolean }>('SELECT compartilha_sos AS sos FROM consentimento WHERE paciente_id = $1', [vinculo.paciente_id]))
+          .rows[0]?.sos ?? false;
+      const usosSos = compartilhaSos
+        ? (
+            await client.query<{ data: string; hora: string }>(
+              `SELECT to_char(criado_em AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD') AS data,
+                      to_char(criado_em AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') AS hora
+                 FROM sos_uso
+                WHERE paciente_id = $1
+                  AND (criado_em AT TIME ZONE 'America/Sao_Paulo')::date
+                      BETWEEN COALESCE($2::date, COALESCE($3::date, CURRENT_DATE) - $4::int)
+                          AND COALESCE($3::date, CURRENT_DATE)
+                ORDER BY criado_em`,
+              [vinculo.paciente_id, q.de ?? null, q.ate ?? null, q.dias],
+            )
+          ).rows
+        : null;
+
+      return { vinculo, consent, rows, anterior, recentes, entradas, usosSos };
     });
     if (!dados) return;
-    const { vinculo, consent, rows, anterior, recentes, entradas } = dados;
+    const { vinculo, consent, rows, anterior, recentes, entradas, usosSos } = dados;
 
     const { registros, frequenciaEmocional, habitos, distribuicaoHorario } = resumirCheckins(rows, consent);
+
+    // Crises por horário: acessos ao SOS (consentimento "sos") e check-ins com ansiedade ≥ 7
+    // (consentimento "humor"), contados pela faixa do dia em que aconteceram.
+    const vazio = () => ({ madrugada: 0, manha: 0, tarde: 0, noite: 0 });
+    const crisesPorHorario = {
+      sos: usosSos ? vazio() : null,
+      ansiedadeAlta: consent.humor ? vazio() : null,
+    };
+    for (const u of usosSos ?? []) crisesPorHorario.sos![faixaDoDia(u.hora)]++;
+    for (const r of registros) {
+      if (crisesPorHorario.ansiedadeAlta && r.horario && (r.ansiedade ?? 0) >= ANSIEDADE_ALTA) {
+        crisesPorHorario.ansiedadeAlta[faixaDoDia(r.horario)]++;
+      }
+    }
 
     // Diário livre exige as duas permissões: consentimento geral e marcação no check-in.
     // O consentimento do diário é por texto (marcado no check-in); compartilha_diario é só o
@@ -257,6 +292,8 @@ pacientes.get(
       correlacaoSonoHumor:
         correlacao === null ? null : { r: Number(correlacao.toFixed(2)), n: pares.length },
       esparso: recentes === null ? null : recentes < MIN_REGISTROS_SEMANA,
+      sos: usosSos,
+      crisesPorHorario,
     });
   }),
 );
