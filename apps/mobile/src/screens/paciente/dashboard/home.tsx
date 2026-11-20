@@ -370,6 +370,10 @@ export default function Home() {
           setSheetContaAberta(false);
           navigation.navigate('Consentimento');
         }}
+        onNotificacoes={() => {
+          setSheetContaAberta(false);
+          navigation.navigate('Notificacoes');
+        }}
       />
 
       <ExercicioRespiracao visivel={respirandoAberta} aoFechar={() => setRespirandoAberta(false)} />
