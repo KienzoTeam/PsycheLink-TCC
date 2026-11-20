@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { api } from './api';
@@ -10,8 +10,10 @@ import { pedirPermissao } from './lembretes';
 const CHAVE = 'avisosPush:v1';
 const CANAL = 'avisos';
 
-/** O Expo Go do Android não recebe push remoto: só o aplicativo instalado. */
-export const semPushNoExpoGo = Platform.OS === 'android' && Constants.expoGoConfig != null;
+/** O Expo Go do Android não recebe push remoto: só o aplicativo instalado. `expoGoConfig` vem preenchido
+ * também no APK; o ambiente de execução é o que distingue o Expo Go (storeClient). */
+export const semPushNoExpoGo =
+  Platform.OS === 'android' && Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 // A escolha vale para quem a fez: outra conta neste celular não herda o aviso ligado.
 type Escolha = { token: string; usuarioId: number };
