@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { registrarAuditoria } from '../../lib/auditoria';
+import { avisarPsicologoDoPaciente } from '../../lib/avisos';
 import { comContextoPaciente } from '../../lib/contextoseguro';
 import { obterPacienteId } from '../../lib/paciente';
 import { idDe, limite, rota } from '../../lib/rota';
@@ -48,6 +49,7 @@ recomendacoes.post(
       alvoTipo: 'recomendacao',
       alvoId: id,
     });
+    void avisarPsicologoDoPaciente(pacienteId, 'recomendacao_feita');
     return res.json({ ok: true });
   }),
 );
