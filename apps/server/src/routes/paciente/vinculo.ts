@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { avisar } from '../../lib/avisos';
+import { perfilProfissional } from '../../lib/perfilProfissional';
 import { DatabaseError } from 'pg';
 import { z } from 'zod';
 import { pool } from '../../db';
@@ -33,6 +35,21 @@ vinculo.get(
   '/',
   limite(60),
   rota(async (req, res) => res.json({ vinculo: await vinculoAtivoDe(req.user!.id) })),
+);
+
+// Perfil profissional do psicólogo vinculado (só com vínculo ativo).
+vinculo.get(
+  '/psicologo',
+  limite(60),
+  rota(async (req, res) => {
+    const { rows } = await pool.query<{ id: number }>(
+      `SELECT v.psicologo_id AS id FROM vinculo v JOIN paciente pa ON pa.id = v.paciente_id
+        WHERE pa.user_id = $1 AND v.status = 'ativo'`,
+      [req.user!.id],
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Você não tem vínculo ativo.' });
+    return res.json({ perfil: await perfilProfissional(rows[0].id) });
+  }),
 );
 
 // Mensagem igual para código inexistente, usado, expirado ou revogado: o paciente não
@@ -109,6 +126,7 @@ vinculo.post(
       alvoId: criado.vinculoId,
       metadados: { psicologoId: criado.psicologoId },
     });
+    void avisar(criado.psicologoId, 'vinculo_novo', pacienteId);
     return res.status(201).json({ vinculo: await vinculoAtivoDe(userId) });
   }),
 );
@@ -134,6 +152,7 @@ vinculo.post(
       alvoId: rows[0].id,
       metadados: { encerradoPor: 'paciente' },
     });
+    void avisar(rows[0].psicologo_id, 'vinculo_encerrado', rows[0].paciente_id);
     return res.json({ ok: true });
   }),
 );
