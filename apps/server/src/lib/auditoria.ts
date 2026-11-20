@@ -22,18 +22,19 @@ export function origemDe(req: Request) {
   };
 }
 
+// req null: tarefa do próprio servidor (ex.: exclusão agendada), sem IP nem navegador.
 export async function registrarAuditoria(
-  req: Request,
+  req: Request | null,
   acao: string,
   opcoes: OpcoesAuditoria = {},
 ): Promise<number> {
   const ator: Ator =
     opcoes.ator !== undefined
       ? opcoes.ator
-      : req.user
+      : req?.user
         ? { id: req.user.id, papel: 'psicologo' }
         : null;
-  const { ip, userAgent } = origemDe(req);
+  const { ip, userAgent } = req ? origemDe(req) : { ip: null, userAgent: null };
 
   const { rows } = await pool.query<{ id: string }>(
     `INSERT INTO auditoria
