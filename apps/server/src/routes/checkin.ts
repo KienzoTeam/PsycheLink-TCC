@@ -232,12 +232,16 @@ checkin.get(['/resumo', '/checkins/resumo'], limite(60), verificarToken, async (
     // Tipagem direta do resultado da consulta
     const { rows } = (await comContextoPaciente(pacienteId, (client) =>
       client.query(
-        `SELECT to_char(data, 'YYYY-MM-DD') AS data,
-                intensidade_humor, intensidade_ansiedade, emocao_predominante
-           FROM checkin_diario
-          WHERE paciente_id = $1
-          ORDER BY data ASC
-          LIMIT 30`,
+        // Os 30 mais recentes, devolvidos em ordem crescente para o gráfico.
+        `SELECT * FROM (
+           SELECT to_char(data, 'YYYY-MM-DD') AS data,
+                  intensidade_humor, intensidade_ansiedade, emocao_predominante
+             FROM checkin_diario
+            WHERE paciente_id = $1
+            ORDER BY checkin_diario.data DESC
+            LIMIT 30
+         ) recentes
+         ORDER BY data ASC`,
         [pacienteId],
       ),
     )) as { rows: CheckinResumoRow[] };

@@ -5,6 +5,7 @@ import {
   bearer,
   capturarCodigos,
   carregarApp,
+  criarCheckin,
   criarCliente,
   criarPaciente,
   criarPsicologo,
@@ -259,6 +260,22 @@ describe('POST /checkin', () => {
       });
       assert.deepEqual(Object.keys(detalhe.checkin.habitos), Object.keys(contagens).slice(1));
       assert.equal(detalhe.checkin.intensidadeEmocao, 8);
+    });
+  });
+
+  describe('GET /checkin/resumo', () => {
+    it('mostra os 30 check-ins mais recentes, do mais antigo para o mais novo', async () => {
+      const paciente = await criarPaciente();
+      const id = await pacienteIdDe(paciente);
+      for (let dias = 0; dias < 35; dias++) await criarCheckin(id, { diasAtras: dias });
+      const res = await criarCliente(servidor.url).requisitar('GET', '/checkin/resumo', { cabecalhos: bearer(paciente) });
+      assert.equal(res.status, 200);
+      const { serieTemporal } = (await res.json()) as Json;
+      const datas = serieTemporal.map((p: Json) => p.data);
+      const { rows } = await dono.query(`SELECT to_char(CURRENT_DATE, 'YYYY-MM-DD') AS hoje`);
+      assert.equal(datas.length, 30);
+      assert.equal(datas.at(-1), rows[0].hoje);
+      assert.deepEqual(datas, [...datas].sort());
     });
   });
 
