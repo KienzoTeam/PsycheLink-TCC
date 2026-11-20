@@ -1,4 +1,4 @@
-import axios, { isAxiosError } from 'axios';
+import axios, { AxiosError, isAxiosError } from 'axios';
 import { codigoDeErro } from './erros';
 import { queryClient } from './queryClient';
 
@@ -38,6 +38,15 @@ function renovarSessao(): Promise<void> {
   });
   return renovacao;
 }
+
+// Só JSON vale como resposta da API. Quando /api não chega à API (ex.: hospedagem sem o repasse), a
+// hospedagem devolve o index.html com 200, e o painel tomava esse HTML por sessão válida e quebrava.
+api.interceptors.response.use((resposta) => {
+  if (resposta.status !== 204 && !String(resposta.headers['content-type'] ?? '').includes('application/json')) {
+    throw new AxiosError('Resposta da API não é JSON', AxiosError.ERR_BAD_RESPONSE, resposta.config, resposta.request, resposta);
+  }
+  return resposta;
+});
 
 api.interceptors.response.use(undefined, async (erro: unknown) => {
   if (!isAxiosError(erro) || erro.response?.status !== 401 || !erro.config) throw erro;
