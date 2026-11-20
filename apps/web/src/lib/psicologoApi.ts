@@ -35,6 +35,8 @@ export type PacienteResumo = {
   vinculadoEm: string;
 };
 
+export type VariacaoSemanal = { atual: number | null; anterior: number | null; variacao: number | null };
+
 export type Dashboard = {
   pacientesVinculados: number;
   serieVinculos: { data: string; total: number }[];
@@ -42,8 +44,31 @@ export type Dashboard = {
   // `acao` é texto aberto: o servidor pode acrescentar ações novas.
   atividadeRecente: { pacienteId: number; nome: string; acao: string; em: string }[];
   dadosInsuficientes: { pacienteId: number; nome: string; registros7d: number }[];
+  // Dos que compartilham humor, quantos fizeram 3 ou mais check-ins nos últimos 7 dias.
+  engajamento: { compartilhando: number; ativos: number };
+  alertas: {
+    total: number;
+    esparsos: number;
+    sos: { usos: number; pacientes: { pacienteId: number; nome: string; usos: number }[] };
+    escalasNaoVistas: number;
+  };
+  insightsSemana: {
+    registros: { atual: number; anterior: number };
+    humor: VariacaoSemanal;
+    ansiedade: VariacaoSemanal;
+    emocoes: { emocao: string; quantidade: number }[];
+  };
   medias: { n: number; humor: number | null; ansiedade: number | null; sono: number | null };
-  consultasHoje: { id: number; pacienteId: number; nome: string; inicio: string; fim: string; status: StatusConsulta }[];
+  consultasHoje: {
+    id: number;
+    pacienteId: number;
+    nome: string;
+    inicio: string;
+    fim: string;
+    status: StatusConsulta;
+    // Escalas respondidas deste paciente cujo detalhe o psicólogo ainda não abriu.
+    escalasParaRever: number;
+  }[];
   escalas: {
     pendentes: number;
     respondidasRecentes: {
@@ -54,6 +79,8 @@ export type Dashboard = {
       respondidoEm: string;
       scoreTotal: number;
       item9DiferenteDeZero: boolean | null;
+      // O psicólogo já abriu o detalhe desta aplicação.
+      vista: boolean;
     }[];
   };
 };
@@ -89,6 +116,10 @@ export type ResumoPaciente = {
   habitos: ({ diasRegistrados: number } & Record<ChaveHabito, number>) | null;
   diario: { data: string; texto: string }[];
   distribuicaoHorario: Record<FaixaHorario, number> | null;
+  // Uma entrada por dia do período; null quando a janela de 7 dias não tem nenhum registro.
+  mediaMovelHumor: { data: string; valor: number | null }[] | null;
+  // Desvio de cada registro em relação à média de ansiedade do período.
+  variacaoAnsiedade: { media: number | null; dias: { data: string; desvio: number }[] } | null;
   comparacao: { atual: ResumoPeriodo; anterior: ResumoPeriodo } | null;
   correlacaoSonoHumor: { r: number; n: number } | null;
   esparso: boolean | null;

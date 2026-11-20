@@ -137,9 +137,16 @@ export default function VisaoGeral({ resumo, de, ate, comparar, onComparar }: Pr
   const { consentimentos: c } = resumo;
   const periodo: Periodo = { start: parseDate(de), end: parseDate(ate) };
   const porDia = new Map(resumo.registros.map((r) => [r.data, r]));
+  const mediaPorDia = new Map((resumo.mediaMovelHumor ?? []).map((m) => [m.data, m.valor]));
   const dias = diasEntre(de, ate).map((data) => {
     const r = porDia.get(data);
-    return { data, humor: r?.humor ?? null, ansiedade: r?.ansiedade ?? null, sono: r?.sonoHoras ?? null };
+    return {
+      data,
+      humor: r?.humor ?? null,
+      ansiedade: r?.ansiedade ?? null,
+      sono: r?.sonoHoras ?? null,
+      mediaMovel: mediaPorDia.get(data) ?? null,
+    };
   });
   const horarios = resumo.distribuicaoHorario;
   const correlacao = resumo.correlacaoSonoHumor;
@@ -160,8 +167,27 @@ export default function VisaoGeral({ resumo, de, ate, comparar, onComparar }: Pr
           consentido={c.humor}
           largo
         >
-          <LegendaSeries />
+          <LegendaSeries comMedia={resumo.mediaMovelHumor !== null} />
           <GraficoHumorAnsiedade dados={dias} />
+        </Bloco>
+
+        <Bloco
+          titulo="Ansiedade em relação à média"
+          apoio={
+            resumo.variacaoAnsiedade?.media != null
+              ? `Quanto cada registro ficou acima (positivo) ou abaixo (negativo) da média do período, ${formatarNumero(resumo.variacaoAnsiedade.media)} de 10.`
+              : 'Quanto cada registro ficou acima ou abaixo da média de ansiedade do período.'
+          }
+          consentido={c.humor}
+        >
+          {resumo.variacaoAnsiedade && resumo.variacaoAnsiedade.dias.length > 0 ? (
+            <GraficoColunas
+              nome="Diferença da média"
+              dados={resumo.variacaoAnsiedade.dias.map((d) => ({ rotulo: formatarDataCurta(d.data), valor: d.desvio }))}
+            />
+          ) : (
+            <p className={pagina.apoio}>Nenhum registro de ansiedade neste período.</p>
+          )}
         </Bloco>
 
         <Bloco titulo="Sono por dia" apoio="Horas de sono informadas pelo paciente." consentido={c.habitos}>
