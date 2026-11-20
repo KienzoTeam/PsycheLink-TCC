@@ -399,6 +399,22 @@ export const listarAuditoria = async (filtro: FiltroAuditoria, cursor?: string) 
 export const atualizarMe = async (dados: { nome: string; especialidade: string }) =>
   (await api.patch<Psicologo>('/psicologo/me', dados)).data;
 
+export type Modalidade = 'presencial' | 'online';
+
+export type PerfilProfissional = {
+  especialidade: string | null;
+  abordagem: string | null;
+  sobre: string | null;
+  modalidades: Modalidade[];
+  atendeEm: string | null;
+  contato: string | null;
+};
+
+export const buscarPerfilProfissional = async () => (await api.get<PerfilProfissional>('/psicologo/me/perfil')).data;
+
+export const salvarPerfilProfissional = async (perfil: PerfilProfissional) =>
+  (await api.put<PerfilProfissional>('/psicologo/me/perfil', perfil)).data;
+
 export const trocarSenha = (senhaAtual: string, novaSenha: string) =>
   api.post('/psicologo/me/senha', { senhaAtual, novaSenha });
 
