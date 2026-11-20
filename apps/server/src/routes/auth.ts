@@ -390,7 +390,7 @@ auth.post('/redefinir-senha', limite(5), async (req, res) => {
 type Perfil = { id: number; nome: string; email: string; data_nascimento: string };
 
 // Token do app (1 dia) e o mesmo perfil do GET /me: o app entra sem mais uma ida e volta.
-const acessoApp = ({ id, nome, email, data_nascimento }: Perfil) => ({
+export const acessoApp = ({ id, nome, email, data_nascimento }: Perfil) => ({
   token: jwt.sign({ id, email }, process.env.JWT_SECRET!, { expiresIn: '1d' }),
   usuario: { id, nome, email, data_nascimento },
 });
