@@ -27,11 +27,11 @@ export const senhaSchema = z
   .max(72, 'Senha deve ter no máximo 72 caracteres') // bcrypt ignora além de 72 bytes
   .superRefine((senha, ctx) => {
     if (senha.length < 8) return; // o min acima já explica
-    const { score, feedback } = avaliarSenha(senha);
-    if (score < NOTA_MINIMA) {
+    const { nota, aviso } = avaliarSenha(senha);
+    if (nota < NOTA_MINIMA) {
       ctx.addIssue({
         code: 'custom',
-        message: `Senha fácil de adivinhar. ${feedback.warning ?? 'Use uma frase com três ou quatro palavras.'}`.trim(),
+        message: `Senha fácil de adivinhar. ${aviso ?? 'Use uma frase com três ou quatro palavras.'}`.trim(),
       });
     }
   });

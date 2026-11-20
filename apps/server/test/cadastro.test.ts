@@ -155,6 +155,8 @@ describe('senha fraca', () => {
     for (const cadastrar of [
       (email: string) => cadastrarPaciente(email, 'Senha@123'),
       (email: string) => cadastrarPsicologo(email, novoCrp(), '12345678'),
+      // Variação de senha comum: palavra comum + "@ano" no fim.
+      (email: string) => cadastrarPaciente(email, 'Brasil@2024'),
     ]) {
       const email = novoEmail();
       const res = await cadastrar(email);
