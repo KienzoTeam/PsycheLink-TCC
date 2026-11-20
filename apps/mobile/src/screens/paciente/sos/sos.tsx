@@ -345,6 +345,9 @@ export default function SOS({ comCabecalho = false, ativa = false }: { comCabeca
         <Text style={[styles.cartaoSegurancaSubtitulo, { color: theme.colors.onPrimary }]}>
           Se este for um momento difícil, existem pessoas e recursos que podem ajudar.
         </Text>
+        <Text style={[styles.cartaoSegurancaSubtitulo, { color: theme.colors.onPrimary, marginTop: 8, fontWeight: '600' }]}>
+          Seu psicólogo não atende por aqui na hora. Em risco, ligue 188 (CVV) ou 192 (SAMU).
+        </Text>
       </View>
 
       <TouchableOpacity

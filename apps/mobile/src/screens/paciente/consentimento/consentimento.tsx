@@ -51,7 +51,8 @@ const DIARIO: Categoria = {
 const SOS: Categoria = {
   chave: 'sos',
   rotulo: 'Avisar quando eu abrir o SOS',
-  descricao: 'Seu psicólogo vê só o dia e a hora, nunca o que você fez lá. Desligado por padrão.',
+  descricao:
+    'Seu psicólogo vê só o dia e a hora, nunca o que você fez lá. Ele não é avisado para responder na hora: em risco, ligue 188 ou 192. Desligado por padrão.',
 };
 
 const SEM_ESCOLHAS: Escolhas = { humor: false, habitos: false, escalas: false, diario: false, sos: false };
