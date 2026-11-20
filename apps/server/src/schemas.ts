@@ -36,6 +36,8 @@ export const senhaSchema = z
     }
   });
 
+const MSG_VERSAO = 'Versão dos documentos inválida.';
+
 export const registroSchema = z.object({
   nome: z.string().trim().min(2, 'Nome muito curto').max(120),
   email: z.string(), // validado por normalizarEmail() (IDN/punycode), não aqui
@@ -46,6 +48,8 @@ export const registroSchema = z.object({
       message: 'Informe uma data de nascimento válida.',
     })
     .transform((v) => parseDataNascimento(v.trim())!),
+  // Opcional: o app já instalado não manda. Só a versão dos documentos aceitos, que vira auditoria.
+  aceites: z.object({ versao: z.string().trim().min(1, MSG_VERSAO).max(20, MSG_VERSAO) }).optional(),
 });
 
 export type DadosRegistro = z.infer<typeof registroSchema>;
