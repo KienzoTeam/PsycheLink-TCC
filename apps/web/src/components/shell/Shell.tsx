@@ -3,6 +3,7 @@ import { Menu } from 'lucide-react';
 import { useCompacto } from '../../lib/useCompacto';
 import { Button } from '../ui/Button';
 import { Gaveta, Sidebar } from './Sidebar';
+import { SinoAvisos } from './SinoAvisos';
 import css from './Shell.module.css';
 
 type Props = { psicologo: { nome: string }; children: ReactNode };
@@ -24,6 +25,9 @@ export function Shell({ psicologo, children }: Props) {
               Menu
             </Button>
             <span className={css.marca}>PsycheLink</span>
+            <span className={css.fimTopo}>
+              <SinoAvisos />
+            </span>
           </header>
           <Gaveta isOpen={gavetaAberta} onOpenChange={setGavetaAberta} nome={psicologo.nome} />
         </>
