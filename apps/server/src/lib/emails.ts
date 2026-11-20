@@ -1,8 +1,8 @@
 // Layout dos e-mails (Catppuccin Latte, como o painel), sem cartão: fundo único, que o tema escuro
 // do leitor inverte sem sobrar moldura. E-mail não é página web: tabelas e estilos inline (Gmail e
 // Outlook ignoram boa parte do CSS) e o logo como imagem hospedada (o Gmail bloqueia imagem embutida).
-// Fontes da marca pelo Google Fonts: Apple Mail e alguns apps carregam; Gmail e Outlook caem no
-// fallback (Georgia no nome, fonte do sistema no texto). Contraste ≥ 4,5:1 em todo texto.
+// Texto em Outfit pelo Google Fonts (Outlook e Apple Mail carregam; o Gmail cai na fonte do sistema);
+// o nome da marca vai na imagem do logo. Contraste ≥ 4,5:1 em todo texto.
 // Os textos são fixos e o código só tem dígitos: nada vindo do usuário entra no HTML sem escapar.
 
 const COR = {
@@ -12,11 +12,12 @@ const COR = {
   divisor: '#dce0e8',
   blocoCodigo: '#efe5fd',
   codigo: '#6a1fd0', // 6,4:1 no bloco lilás
+  marca: '#8839ef', // mesmo mauve da imagem do logo
 };
 const FONTE = "Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 const FONTE_MARCA = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
 const FONTES_GOOGLE =
-  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Outfit:wght@400;600&display=swap';
+  'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap';
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace";
 
 export type TipoCodigo = 'cadastro' | 'acesso' | 'senha';
@@ -45,12 +46,15 @@ const CODIGOS: Record<TipoCodigo, { rotulo: string; minutos: number; paragrafo: 
   },
 };
 
-// O logo vem do próprio painel (public/Psychelink.png). Sem WEB_ORIGINS, sai só o nome.
+// Logo e nome numa imagem só (apps/web/public/email-marca.png: árvore + "PsycheLink" em Cormorant
+// Garamond, mauve, fundo transparente): a fonte da marca aparece em qualquer leitor, e o mauve fica
+// legível no branco (5,4:1) e no escuro do Gmail (3,5:1). Sem WEB_ORIGINS, sai só o nome em texto.
 const logo = () => {
   const origem = process.env.WEB_ORIGINS?.split(',')[0]?.trim();
-  const nome = `<span style="font-family:${FONTE_MARCA};font-size:32px;line-height:40px;font-weight:600;color:${COR.texto};vertical-align:middle;">PsycheLink</span>`;
-  if (!origem) return nome;
-  return `<img src="${origem}/Psychelink.png" width="72" height="72" alt="" style="display:inline-block;width:72px;height:72px;border:0;vertical-align:middle;margin-right:12px;">${nome}`;
+  if (!origem) {
+    return `<span style="font-family:${FONTE_MARCA};font-size:32px;line-height:40px;font-weight:600;color:${COR.marca};">PsycheLink</span>`;
+  }
+  return `<img src="${origem}/email-marca.png" width="280" height="76" alt="PsycheLink" style="display:block;width:280px;max-width:100%;height:auto;border:0;">`;
 };
 
 function montar({ titulo, paragrafos, seguranca, codigo, minutos }: Conteudo) {
