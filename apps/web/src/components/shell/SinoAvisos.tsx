@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router';
 import { Dialog, DialogTrigger, Heading, Popover } from 'react-aria-components';
@@ -9,11 +10,20 @@ import css from './SinoAvisos.module.css';
 
 const CHAVE = ['avisos'];
 
-// Sino do painel (FP12): busca a cada minuto; abrir marca tudo como lido.
+// Sino do painel (FP12): busca a cada 15 s com a aba visível; abrir marca tudo como lido. Aviso novo
+// (SOS, escala respondida, recomendação feita...) recarrega o que estiver na tela, sem esperar o usuário.
 export function SinoAvisos() {
   const cliente = useQueryClient();
   const navigate = useNavigate();
-  const consulta = useQuery({ queryKey: CHAVE, queryFn: listarAvisos, refetchInterval: 60_000 });
+  const consulta = useQuery({ queryKey: CHAVE, queryFn: listarAvisos, refetchInterval: 15_000 });
+  const ultimo = useRef<number | null>(null);
+  const maisNovo = consulta.data?.avisos[0]?.id ?? 0;
+  useEffect(() => {
+    if (ultimo.current !== null && maisNovo > ultimo.current) {
+      void cliente.invalidateQueries({ predicate: (q) => q.queryKey[0] !== CHAVE[0] });
+    }
+    if (consulta.data) ultimo.current = maisNovo;
+  }, [maisNovo, consulta.data, cliente]);
   const lidos = useMutation({ mutationFn: marcarAvisosLidos, onSuccess: () => cliente.invalidateQueries({ queryKey: CHAVE }) });
   const naoLidas = consulta.data?.naoLidas ?? 0;
   const rotulo = naoLidas ? `Avisos, ${naoLidas} não ${naoLidas === 1 ? 'lido' : 'lidos'}` : 'Avisos';
