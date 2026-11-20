@@ -14,16 +14,21 @@ import { ExerciseCard } from '../../../components/bemEstar/ExerciseCard';
 import { GuidedExerciseModal } from '../../../components/bemEstar/GuidedExerciseModal';
 import { TechniqueModal } from '../../../components/bemEstar/TechniqueModal';
 import { MoodModal } from '../../../components/bemEstar/MoodModal';
+import { RecomendacoesDoPsicologo } from '../../../components/bemEstar/RecomendacoesDoPsicologo';
+import { useRecomendacoes } from '../../../hooks/useRecomendacoes';
 
 interface BemEstarProps {
   onVoltar: () => void;
+  /** A aba está na tela: as recomendações recarregam a cada vez que ela fica ativa. */
+  ativa: boolean;
 
   // Mantidos apenas no histórico local do aplicativo. - Futura Integração com a api, sendo chamada por um outro hook.
   onRegistrarHumor?: (entry: MoodEntry) => void;
 }
 
-export default function BemEstar({ onVoltar, onRegistrarHumor }: BemEstarProps) {
+export default function BemEstar({ onVoltar, ativa, onRegistrarHumor }: BemEstarProps) {
   const { theme } = useTheme();
+  const recomendacoes = useRecomendacoes(ativa);
 
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [exerciseModalVisible, setExerciseModalVisible] = useState(false);
@@ -121,6 +126,14 @@ export default function BemEstar({ onVoltar, onRegistrarHumor }: BemEstarProps) 
         contentContainerStyle={styles.screenContent}
         showsVerticalScrollIndicator={false}
       >
+        <RecomendacoesDoPsicologo
+          recomendacoes={recomendacoes.lista}
+          erro={recomendacoes.erro}
+          onTentarDeNovo={recomendacoes.carregar}
+          onAbrirExercicio={openExercise}
+          onMarcarFeita={recomendacoes.marcarFeita}
+        />
+
         <DailyTipCard tip="“Descansar faz parte do processo.”" />
 
         <View style={styles.sectionHeader}>
