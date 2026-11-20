@@ -454,3 +454,16 @@ export const esquecerNavegadores = async () =>
 
 export const encerrarOutrasSessoes = async () =>
   (await api.post<{ encerradas: number }>('/psicologo/me/sessoes/encerrar-outras')).data.encerradas;
+
+// Avisos do psicólogo (sino, preferências e push do navegador).
+export type Aviso = { id: number; tipo: string; rotulo: string; pacienteId: number | null; nome: string | null; criadoEm: string; lida: boolean };
+export type PreferenciaAviso = { tipo: string; rotulo: string; painel: boolean; email: boolean; push: boolean };
+
+export const listarAvisos = async () => (await api.get<{ avisos: Aviso[]; naoLidas: number }>('/psicologo/avisos')).data;
+export const marcarAvisosLidos = async () => void (await api.post('/psicologo/avisos/lidas', {}));
+export const buscarPreferenciasAvisos = async () =>
+  (await api.get<{ tipos: PreferenciaAviso[]; chavePush: string | null }>('/psicologo/avisos/preferencias')).data;
+export const salvarPreferenciaAviso = async ({ tipo, painel, email, push }: PreferenciaAviso) =>
+  (await api.put<{ tipos: PreferenciaAviso[] }>('/psicologo/avisos/preferencias', { [tipo]: { painel, email, push } })).data.tipos;
+export const inscreverPush = async (inscricao: PushSubscriptionJSON) => void (await api.post('/psicologo/avisos/push', inscricao));
+export const cancelarPush = async (endpoint: string) => void (await api.delete('/psicologo/avisos/push', { data: { endpoint } }));

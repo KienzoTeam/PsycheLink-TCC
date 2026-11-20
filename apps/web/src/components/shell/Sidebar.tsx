@@ -6,6 +6,7 @@ import { IconButton } from '../ui/IconButton';
 import { ScrollFade } from '../ui/ScrollFade';
 import { ITENS_NAV, type ItemNav } from './itensNav';
 import { MenuConta } from './MenuConta';
+import { SinoAvisos } from './SinoAvisos';
 import css from './Sidebar.module.css';
 
 function ListaNav({ itens, recolhida, aoNavegar }: { itens: readonly ItemNav[]; recolhida: boolean; aoNavegar?: () => void }) {
@@ -30,11 +31,14 @@ export function Sidebar({ colapsada, onAlternar, nome }: PropsSidebar) {
     <nav aria-label="Principal" className={cx(css.barra, colapsada && css.recolhida)}>
       <div className={css.topo}>
         {!colapsada && <span className={css.marca}>PsycheLink</span>}
-        <IconButton
-          aria-label={colapsada ? 'Expandir menu lateral' : 'Recolher menu lateral'}
-          icone={colapsada ? <PanelLeftOpen /> : <PanelLeftClose />}
-          onPress={onAlternar}
-        />
+        <div className={css.acoesTopo}>
+          <SinoAvisos />
+          <IconButton
+            aria-label={colapsada ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+            icone={colapsada ? <PanelLeftOpen /> : <PanelLeftClose />}
+            onPress={onAlternar}
+          />
+        </div>
       </div>
       {/* Em tela baixa a lista rola sozinha, com véu e seta enquanto houver destinos abaixo; a conta fica fixa. */}
       <ScrollFade aria-label="Destinos" className={css.rolagem}>
