@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { verificarToken } from '../auth';
 import { consentimento } from './consentimento';
 import { consultas } from './consultas';
+import { diario } from './diario';
 import { escalas } from './escalas';
 import { vinculo } from './vinculo';
 
@@ -13,3 +14,4 @@ paciente.use('/vinculo', vinculo);
 paciente.use('/consentimento', consentimento);
 paciente.use(escalas);
 paciente.use('/consultas', consultas);
+paciente.use('/diario', diario);

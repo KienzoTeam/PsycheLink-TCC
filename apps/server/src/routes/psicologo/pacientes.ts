@@ -186,22 +186,42 @@ pacientes.get(
           ).rows[0].n
         : null;
 
-      return { vinculo, consent, rows, anterior, recentes };
+      // Entradas avulsas do diário (F8) no mesmo período; a policy só devolve as compartilhadas.
+      const entradas = (
+        await client.query<{ data: string; hora: string; texto: string }>(
+          `SELECT to_char(criado_em AT TIME ZONE 'America/Sao_Paulo', 'YYYY-MM-DD') AS data,
+                  to_char(criado_em AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') AS hora, texto
+             FROM diario_entrada
+            WHERE paciente_id = $1 AND compartilhado
+              AND (criado_em AT TIME ZONE 'America/Sao_Paulo')::date
+                  BETWEEN COALESCE($2::date, COALESCE($3::date, CURRENT_DATE) - $4::int)
+                      AND COALESCE($3::date, CURRENT_DATE)
+            ORDER BY criado_em`,
+          [vinculo.paciente_id, q.de ?? null, q.ate ?? null, q.dias],
+        )
+      ).rows;
+
+      return { vinculo, consent, rows, anterior, recentes, entradas };
     });
     if (!dados) return;
-    const { vinculo, consent, rows, anterior, recentes } = dados;
+    const { vinculo, consent, rows, anterior, recentes, entradas } = dados;
 
     const { registros, frequenciaEmocional, habitos, distribuicaoHorario } = resumirCheckins(rows, consent);
 
     // Diário livre exige as duas permissões: consentimento geral e marcação no check-in.
     // O consentimento do diário é por texto (marcado no check-in); compartilha_diario é só o
     // valor inicial do interruptor no app. Revogar tudo desmarca os textos (ver paciente/consentimento).
-    const diario: Array<{ data: string; texto: string }> = [];
+    const diario: Array<{ data: string; hora: string | null; texto: string; origem: 'checkin' | 'avulso' }> = [];
     for (const l of rows) {
       if (!l.diario_compartilhado || !l.diario_livre) continue;
       const texto = lerSeguro(l.diario_livre);
-      if (texto !== null) diario.push({ data: l.data, texto });
+      if (texto !== null) diario.push({ data: l.data, hora: l.horario, texto, origem: 'checkin' });
     }
+    for (const e of entradas) {
+      const texto = lerSeguro(e.texto);
+      if (texto !== null) diario.push({ data: e.data, hora: e.hora, texto, origem: 'avulso' });
+    }
+    diario.sort((a, b) => `${a.data} ${a.hora ?? ''}`.localeCompare(`${b.data} ${b.hora ?? ''}`));
 
     const resumirPeriodo = (linhas: LinhaPeriodo[]) => ({
       registros: consent.humor || consent.habitos ? linhas.length : null,
