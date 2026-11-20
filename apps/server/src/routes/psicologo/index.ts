@@ -10,6 +10,7 @@ import { escalas } from './escalas';
 import { consultas } from './consultas';
 import { relatorios } from './relatorios';
 import { auditoria } from './auditoria';
+import { avisos } from './avisos';
 import { arquivadas } from './arquivadas';
 
 /**
@@ -48,4 +49,5 @@ psicologo.use(escalas);
 psicologo.use('/consultas', consultas);
 psicologo.use('/relatorios', relatorios);
 psicologo.use('/auditoria', auditoria);
+psicologo.use('/avisos', avisos);
 psicologo.use('/anotacoes-arquivadas', arquivadas);

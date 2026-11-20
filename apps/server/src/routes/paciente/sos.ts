@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { avisarPsicologoDoPaciente } from '../../lib/avisos';
 import { comContextoPaciente } from '../../lib/contextoseguro';
 import { obterPacienteId } from '../../lib/paciente';
 import { limite, rota } from '../../lib/rota';
@@ -24,6 +25,7 @@ sos.post(
       );
       return (rowCount ?? 0) > 0;
     });
+    if (registrado) void avisarPsicologoDoPaciente(pacienteId, 'sos_usado');
     return res.json({ registrado });
   }),
 );
