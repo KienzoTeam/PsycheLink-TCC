@@ -13,6 +13,7 @@ export type Valores = {
   dataNascimento: string;
   crp: string;
   especialidade: string;
+  aceite: boolean;
 };
 
 export const VALORES_VAZIOS: Valores = {
@@ -23,6 +24,7 @@ export const VALORES_VAZIOS: Valores = {
   dataNascimento: '',
   crp: '',
   especialidade: '',
+  aceite: false,
 };
 
 // Espelha apps/server/src/schemas.ts: DD/MM/AAAA ou AAAA-MM-DD, data real e no passado.
@@ -83,6 +85,7 @@ export const esquemaCadastro = z
     especialidade: z.string().trim().max(255, 'Especialidade muito longa.'),
     password: senhaNova,
     confirmacao,
+    aceite: z.boolean().refine((v) => v, 'Para criar a conta, aceite os Termos de Uso e a Política de Privacidade.'),
   })
   .refine(confirmar, MSG_CONFIRMACAO);
 

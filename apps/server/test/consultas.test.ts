@@ -375,7 +375,7 @@ describe('dashboard e linha do tempo', () => {
       painel.consultasHoje.map((c: Json) => [c.nome, c.status, c.pacienteId]),
       [['Paciente Hoje', 'cancelada', paciente.id], ['Paciente Hoje', 'concluida', paciente.id]],
     );
-    assert.deepEqual(Object.keys(painel.consultasHoje[0]).sort(), ['fim', 'id', 'inicio', 'nome', 'pacienteId', 'status']);
+    assert.deepEqual(Object.keys(painel.consultasHoje[0]).sort(), ['escalasParaRever', 'fim', 'id', 'inicio', 'nome', 'pacienteId', 'status']);
 
     const tempo = await ler(await C.requisitar('GET', `/psicologo/pacientes/${paciente.id}/linha-do-tempo`));
     const itens = tempo.itens.filter((i: Json) => i.tipo === 'consulta');

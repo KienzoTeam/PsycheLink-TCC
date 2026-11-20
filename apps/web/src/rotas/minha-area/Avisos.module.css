@@ -1,0 +1,67 @@
+.pilha {
+  display: grid;
+  gap: var(--espaco-24);
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabela th,
+.tabela td {
+  padding: var(--espaco-8);
+  border-block-end: var(--largura-borda) solid var(--cor-contorno-variante);
+  text-align: start;
+}
+
+.tabela thead th {
+  color: var(--cor-sobre-superficie-variante);
+  font: var(--tipo-rotulo-grande);
+}
+
+.tabela tbody th {
+  font: var(--tipo-corpo-grande);
+}
+
+/* O rótulo do canal já está no cabeçalho da coluna: na tabela larga ele some (fica no aria-label). */
+.rotuloCelula {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* Celular: cada aviso vira um bloco com os três canais em linha, com rótulo visível. */
+@media (max-width: 599px) {
+  .tabela thead {
+    display: none;
+  }
+
+  .tabela tr {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: var(--espaco-4) var(--espaco-12);
+    padding-block: var(--espaco-12);
+    border-block-end: var(--largura-borda) solid var(--cor-contorno-variante);
+  }
+
+  .tabela tbody th {
+    grid-column: 1 / -1;
+  }
+
+  .tabela th,
+  .tabela td {
+    padding: 0;
+    border: 0;
+  }
+
+  .rotuloCelula {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}

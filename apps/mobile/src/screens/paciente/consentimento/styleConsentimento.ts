@@ -76,6 +76,50 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
+  perfil: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    padding: 16,
+    gap: 14,
+  },
+  perfilEstado: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  campo: {
+    gap: 2,
+  },
+  campoRotulo: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+  },
+  campoValor: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  contato: {
+    gap: 10,
+  },
+  acoes: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  acao: {
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  acaoTexto: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
   introducao: {
     fontSize: 15,
     lineHeight: 22,

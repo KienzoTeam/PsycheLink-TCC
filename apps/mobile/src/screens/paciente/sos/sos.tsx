@@ -5,10 +5,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Contacts from 'expo-contacts';
 import { useTheme } from '../../../theme/ThemeContext';
 import ExercicioRespiracao from '../../../components/ui/ExercicioRespiracao';
+import ExercicioGrounding from '../../../components/ui/ExercicioGrounding';
+import { api } from '../../../lib/api';
 import { ContatoConfianca, MAX_CONTATOS, lerContatos, salvarContatos } from '../../../lib/contatosConfianca';
 import { styles } from './styleSOS';
 
 const NUMERO_CVV = '188';
+// F9: além do CVV, os serviços públicos de emergência.
+const EMERGENCIAS = [
+  { numero: '192', nome: 'SAMU 192', papel: 'Urgência médica', icone: 'plus-square' as const },
+  { numero: '193', nome: 'Bombeiros 193', papel: 'Resgate e emergência', icone: 'shield' as const },
+];
 // Mantém o JSON dos contatos bem abaixo de ~2 KB com MAX_CONTATOS (limite do SecureStore em iOS antigos).
 const MAX_NOME = 60;
 const CORES_AVATAR = ['#6C4CE0', '#4B32B0', '#2E9E6B', '#D08C2E', '#C2445C'];
@@ -72,10 +79,16 @@ function extrairTelefone(obj: any): string | null {
 }
 
 // comCabecalho: no SOS sem login o cabeçalho nativo já cobre a barra de status e não há barra de abas.
-export default function SOS({ comCabecalho = false }: { comCabecalho?: boolean }) {
+// ativa: a aba está na tela; abrir conta como um uso (o servidor só guarda com o consentimento "sos").
+export default function SOS({ comCabecalho = false, ativa = false }: { comCabecalho?: boolean; ativa?: boolean }) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [respirandoAberto, setRespirandoAberto] = useState(false);
+  const [groundingAberto, setGroundingAberto] = useState(false);
+
+  useEffect(() => {
+    if (ativa && !comCabecalho) api.post('/paciente/sos').catch(() => undefined);
+  }, [ativa, comCabecalho]);
   const [contatos, setContatos] = useState<ContatoConfianca[]>([]);
   const [carregandoContatos, setCarregandoContatos] = useState(true);
   // Leitura falhou: os contatos podem estar intactos, então não gravamos por cima de uma lista vazia.
@@ -332,6 +345,9 @@ export default function SOS({ comCabecalho = false }: { comCabecalho?: boolean }
         <Text style={[styles.cartaoSegurancaSubtitulo, { color: theme.colors.onPrimary }]}>
           Se este for um momento difícil, existem pessoas e recursos que podem ajudar.
         </Text>
+        <Text style={[styles.cartaoSegurancaSubtitulo, { color: theme.colors.onPrimary, marginTop: 8, fontWeight: '600' }]}>
+          Seu psicólogo não atende por aqui na hora. Em risco, ligue 188 (CVV) ou 192 (SAMU).
+        </Text>
       </View>
 
       <TouchableOpacity
@@ -395,6 +411,25 @@ export default function SOS({ comCabecalho = false }: { comCabecalho?: boolean }
         </View>
         <Feather name="phone" size={20} color={theme.colors.onPrimary} />
       </TouchableOpacity>
+
+      {EMERGENCIAS.map(({ numero, nome, papel, icone }) => (
+        <TouchableOpacity
+          key={numero}
+          style={[styles.linhaContato, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
+          onPress={() => ligarPara(numero)}
+          accessibilityRole="button"
+          accessibilityLabel={`Ligar para ${nome}`}
+        >
+          <View style={[styles.contatoIconeCirculo, { backgroundColor: theme.colors.primaryContainer }]}>
+            <Feather name={icone} size={20} color={theme.colors.primary} />
+          </View>
+          <View style={styles.contatoInformacao}>
+            <Text style={[styles.contatoNome, { color: theme.colors.onSurface }]}>{nome}</Text>
+            <Text style={[styles.contatoPapel, { color: theme.colors.onSurfaceVariant }]}>{papel}</Text>
+          </View>
+          <Feather name="phone" size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
+      ))}
 
       {/* Lista de Contatos de Confiança com o Nome Correto */}
       {!carregandoContatos &&
@@ -483,7 +518,25 @@ export default function SOS({ comCabecalho = false }: { comCabecalho?: boolean }
         </TouchableOpacity>
       </View>
 
+      <View style={[styles.exercicioCard, { backgroundColor: theme.colors.primaryContainer }]}>
+        <Feather name="anchor" size={32} color={theme.colors.primary} />
+        <Text style={[styles.exercicioTitulo, { color: theme.colors.onPrimaryContainer }]}>
+          Pensamentos acelerados?
+        </Text>
+        <Text style={[styles.exercicioDescricao, { color: theme.colors.onPrimaryContainer }]}>
+          O 5-4-3-2-1 usa os seus sentidos para trazer a atenção de volta para onde você está.
+        </Text>
+        <TouchableOpacity
+          style={[styles.exercicioBotao, { backgroundColor: theme.colors.primary }]}
+          onPress={() => setGroundingAberto(true)}
+          accessibilityRole="button"
+        >
+          <Text style={[styles.exercicioBotaoTexto, { color: theme.colors.onPrimary }]}>Começar 5-4-3-2-1</Text>
+        </TouchableOpacity>
+      </View>
+
       <ExercicioRespiracao visivel={respirandoAberto} aoFechar={() => setRespirandoAberto(false)} />
+      <ExercicioGrounding visivel={groundingAberto} aoFechar={() => setGroundingAberto(false)} />
 
       {/* MODAL PARA DEFINIR/CONFIRMAR O NOME DA PESSOA */}
       {/* Só a status bar translúcida: com a barra de navegação também, o Android para de

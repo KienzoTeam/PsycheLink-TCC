@@ -6,11 +6,22 @@ export type Vinculo = {
   desde: string;
 };
 
+/** Perfil que o psicólogo preenche; só o paciente vinculado o recebe. Campo vazio vem como null. */
+export type PerfilProfissional = {
+  especialidade: string | null;
+  abordagem: string | null;
+  sobre: string | null;
+  modalidades: ('presencial' | 'online')[];
+  atendeEm: string | null;
+  contato: string | null;
+};
+
 export type Escolhas = {
   humor: boolean;
   habitos: boolean;
   escalas: boolean;
   diario: boolean;
+  sos: boolean;
 };
 
 /** `diarioCompartilhados` é quantos textos do diário estão liberados agora. */
@@ -19,6 +30,11 @@ export type Consentimento = Escolhas & { atualizadoEm: string | null; diarioComp
 export async function buscarVinculo(): Promise<Vinculo | null> {
   const { data } = await api.get<{ vinculo: Vinculo | null }>('/paciente/vinculo');
   return data.vinculo;
+}
+
+export async function buscarPerfilDoPsicologo(): Promise<PerfilProfissional> {
+  const { data } = await api.get<{ perfil: PerfilProfissional }>('/paciente/vinculo/psicologo');
+  return data.perfil;
 }
 
 export async function vincular(codigo: string): Promise<Vinculo> {
@@ -40,12 +56,14 @@ export async function salvarConsentimento({
   habitos,
   escalas,
   diario,
+  sos,
 }: Escolhas): Promise<Consentimento> {
   const { data } = await api.put<Consentimento>('/paciente/consentimento', {
     humor,
     habitos,
     escalas,
     diario,
+    sos,
   });
   return data;
 }

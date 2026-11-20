@@ -15,6 +15,7 @@ import { salvarRascunho, lerRascunho, resetarRascunho } from '../../../lib/rascu
 import { vibrarLeve } from '../../../lib/hapticos';
 import SeloDemonstracao from '../../../components/ui/SeloDemonstracao';
 import { buscarDiarioPadrao, enviarCheckin } from '../../../lib/checkinService';
+import { carregarLembretes, lembretesSuportados, pedirPermissao, salvarLembretes } from '../../../lib/lembretes';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Checkin'>;
 
@@ -204,6 +205,8 @@ export default function Checkin({ navigation }: Props) {
 
   // Envio final do check-in pro backend.
   const [enviando, setEnviando] = useState(false);
+  // Oferta de lembretes: aparece uma vez, no sucesso do primeiro check-in deste celular.
+  const [ofertaLembrete, setOfertaLembrete] = useState<'oferecer' | 'ativado' | 'negado' | null>(null);
 
   // Etapa 1 - Aba de Emoções
   const [emocoesSelecionadas, setEmocoesSelecionadas] = useState<string[]>(lerRascunho()?.emocoes ?? []);
@@ -314,6 +317,7 @@ export default function Checkin({ navigation }: Props) {
       resetarRascunho();
       setDirecao('frente');
       setEtapa(total_etapas); // vai direto pra etapa 7 (sucesso)
+      if (lembretesSuportados && !(await carregarLembretes()).oferecido) setOfertaLembrete('oferecer');
     } catch (error: any) {
       Alert.alert(
         'Não foi possível salvar',
@@ -671,6 +675,23 @@ export default function Checkin({ navigation }: Props) {
   );
 };
 
+  const ativarLembretes = async () => {
+    const atuais = await carregarLembretes();
+    const permitido = await pedirPermissao();
+    await salvarLembretes({
+      ...atuais,
+      noite: { ...atuais.noite, ativo: permitido },
+      semanal: { ...atuais.semanal, ativo: permitido },
+      oferecido: true,
+    });
+    setOfertaLembrete(permitido ? 'ativado' : 'negado');
+  };
+
+  const recusarLembretes = async () => {
+    await salvarLembretes({ ...(await carregarLembretes()), oferecido: true });
+    setOfertaLembrete(null);
+  };
+
   const renderEtapa7 = () => (
     <View style={styles.content}>
       <View style={styles.sucessoContainer}>
@@ -709,6 +730,33 @@ export default function Checkin({ navigation }: Props) {
             Seu registro de hoje foi salvo.
           </Text>
         </Animated.View>
+        {ofertaLembrete && (
+          <Animated.View
+            style={[styles.sucessoCard, { backgroundColor: theme.colors.surfaceContainer, borderWidth: 1, borderColor: theme.colors.outlineVariant }]}
+            entering={FadeInUp.delay(400)}
+            accessibilityLiveRegion="polite"
+          >
+            {ofertaLembrete === 'oferecer' ? (
+              <>
+                <Text style={[styles.sucessoCardTexto, { color: theme.colors.onSurface }]}>Quer um lembrete?</Text>
+                <Text style={[styles.sucessoCardSubTexto, { color: theme.colors.onSurfaceVariant }]}>
+                  Às 21:00, caso ainda não tenha feito o check-in do dia, e um resumo toda segunda. Você muda os horários em
+                  Notificações, no menu da sua conta.
+                </Text>
+                <View style={{ gap: 8, marginTop: 12 }}>
+                  <CustomButton title="Ativar lembretes" onPress={() => void ativarLembretes()} />
+                  <CustomButton title="Agora não" variant="outline" onPress={() => void recusarLembretes()} />
+                </View>
+              </>
+            ) : (
+              <Text style={[styles.sucessoCardSubTexto, { color: theme.colors.onSurface }]}>
+                {ofertaLembrete === 'ativado'
+                  ? 'Lembretes ativados. Você ajusta em Notificações, no menu da sua conta.'
+                  : 'As notificações estão bloqueadas no Android. Você pode liberar depois em Notificações, no menu da sua conta.'}
+              </Text>
+            )}
+          </Animated.View>
+        )}
         <Animated.View style={{ width: '100%' }} entering={FadeInDown.delay(440)}>
           <CustomButton
             title="Voltar para Home"
