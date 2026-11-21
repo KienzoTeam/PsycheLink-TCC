@@ -2,15 +2,22 @@ import type { Request, Response } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import type { z } from 'zod';
 
-// Rotas já autenticadas não devem dividir limite em uma rede compartilhada.
-// Antes da autenticação, continua sendo por IP (login, cadastro e recuperação de senha).
+// Após autenticação, isola contas; antes dela, mantém a proteção por IP.
+// `chave` preserva limites explícitos já existentes.
 export const limite = (n: number, chave?: (req: Request) => string) =>
   rateLimit({
     windowMs: 15 * 60_000,
     limit: n,
     message: { error: 'Muitas requisições. Tente novamente em alguns minutos.' },
-    keyGenerator: chave ?? ((req) => (req.user ? `usuario:${req.user.id}` : ipKeyGenerator(req.ip ?? '0.0.0.0'))),
+    keyGenerator: chave ?? ((req) => req.user ? `usuario:${req.user.id}` : ipKeyGenerator(req.ip ?? '0.0.0.0')),
   });
+
+// Defesa adicional por IP em operações sensíveis e antes da validação do token.
+export const limitePorIp = (n: number) => rateLimit({
+  windowMs: 15 * 60_000,
+  limit: n,
+  message: { error: 'Muitas requisições. Tente novamente em alguns minutos.' },
+});
 
 /** Id numérico de um parâmetro de rota; null se não for inteiro positivo. */
 export function idDe(texto: string): number | null {

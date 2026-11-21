@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { pool } from '../../db';
 import { registrarAuditoria } from '../../lib/auditoria';
 import { emTransacao } from '../../lib/contextoseguro';
-import { lerOuNegar, limite, rota } from '../../lib/rota';
+import { lerOuNegar, limite, limitePorIp, rota } from '../../lib/rota';
 import { revogarDispositivos } from '../../lib/dispositivoConfiavel';
 import {
   derrubarAcessosWeb,
@@ -79,6 +79,7 @@ conta.put(
 
 conta.post(
   '/me/senha',
+  limitePorIp(50),
   limite(5),
   rota(async (req, res) => {
     const parsed = trocaSenhaSchema.safeParse(req.body);
@@ -159,6 +160,7 @@ conta.post(
 // escalas e anotações, e registro clínico não pode sumir (CFP). Encerrado também conta.
 conta.post(
   '/me/excluir',
+  limitePorIp(50),
   limite(5),
   rota(async (req, res) => {
     const parsed = exclusaoContaSchema.safeParse(req.body);
