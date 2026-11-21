@@ -24,7 +24,7 @@ async function preferenciasDe(psicologoId: number) {
 
 avisos.get(
   '/',
-  limite(120),
+  limite(720), // cinco abas a cada 15 s, com margem para acessos extras
   rota(async (_req, res) => {
     const psicologoId: number = res.locals.psicologoId;
     const prefs = await preferenciasDe(psicologoId);

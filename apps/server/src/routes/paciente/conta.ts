@@ -10,7 +10,7 @@ import { revogarDispositivos } from '../../lib/dispositivoConfiavel';
 import { DIAS_PARA_EXCLUIR } from '../../lib/exclusaoConta';
 import { obterPacienteId } from '../../lib/paciente';
 import { checkinsDoPeriodo, resumirCheckins } from '../../lib/resumo';
-import { lerOuNegar, limite, rota } from '../../lib/rota';
+import { lerOuNegar, limite, limitePorIp, rota } from '../../lib/rota';
 import { exclusaoContaSchema, trocaSenhaSchema } from '../../schemas';
 import { acessoApp } from '../auth';
 
@@ -56,6 +56,7 @@ conta.patch(
 // recebe um token novo e continua dentro.
 conta.post(
   '/senha',
+  limitePorIp(50),
   limite(5),
   rota(async (req, res) => {
     const parsed = trocaSenhaSchema.safeParse(req.body);
@@ -90,6 +91,7 @@ conta.post(
 // Exclusão em duas etapas: agenda agora (encerra o vínculo e as sessões) e apaga em 30 dias.
 conta.post(
   '/excluir',
+  limitePorIp(50),
   limite(5),
   rota(async (req, res) => {
     const parsed = exclusaoContaSchema.safeParse(req.body);

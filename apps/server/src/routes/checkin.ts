@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
+import { limite, limitePorIp } from '../lib/rota';
 import { checkinSchema } from '../schemas';
 import { HABITOS } from '../lib/habitos';
 import { verificarToken } from './auth';
@@ -14,9 +14,6 @@ const PERIODOS = new Set([7, 30, 90, 365]);
 const TUDO = { humor: true, habitos: true, escalas: true, diario: true }; // o paciente vê tudo o que é dele
 
 export const checkin = Router();
-
-// Limite de requisições por rota
-const limite = (n: number) => rateLimit({ windowMs: 15 * 60_000, limit: n });
 
 const QUALIDADE_SONO_MAP: Record<'Ruim' | 'Regular' | 'Boa', number> = {
   Ruim: 1,
@@ -166,7 +163,7 @@ function gerarPercepcao(d: DadosPercepcao): string {
 }
 
 // Registro do CheckIn
-checkin.post(['/', '/checkins'], limite(20), verificarToken, async (req, res) => {
+checkin.post(['/', '/checkins'], limitePorIp(200), verificarToken, limite(20), async (req, res) => {
   const parsed = checkinSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.issues[0]?.message ?? 'Dados inválidos.' });
@@ -227,7 +224,7 @@ checkin.post(['/', '/checkins'], limite(20), verificarToken, async (req, res) =>
 });
 
 // Resumo dos Graficos para o banco de dados.
-checkin.get(['/resumo', '/checkins/resumo'], limite(60), verificarToken, async (req, res) => {
+checkin.get(['/resumo', '/checkins/resumo'], limitePorIp(600), verificarToken, limite(60), async (req, res) => {
   try {
     const pacienteId = await obterPacienteId(req.user!.id);
 
@@ -289,7 +286,7 @@ checkin.get(['/resumo', '/checkins/resumo'], limite(60), verificarToken, async (
 });
 
 // Histórico (F4) e Meus Dados (F6): check-ins do período, do mais novo para o mais antigo, com o resumo.
-checkin.get(['/historico', '/checkins/historico'], limite(60), verificarToken, async (req, res) => {
+checkin.get(['/historico', '/checkins/historico'], limitePorIp(600), verificarToken, limite(60), async (req, res) => {
   const dias = Number(req.query.dias ?? 30);
   if (!PERIODOS.has(dias)) return res.status(400).json({ error: 'Período inválido.' });
 
@@ -319,7 +316,7 @@ checkin.get(['/historico', '/checkins/historico'], limite(60), verificarToken, a
 });
 
 // Home Inicial
-checkin.get(['/painel', '/checkins/painel'], limite(60), verificarToken, async (req, res) => {
+checkin.get(['/painel', '/checkins/painel'], limitePorIp(600), verificarToken, limite(60), async (req, res) => {
   try {
     const pacienteId = await obterPacienteId(req.user!.id);
 
