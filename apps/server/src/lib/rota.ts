@@ -1,14 +1,15 @@
 import type { Request, Response } from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import type { z } from 'zod';
 
-// Por padrão o limite é por IP; `chave` troca por outra (ex.: o usuário autenticado).
+// Rotas já autenticadas não devem dividir limite em uma rede compartilhada.
+// Antes da autenticação, continua sendo por IP (login, cadastro e recuperação de senha).
 export const limite = (n: number, chave?: (req: Request) => string) =>
   rateLimit({
     windowMs: 15 * 60_000,
     limit: n,
     message: { error: 'Muitas requisições. Tente novamente em alguns minutos.' },
-    ...(chave && { keyGenerator: chave }),
+    keyGenerator: chave ?? ((req) => (req.user ? `usuario:${req.user.id}` : ipKeyGenerator(req.ip ?? '0.0.0.0'))),
   });
 
 /** Id numérico de um parâmetro de rota; null se não for inteiro positivo. */
