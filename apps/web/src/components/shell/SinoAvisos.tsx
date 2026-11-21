@@ -20,7 +20,7 @@ export function SinoAvisos() {
   const maisNovo = consulta.data?.avisos[0]?.id ?? 0;
   useEffect(() => {
     if (ultimo.current !== null && maisNovo > ultimo.current) {
-      void cliente.invalidateQueries({ predicate: (q) => q.queryKey[0] !== CHAVE[0] });
+      void cliente.invalidateQueries({ predicate: (q) => q.queryKey[0] !== CHAVE[0] && !(q.queryKey[0] === 'psicologo' && q.queryKey[1] === 'me') });
     }
     if (consulta.data) ultimo.current = maisNovo;
   }, [maisNovo, consulta.data, cliente]);

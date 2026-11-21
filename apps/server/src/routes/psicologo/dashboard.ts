@@ -77,7 +77,7 @@ const escalaVista = (a: string) => `EXISTS (
 // dados insuficientes olham sempre para os registros mais novos, qualquer que seja o período.
 dashboard.get(
   '/',
-  limite(60),
+  limite(360), // cinco abas a cada 30 s, com margem para acessos extras
   rota(async (req, res) => {
     const q = lerOuNegar(dashboardSchema, req.query, res);
     if (!q) return;
