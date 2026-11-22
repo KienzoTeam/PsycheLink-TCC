@@ -7,13 +7,25 @@ import { checkin } from './routes/checkin';
 import { paciente } from './routes/paciente';
 import { psicologo } from './routes/psicologo';
 import { pool } from './db';
+import { criarDepurarIp } from './lib/depurarIp';
 import { ipDaPages } from './lib/ipDaPages';
 import { exigirOrigem } from './lib/sessaoWeb';
 
 export const app = express();
 
 // Número de proxies confiáveis à frente do servidor; sem isso o rate limit usa o IP do proxy.
-app.set('trust proxy', Number(process.env.TRUST_PROXY) || false);
+// Um número maior que a cadeia real faz o Express aceitar o X-Forwarded-For que o cliente escreveu,
+// e o rate limit por IP pode ser burlado com um cabeçalho forjado.
+const saltosDeProxy = Number(process.env.TRUST_PROXY) || false;
+if (saltosDeProxy && saltosDeProxy > 3) {
+  console.warn(
+    `TRUST_PROXY=${saltosDeProxy} é alto: confira a cadeia real de proxies (DEBUG_IP=1 mostra o que chega).`,
+  );
+}
+app.set('trust proxy', saltosDeProxy);
+
+// Diagnóstico temporário do IP que o Express enxerga; desligado por padrão.
+if (process.env.DEBUG_IP === '1') app.use(criarDepurarIp());
 
 app.use(ipDaPages);
 
