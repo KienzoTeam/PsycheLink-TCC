@@ -24,26 +24,25 @@ updates:
     groups:
       mobile:
         update-types: [minor, patch]
-    # As versões do Expo/React Native vêm do SDK: trocar de SDK é manual, com `npx expo install --fix`.
-    # No react-native 0.x a "minor" é a quebra de versão, por isso ela também fica de fora.
+    # Estes pacotes têm a versão fixada pelo SDK do Expo (o expo-doctor confere e o Expo Go traz o
+    # nativo correspondente): nem patch pode vir daqui. Sobem só com `npx expo install --fix`.
     ignore:
       - dependency-name: "expo"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "expo-*"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "@expo/*"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "babel-preset-expo"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react-native"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
-      - dependency-name: "react-native-*"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
-      - dependency-name: "@react-native-async-storage/async-storage"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "react"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "react-dom"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-gesture-handler"
+      - dependency-name: "react-native-pager-view"
+      - dependency-name: "react-native-reanimated"
+      - dependency-name: "react-native-safe-area-context"
+      - dependency-name: "react-native-screens"
+      - dependency-name: "react-native-svg"
+      - dependency-name: "react-native-web"
+      - dependency-name: "react-native-worklets"
+      - dependency-name: "@react-native-async-storage/async-storage"
+      # O SDK aceita patch dos tipos (~19.3.x); só minor e major ficam de fora.
       - dependency-name: "@types/react"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
