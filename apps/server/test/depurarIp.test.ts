@@ -11,7 +11,7 @@ async function subir(saltos: number, limite: number) {
   app.set('trust proxy', saltos);
   app.use(criarDepurarIp(limite));
   app.get('/ip', (req, res) => res.send(req.ip));
-  const servidor = app.listen(0);
+  const servidor = app.listen(0, '127.0.0.1');
   await once(servidor, 'listening');
   return { url: `http://127.0.0.1:${(servidor.address() as AddressInfo).port}`, fechar: () => servidor.close() };
 }
