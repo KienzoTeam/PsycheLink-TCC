@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import type { z } from 'zod';
+import { normalizarEmail } from './validarEmail';
 
 // Após autenticação, isola contas; antes dela, mantém a proteção por IP.
 // `chave` preserva limites explícitos já existentes.
@@ -18,6 +19,35 @@ export const limitePorIp = (n: number) => rateLimit({
   limit: n,
   message: { error: 'Muitas requisições. Tente novamente em alguns minutos.' },
 });
+
+const MSG_TENTATIVAS = { error: 'Muitas tentativas. Aguarde alguns minutos e tente de novo.' };
+
+// Só respostas com erro (status >= 400) entram na conta: quem acerta a senha, o código ou a sessão
+// não gasta o limite, então uma turma atrás do mesmo IP não se bloqueia só por entrar.
+const contarSoFalhas = (n: number, chave?: (req: Request) => string) =>
+  rateLimit({
+    windowMs: 15 * 60_000,
+    limit: n,
+    message: MSG_TENTATIVAS,
+    skipSuccessfulRequests: true,
+    ...(chave && { keyGenerator: chave }),
+  });
+
+/** Segunda etapa do acesso (código 2FA, renovação da sessão): teto por IP que só conta falhas. */
+export const limiteSessao = (n: number) => contarSoFalhas(n);
+
+/**
+ * Login: um teto folgado por IP (turma no mesmo wifi) e um por e-mail, contra força bruta numa
+ * conta. Os dois só contam falhas. O do e-mail vale para qualquer IP: quem erra a senha de
+ * alguém mais que `porEmail` vezes trava o login dessa conta por 15 min.
+ */
+export const limiteLogin = (porIp: number, porEmail: number) => [
+  contarSoFalhas(porIp),
+  contarSoFalhas(porEmail, (req) => {
+    const email = normalizarEmail(req.body?.email);
+    return email ? `email:${email}` : ipKeyGenerator(req.ip ?? '0.0.0.0');
+  }),
+];
 
 /** Id numérico de um parâmetro de rota; null se não for inteiro positivo. */
 export function idDe(texto: string): number | null {

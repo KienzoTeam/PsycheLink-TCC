@@ -6,6 +6,7 @@ import { pool } from '../db';
 import { desafioSchema, doisFatoresSchema, psicologoRegistroSchema } from '../schemas';
 import { HASH_REFERENCIA } from '../lib/hashReferencia';
 import { normalizarEmail } from '../lib/validarEmail';
+import { limiteLogin, limiteSessao } from '../lib/rota';
 import { gerarCodigo, hashCodigo } from '../lib/codigo';
 import { enviarCodigo, resumoErroSmtp } from '../lib/mailer';
 import { registrarAuditoria } from '../lib/auditoria';
@@ -44,7 +45,7 @@ const MSG_FALHA_ENVIO = 'Não foi possível enviar o código. Tente novamente.';
 
 
 // Login do psicólogo, etapa 1: confere as credenciais e envia o código. Não emite sessão.
-authPsicologo.post('/psicologo/login', limite(10), async (req, res) => {
+authPsicologo.post('/psicologo/login', ...limiteLogin(60, 10), async (req, res) => {
   const email = normalizarEmail(req.body?.email);
   const password = req.body?.password;
 
@@ -125,7 +126,7 @@ authPsicologo.post('/psicologo/login', limite(10), async (req, res) => {
 });
 
 // Login do psicólogo, etapa 2: confere o código e abre a sessão (cookies).
-authPsicologo.post('/psicologo/2fa', limite(20), async (req, res) => {
+authPsicologo.post('/psicologo/2fa', limiteSessao(20), async (req, res) => {
   const parsed = doisFatoresSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Dados inválidos.' });
   const { desafioId, codigo, confiar } = parsed.data;
@@ -159,7 +160,7 @@ authPsicologo.post('/psicologo/2fa/reenviar', limite(5), async (req, res) => {
 });
 
 // Renova a sessão: o refresh é de uso único e cada uso emite um novo (rotação).
-authPsicologo.post('/psicologo/refresh', limite(30), async (req, res) => {
+authPsicologo.post('/psicologo/refresh', limiteSessao(120), async (req, res) => {
   const negar = () => {
     limparCookies(res);
     return res.status(401).json({ error: 'Sessão ausente ou expirada.' });

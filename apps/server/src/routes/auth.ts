@@ -12,6 +12,7 @@ import { conferirDesafio, criarDesafio, MSG_CODIGO_INVALIDO, reenviarDesafio, us
 import { confiarNoDispositivo, dispositivoConfiavel } from '../lib/dispositivoConfiavel';
 import { HASH_REFERENCIA } from '../lib/hashReferencia';
 import { normalizarEmail } from '../lib/validarEmail';
+import { limiteLogin, limiteSessao } from '../lib/rota';
 import { gerarCodigo, hashCodigo, codigoConfere } from '../lib/codigo';
 import type { TipoCodigo } from '../lib/emails';
 import { enviarAvisoCadastro, enviarCodigo, resumoErroSmtp } from '../lib/mailer';
@@ -407,7 +408,7 @@ export const acessoApp = ({ id, nome, email, data_nascimento }: Perfil) => ({
 });
 
 // Login do app, etapa 1: confere a senha e envia o código (ou entra direto num celular confiável).
-auth.post('/login', limite(10), async (req, res) => {
+auth.post('/login', ...limiteLogin(60, 10), async (req, res) => {
   const email = normalizarEmail(req.body.email);
   const { password } = req.body;
 
@@ -462,7 +463,7 @@ auth.post('/login', limite(10), async (req, res) => {
 });
 
 // Login do app, etapa 2: confere o código e entrega o token (e o do celular, se pediu para confiar).
-auth.post('/2fa', limite(20), async (req, res) => {
+auth.post('/2fa', limiteSessao(20), async (req, res) => {
   const parsed = doisFatoresSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Dados inválidos.' });
   const { desafioId, codigo, confiar } = parsed.data;
