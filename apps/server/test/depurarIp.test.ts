@@ -38,6 +38,23 @@ describe('depurarIp (DEBUG_IP=1)', () => {
     });
   });
 
+  it('não gasta o limite com o /health do Render', async (t) => {
+    const log = t.mock.method(console, 'log', () => {});
+    const app = express();
+    app.use(criarDepurarIp(1));
+    app.get(['/health', '/ip'], (_req, res) => res.send('ok'));
+    const servidor = app.listen(0, '127.0.0.1');
+    await once(servidor, 'listening');
+    const url = `http://127.0.0.1:${(servidor.address() as AddressInfo).port}`;
+    try {
+      for (const caminho of ['/health', '/health', '/ip', '/ip']) await (await fetch(url + caminho)).text();
+    } finally {
+      servidor.close();
+    }
+    assert.equal(log.mock.callCount(), 1);
+    assert.equal(JSON.parse((log.mock.calls[0].arguments as string[])[1]).caminho, '/ip');
+  });
+
   it('com mais saltos que a cadeia, o IP forjado no X-Forwarded-For vira o req.ip', async () => {
     const servidor = await subir(6, 0);
     try {

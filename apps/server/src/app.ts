@@ -24,10 +24,11 @@ if (saltosDeProxy && saltosDeProxy > 3) {
 }
 app.set('trust proxy', saltosDeProxy);
 
-// Diagnóstico temporário do IP que o Express enxerga; desligado por padrão.
-if (process.env.DEBUG_IP === '1') app.use(criarDepurarIp());
-
 app.use(ipDaPages);
+
+// Diagnóstico temporário do IP que o Express enxerga; desligado por padrão. Vem depois do
+// ipDaPages para o `ip` logado ser o final (o do usuário, quando o PROXY_SEGREDO confere).
+if (process.env.DEBUG_IP === '1') app.use(criarDepurarIp());
 
 // Cabeçalhos de segurança padrão (X-Content-Type-Options, sem X-Powered-By, etc.)
 app.use(helmet());
